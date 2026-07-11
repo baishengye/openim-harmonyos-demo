@@ -1,0 +1,11 @@
+{
+  "name": "imsdk",
+  "version": "1.0.0",
+  "description": "Please describe the basic information.",
+  "main": "",
+  "author": "",
+  "license": "",
+  "dependencies": {
+    "libimsdk.so": "file:./src/main/cpp/types/libimsdk"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "module description"
+    },
+    {
+      "name": "ImSdkAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "ImSdkAbility_label",
+      "value": "label"
+    }
+  ]
+}

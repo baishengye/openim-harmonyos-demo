@@ -1,0 +1,5 @@
+{
+  "libimsdk.so": {
+    "source": "src/mock/Libimsdk.mock.ets"
+  }
+}
