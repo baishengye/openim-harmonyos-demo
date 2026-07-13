@@ -48,6 +48,7 @@ import {
   JoinGroupParams,
   LocationMsgParams,
   MergerMsgParams,
+  CardElem,
   OffsetParams,
   PartialUserItem,
   PinFriendParams,
@@ -78,11 +79,16 @@ import {
   TransferGroupParams,
   UpdateFriendsParams,
   UpdateMemberInfoParams,
-  VideoMsgParamsByURL} from './params';
+  VideoMsgParamsByURL,
+  VideoMsgParamsByFullPath,
+  SoundMsgParamsByFullPath,
+  ChangeGroupMemberMuteParams,
+  TypingUpdateParams } from './params';
 import { uuidV4 } from './Utils';
 import { JSON } from '@kit.ArkTS';
 import { Listener } from './listener';
 import { Logger } from './Logger';
+import { notificationManager } from '@kit.NotificationKit';
 
 export function getSDK() { return IMSdk.getInstance(); }
 
@@ -178,6 +184,16 @@ export class IMSdk extends Listener{
       }
     });
   }
+  async createImageMessageFromFullPath(imageFullPath: string, operationID: string = uuidV4()): Promise<MessageItem> {
+    return new Promise((resolve, reject) => {
+      try {
+        const result = imapi.createImageMessageFromFullPath(operationID,  imageFullPath);
+        resolve(JSON.parse(result) as MessageItem)
+      } catch (e) {
+        reject(e)
+      }
+    });
+  }
   async createCustomMessage(params: CustomMsgParams, operationID: string = uuidV4()): Promise<MessageItem> {
     return new Promise((resolve, reject) => {
       try {
@@ -191,7 +207,7 @@ export class IMSdk extends Listener{
   async createQuoteMessage(params: QuoteMsgParams, operationID: string = uuidV4()): Promise<MessageItem> {
     return new Promise((resolve, reject) => {
       try {
-        const result = imapi.createQuoteMessage(operationID,  params.text, params.message);
+        const result = imapi.createQuoteMessage(operationID,  params.text, JSON.stringify(params.message));
         resolve(JSON.parse(result) as MessageItem)
       } catch (e) {
         reject(e)
@@ -333,6 +349,16 @@ export class IMSdk extends Listener{
       }
     });
   }
+  async createSoundMessageFromFullPath(data:SoundMsgParamsByFullPath,operationID: string = uuidV4()): Promise<MessageItem>{
+    return new Promise((resolve, reject) => {
+      try {
+        const result = imapi.createSoundMessageFromFullPath(operationID,data.soundPath,data.duration);
+        resolve(JSON.parse(result) as MessageItem)
+      } catch (e) {
+        reject(e)
+      }
+    });
+  }
   async createVideoMessageByURL(data: VideoMsgParamsByURL, operationID: string = uuidV4()): Promise<MessageItem> {
     return new Promise((resolve, reject) => {
       try {
@@ -347,6 +373,16 @@ export class IMSdk extends Listener{
     return new Promise((resolve, reject) => {
       try {
         const result = imapi.createVideoMessageByUrl(operationID, JSON.stringify(data));
+        resolve(JSON.parse(result) as MessageItem)
+      } catch (e) {
+        reject(e)
+      }
+    });
+  }
+  async createVideoMessageFromFullPath(data:VideoMsgParamsByFullPath,operationID: string = uuidV4()): Promise<MessageItem>{
+    return new Promise((resolve, reject) => {
+      try {
+        const result = imapi.createVideoMessageFromFullPath(operationID,data.videoFullPath,data.videoType,data.duration,data.snapshotFullPath);
         resolve(JSON.parse(result) as MessageItem)
       } catch (e) {
         reject(e)
@@ -413,7 +449,7 @@ export class IMSdk extends Listener{
       }
     });
   }
-  async createCardMessage(data: LocationMsgParams, operationID: string = uuidV4()): Promise<MessageItem> {
+  async createCardMessage(data: CardElem, operationID: string = uuidV4()): Promise<MessageItem> {
     return new Promise((resolve, reject) => {
       try {
         const result = imapi.createCardMessage(operationID, JSON.stringify(data));
@@ -552,6 +588,10 @@ export class IMSdk extends Listener{
     const result = await imapi.refuseFriendApplication(operationID, JSON.stringify(data));
     return result;
   }
+  async getFriendApplicationUnhandledCount(req: string, operationID: string = uuidV4()): Promise<string> {
+    const result = await imapi.getFriendApplicationUnhandledCount(operationID, req);
+    return result;
+  }
   async deleteFriend(data: string, operationID: string = uuidV4()): Promise<string> {
     const result = await imapi.deleteFriend(operationID, JSON.stringify(data));
     return result;
@@ -663,6 +703,15 @@ export class IMSdk extends Listener{
     const result = await imapi.changeGroupMute(operationID, data.groupID, data.isMute);
     return result;
   }
+  async changeGroupMemberMute(data: ChangeGroupMemberMuteParams, operationID: string = uuidV4()): Promise<string> {
+    const result = await imapi.changeGroupMemberMute(operationID, data.groupID, data.userID, data.mutedSeconds);
+    return result;
+  }
+  async typingStatusUpdate(data: TypingUpdateParams, operationID: string = uuidV4()): Promise<string> {
+    const result = await imapi.typingStatusUpdate(operationID, data.recvID, data.msgTip);
+    return result;
+  }
+
   async transferGroupOwner(data: TransferGroupParams, operationID: string = uuidV4()): Promise<string> {
     const result = await imapi.transferGroupOwner(operationID, data.groupID, data.newOwnerUserID);
     return result;
@@ -739,5 +788,13 @@ export class IMSdk extends Listener{
   async setConversationMsgDestructTime(data: SetConversationMsgDestructTimeParams, operationID: string = uuidV4()): Promise<string> {
     const result = await imapi.setConversation(operationID, data.conversationID, JSON.stringify({ msgDestructTime: data.msgDestructTime }));
     return result;
+  }
+  async setAppBadge(appUnreadCount: number, operationID: string = uuidV4()): Promise<boolean> {
+    try {
+      await notificationManager.setBadgeNumber(appUnreadCount);
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 }

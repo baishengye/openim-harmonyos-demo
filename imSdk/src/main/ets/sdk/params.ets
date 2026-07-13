@@ -121,7 +121,7 @@ export interface CustomMsgParams {
 };
 export interface QuoteMsgParams {
   text: string;
-  message: string;
+  message: MessageItem;
 };
 export interface AdvancedQuoteMsgParams {
   text: string;
@@ -245,6 +245,12 @@ export interface LocationMsgParams {
   longitude: number;
   latitude: number;
 };
+export interface CardElem{
+  userID: string;
+  nickname: string;
+  faceURL: string;
+  ex: string;
+}
 export interface InsertSingleMsgParams {
   message: MessageItem;
   recvID: string;
@@ -307,8 +313,8 @@ export interface GetSpecifiedFriendsParams {
 export interface UpdateFriendsParams {
   friendUserIDs: string[];
   isPinned?: boolean;
-  remark?: boolean;
-  ex?: boolean;
+  remark?: string;
+  ex?: string;
 };
 export interface FriendApplicationListAsRecipientParams {
   handleResults: number[];
