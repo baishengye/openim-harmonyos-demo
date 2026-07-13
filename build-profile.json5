@@ -39,7 +39,7 @@
       ]
     },
     {
-      "name": "imSdk",
+      "name": "imsdk",
       "srcPath": "./imSdk",
       "targets": [
         {

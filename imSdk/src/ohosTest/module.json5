@@ -1,9 +1,9 @@
 {
   "module": {
-    "name": "imSdk_test",
+    "name": "imsdk_test",
     "type": "feature",
     "deviceTypes": [
-      "phone"
+      "default"
     ],
     "deliveryWithInstall": true,
     "installationFree": false
