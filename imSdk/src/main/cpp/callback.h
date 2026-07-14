@@ -13,6 +13,11 @@ struct TsfRegistration {
 void ThrowError(napi_env env, int32_t errCode, const char* errorMsg);
 napi_value ReturnVoid(napi_env env);
 TsfRegistration CreateTSF(napi_env env, const std::string& opID, napi_value jsCB);
+TsfRegistration CreateTSFWithMessage(napi_env env, const std::string& opID, napi_value jsCB, const std::string& message);
+
+// 进度回调相关
+void SetProgressCallback(napi_env env, napi_value callback, const std::string& opID);
+CB_I_S GetUploadProgressCallback();
 
 void RegisterSISSI(char *opID, int errCode, char* errMsg, char* data, int progress);
 void OnCallJSSISSI(napi_env env,napi_value js_callback,void* /*context*/,void* data);

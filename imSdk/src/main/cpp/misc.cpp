@@ -196,25 +196,45 @@ napi_value GetSelfUserInfo(napi_env env, napi_callback_info info) {
     }
     return result.promise;
 }
+/*
+@napi-ts
+上传文件.
+@param operationID - 唯一操作标识
+@param req - 上传请求JSON字符串
+@param onProgress - 进度回调 (event: number, operationID: string, data: string) => void
+@returns Promise<string>
+@signature export function uploadFile(operationID: string, req: string, onProgress: (event: number, operationID: string, data: string) => void): Promise<string>;
+*/
 napi_value UploadFile(napi_env env, napi_callback_info info) {
-//    constexpr size_t kArgc = 2;
-//    napi_value args[kArgc];
-//    size_t argc = kArgc;
-//    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-//    if (argc < kArgc) {
-//        ThrowError(env, ARG_ERR, "missing arguments");
-//        return nullptr;
-//    }
-//    auto operationID = GetJSString(env, args[0]);
-//    auto req = GetJSString(env, args[2]);
-//    auto result = CreateTSF(env, operationID, nullptr);
-//    if (result.should_proceed) {
-//        upload_file(RegisterSISS,
-//                             const_cast<char*>(operationID.c_str()),
-//                             const_cast<char*>(req.c_str()));
-//    }
-//    return result.promise;
-    return nullptr;
+    constexpr size_t kArgc = 3;
+    napi_value args[kArgc];
+    size_t argc = kArgc;
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    if (argc < 2) {
+        ThrowError(env, ARG_ERR, "missing arguments");
+        return nullptr;
+    }
+    auto opID = GetJSString(env, args[0]);
+    auto req = GetJSString(env, args[1]);
+    napi_value onProgress = args[2];
+
+    // 设置进度回调
+    if (onProgress != nullptr) {
+        napi_valuetype type;
+        napi_typeof(env, onProgress, &type);
+        if (type == napi_function) {
+            SetProgressCallback(env, onProgress, opID);
+        }
+    }
+
+    auto result = CreateTSF(env, opID, nullptr);
+    if (result.should_proceed) {
+        upload_file(RegisterSISS,
+                    const_cast<char*>(opID.c_str()),
+                    const_cast<char*>(req.c_str()),
+                    GetUploadProgressCallback());  // 使用进度回调
+    }
+    return result.promise;
 }
 napi_value UpdateFcmToken(napi_env env, napi_callback_info info) {
     constexpr size_t kArgc = 3;
@@ -265,9 +285,88 @@ napi_value SetAppBadge(napi_env env, napi_callback_info info) {
     }
     return result.promise;
 }
+/*
+@napi-ts
+上传日志.
+@param operationID - 唯一操作标识
+@param line - 日志行数
+@param ex - 额外信息
+@param onProgress - 进度回调 (event: number, operationID: string, data: string) => void
+@returns Promise<string>
+@signature export function uploadLogs(operationID: string, line: number, ex: string, onProgress: (event: number, operationID: string, data: string) => void): Promise<string>;
+*/
 napi_value UploadLogs(napi_env env, napi_callback_info info) {
-    return nullptr;
+    constexpr size_t kArgc = 4;
+    napi_value args[kArgc];
+    size_t argc = kArgc;
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    if (argc < 3) {
+        ThrowError(env, ARG_ERR, "missing arguments");
+        return nullptr;
+    }
+    auto opID = GetJSString(env, args[0]);
+    auto line = GetJSInt32(env, args[1]);
+    auto ex = GetJSString(env, args[2]);
+    napi_value onProgress = args[3];
+
+    // 设置进度回调
+    if (onProgress != nullptr) {
+        napi_valuetype type;
+        napi_typeof(env, onProgress, &type);
+        if (type == napi_function) {
+            SetProgressCallback(env, onProgress, opID);
+        }
+    }
+
+    auto result = CreateTSF(env, opID, nullptr);
+    if (result.should_proceed) {
+        upload_logs(RegisterSISS,
+                    const_cast<char*>(opID.c_str()),
+                    line,
+                    const_cast<char*>(ex.c_str()),
+                    GetUploadProgressCallback());
+    }
+    return result.promise;
 }
+/*
+@napi-ts
+记录日志.
+@param operationID - 唯一操作标识
+@param logLevel - 日志级别
+@param file - 文件名
+@param line - 行号
+@param msgs - 消息内容
+@param err - 错误信息
+@param keyAndValue - 键值对
+@returns Promise<string>
+@signature export function logs(operationID: string, logLevel: number, file: string, line: number, msgs: string, err: string, keyAndValue: string): Promise<string>;
+*/
 napi_value Logs(napi_env env, napi_callback_info info) {
-    return nullptr;
+    constexpr size_t kArgc = 7;
+    napi_value args[kArgc];
+    size_t argc = kArgc;
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    if (argc < kArgc) {
+        ThrowError(env, ARG_ERR, "missing arguments");
+        return nullptr;
+    }
+    auto operationID = GetJSString(env, args[0]);
+    auto logLevel = GetJSInt32(env, args[1]);
+    auto file = GetJSString(env, args[2]);
+    auto line = GetJSInt32(env, args[3]);
+    auto msgs = GetJSString(env, args[4]);
+    auto err = GetJSString(env, args[5]);
+    auto keyAndValue = GetJSString(env, args[6]);
+    auto result = CreateTSF(env, operationID, nullptr);
+    if (result.should_proceed) {
+        logs(RegisterSISS,
+             const_cast<char*>(operationID.c_str()),
+             logLevel,
+             const_cast<char*>(file.c_str()),
+             line,
+             const_cast<char*>(msgs.c_str()),
+             const_cast<char*>(err.c_str()),
+             const_cast<char*>(keyAndValue.c_str()));
+    }
+    return result.promise;
 }

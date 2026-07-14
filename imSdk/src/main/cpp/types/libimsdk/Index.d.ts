@@ -89,7 +89,8 @@ export function createAdvancedTextMessage(operationID: string, text: string, mes
  * @param message - 唯一操作标识
  * @returns string
  */
-export function createTextAtMessage(operationID: string, text: string, atUserList: string, atUsersInfo: string, message: string): string;
+export function createTextAtMessage(operationID: string, text: string, atUserList: string, atUsersInfo: string,
+  message: string): string;
 
 /**
  * 创建位置消息.
@@ -99,7 +100,8 @@ export function createTextAtMessage(operationID: string, text: string, atUserLis
  * @param latitude - 维度
  * @returns string
  */
-export function createLocationMessage(operationID: string, description: string, longitude: number, latitude: number): string;
+export function createLocationMessage(operationID: string, description: string, longitude: number,
+  latitude: number): string;
 
 /**
  * 创建自定义消息.
@@ -128,7 +130,8 @@ export function createQuoteMessage(operationID: string, data: string, message: s
  * @param messageEntityList - 消息实例列表
  * @returns string
  */
-export function createAdvancedQuoteMessage(operationID: string, data: string, message: string, messageEntityList: string): string;
+export function createAdvancedQuoteMessage(operationID: string, data: string, message: string,
+  messageEntityList: string): string;
 
 /**
  * 创建卡片消息.
@@ -147,7 +150,8 @@ export function createCardMessage(operationID: string, cardInfo: string): string
  * @param snapshotFullPath - 预览图绝对路径
  * @returns string
  */
-export function createVideoMessageFromFullPath(operationID: string, videoFullPath: string, videoType: string, duration: number, snapshotFullPath: string): string;
+export function createVideoMessageFromFullPath(operationID: string, videoFullPath: string, videoType: string,
+  duration: number, snapshotFullPath: string): string;
 
 /**
  * 创建本地路径图片消息.
@@ -192,7 +196,8 @@ export function createImageMessage(operationID: string, imagePath: string): stri
  * @param snapshotPicture - 缩略图相关信息
  * @returns string
  */
-export function createImageMessageByUrl(operationID: string, sourcePath: string, sourcePicture: string, bigPicture: string, snapshotPicture: string): string;
+export function createImageMessageByUrl(operationID: string, sourcePath: string, sourcePicture: string,
+  bigPicture: string, snapshotPicture: string): string;
 
 /**
  * 创建URL地址音频消息.
@@ -228,7 +233,8 @@ export function createVideoMessageByUrl(operationID: string, videoBaseInfo: stri
  * @param snapshotPath - 视频缩略图
  * @returns string
  */
-export function createVideoMessage(operationID: string, videoPath: string, videoType: string, duration: number, snapshotPath: string): string;
+export function createVideoMessage(operationID: string, videoPath: string, videoType: string, duration: number,
+  snapshotPath: string): string;
 
 /**
  * 创建URL地址文件消息.
@@ -255,7 +261,8 @@ export function createFileMessage(operationID: string, filePath: string, fileNam
  * @param summaryList - 子标题列表
  * @returns string
  */
-export function createMergerMessage(operationID: string, messageList: string, title: string, summaryList: string): string;
+export function createMergerMessage(operationID: string, messageList: string, title: string,
+  summaryList: string): string;
 
 /**
  * 创建表情消息.
@@ -283,10 +290,11 @@ export function createForwardMessage(operationID: string, data: string): string;
  * @param offlinePush -
  * @param isOnlineOnly -
  * @param operationID -
- * @param (progress: number) => {} -
+ * @param onProgress - 进度回调 {progress: number, message: MessageItem}
  * @returns Promise<string>
  */
-export function sendMessage(operationID: string, message: string, recvID: string, groupID: string, offlinePush: string, isOnlineOnly: boolean, onProgress: (progress: number) => void): Promise<string>;
+export function sendMessage(operationID: string, message: string, recvID: string, groupID: string, offlinePush: string,
+  isOnlineOnly: boolean, onProgress: (data: string) => void): Promise<string>;
 
 /**
  * 发送消息.
@@ -297,10 +305,11 @@ export function sendMessage(operationID: string, message: string, recvID: string
  * @param offlinePush -
  * @param isOnlineOnly -
  * @param operationID -
- * @param (progress: number) => {} -
+ * @param onProgress - 进度回调 {progress: number, message: MessageItem}
  * @returns Promise<string>
  */
-export function sendMessageNotOss(operationID: string, message: string, recvID: string, groupID: string, offlinePush: string, isOnlineOnly: boolean, onProgress: (progress: number) => void): Promise<string>;
+export function sendMessageNotOss(operationID: string, message: string, recvID: string, groupID: string,
+  offlinePush: string, isOnlineOnly: boolean, onProgress: (data: string) => void): Promise<string>;
 
 /**
  * 查询消息列表.
@@ -359,7 +368,8 @@ export function markConversationMessageAsRead(operationID: string, conversationI
  * @param clientMsgID - 消息ID
  * @returns Promise<string>
  */
-export function deleteMessageFromLocalStorage(operationID: string, conversationID: string, clientMsgID: string): Promise<string>;
+export function deleteMessageFromLocalStorage(operationID: string, conversationID: string,
+  clientMsgID: string): Promise<string>;
 
 /**
  * 删除消息.
@@ -415,7 +425,8 @@ export function deleteConversationAndDeleteAllMsg(operationID: string, conversat
  * @param sendID -
  * @returns Promise<string>
  */
-export function insertSingleMessageToLocalStorage(operationID: string, message: string, recvID: string, sendID: string): Promise<string>;
+export function insertSingleMessageToLocalStorage(operationID: string, message: string, recvID: string,
+  sendID: string): Promise<string>;
 
 /**
  * 插入群聊消息到本地.
@@ -425,7 +436,8 @@ export function insertSingleMessageToLocalStorage(operationID: string, message: 
  * @param sendID -
  * @returns Promise<string>
  */
-export function insertGroupMessageToLocalStorage(operationID: string, message: string, groupID: string, sendID: string): Promise<string>;
+export function insertGroupMessageToLocalStorage(operationID: string, message: string, groupID: string,
+  sendID: string): Promise<string>;
 
 /**
  * 搜索本地消息.
@@ -443,7 +455,8 @@ export function searchLocalMessages(operationID: string, searchParam: string): P
  * @param localEx - 扩展字段内容
  * @returns Promise<string>
  */
-export function setMessageLocalEx(operationID: string, conversationID: string, clientMsgID: string, localEx: string): Promise<string>;
+export function setMessageLocalEx(operationID: string, conversationID: string, clientMsgID: string,
+  localEx: string): Promise<string>;
 
 /**
  * 改变输入状态.
@@ -549,7 +562,8 @@ export function createGroup(operationID: string, cGroupReqInfo: string): Promise
  * @param ex - 其他信息
  * @returns Promise<string>
  */
-export function joinGroup(operationID: string, cGroupID: string, cReqMsg: string, cJoinSource: number, ex: string): Promise<string>;
+export function joinGroup(operationID: string, cGroupID: string, cReqMsg: string, cJoinSource: number,
+  ex: string): Promise<string>;
 
 /**
  * 退出群.
@@ -584,7 +598,8 @@ export function changeGroupMute(operationID: string, cGroupID: string, cIsMute: 
  * @param cMutedSeconds - 禁言时长
  * @returns Promise<string>
  */
-export function changeGroupMemberMute(operationID: string, cGroupID: string, cUserID: string, cMutedSeconds: number): Promise<string>;
+export function changeGroupMemberMute(operationID: string, cGroupID: string, cUserID: string,
+  cMutedSeconds: number): Promise<string>;
 
 /**
  * 设置群成员信息.
@@ -643,7 +658,8 @@ export function setGroupInfo(operationID: string, cGroupInfo: string): Promise<s
  * @param cCount - 每页大小
  * @returns Promise<string>
  */
-export function getGroupMemberList(operationID: string, cGroupInfo: string, cFilter: number, cOffset: number, cCount: number): Promise<string>;
+export function getGroupMemberList(operationID: string, cGroupInfo: string, cFilter: number, cOffset: number,
+  cCount: number): Promise<string>;
 
 /**
  * 获取群主和群管理员.
@@ -664,7 +680,8 @@ export function getGroupMemberOwnerAndAdmin(operationID: string, cGroupID: strin
  * @param cFilterUserIDList - 过滤用户列表
  * @returns Promise<string>
  */
-export function getGroupMemberListByJoinTimeFilter(operationID: string, cGroupID: string, cOffset: number, cCount: number, cJoinTimeBegin: number,  cJoinTimeEnd: number,  cFilterUserIDList: string): Promise<string>;
+export function getGroupMemberListByJoinTimeFilter(operationID: string, cGroupID: string, cOffset: number,
+  cCount: number, cJoinTimeBegin: number, cJoinTimeEnd: number, cFilterUserIDList: string): Promise<string>;
 
 /**
  * 获取指定群成员信息.
@@ -673,7 +690,8 @@ export function getGroupMemberListByJoinTimeFilter(operationID: string, cGroupID
  * @param cUserIDList - 成员ID列表
  * @returns Promise<string>
  */
-export function getSpecifiedGroupMembersInfo(operationID: string, cGroupID: string, cUserIDList: string): Promise<string>;
+export function getSpecifiedGroupMembersInfo(operationID: string, cGroupID: string,
+  cUserIDList: string): Promise<string>;
 
 /**
  * 移除群成员.
@@ -683,7 +701,8 @@ export function getSpecifiedGroupMembersInfo(operationID: string, cGroupID: stri
  * @param cUserIDList - 成员ID列表
  * @returns Promise<string>
  */
-export function kickGroupMember(operationID: string, cGroupID: string, cReason: string, cUserIDList: string): Promise<string>;
+export function kickGroupMember(operationID: string, cGroupID: string, cReason: string,
+  cUserIDList: string): Promise<string>;
 
 /**
  * 转让群主.
@@ -702,7 +721,8 @@ export function transferGroupOwner(operationID: string, cGroupID: string, cNewOw
  * @param cUserIDList - 用户ID列表
  * @returns Promise<string>
  */
-export function inviteUserToGroup(operationID: string, cGroupID: string, cReason: string, cUserIDList: string): Promise<string>;
+export function inviteUserToGroup(operationID: string, cGroupID: string, cReason: string,
+  cUserIDList: string): Promise<string>;
 
 /**
  * 获取加入群申请，（接收者）.
@@ -728,7 +748,8 @@ export function getGroupApplicationListAsApplicant(operationID: string, req: str
  * @param cHandleMsg - 处理信息
  * @returns Promise<string>
  */
-export function acceptGroupApplication(operationID: string, cGroupID: string, cFromUserID: string, cHandleMsg: string): Promise<string>;
+export function acceptGroupApplication(operationID: string, cGroupID: string, cFromUserID: string,
+  cHandleMsg: string): Promise<string>;
 
 /**
  * 拒绝加入群申请.
@@ -738,7 +759,8 @@ export function acceptGroupApplication(operationID: string, cGroupID: string, cF
  * @param cHandleMsg - 处理信息
  * @returns Promise<string>
  */
-export function refuseGroupApplication(operationID: string, cGroupID: string, cFromUserID: string, cHandleMsg: string): Promise<string>;
+export function refuseGroupApplication(operationID: string, cGroupID: string, cFromUserID: string,
+  cHandleMsg: string): Promise<string>;
 
 /**
  * 获取群加入申请数量.
@@ -798,7 +820,8 @@ export function getFriendList(operationID: string, filterBlack: boolean): Promis
  * @param filterBlack - 过滤黑名单
  * @returns Promise<string>
  */
-export function getFriendListPage(operationID: string, offset: number, count: number, filterBlack: boolean): Promise<string>;
+export function getFriendListPage(operationID: string, offset: number, count: number,
+  filterBlack: boolean): Promise<string>;
 
 /**
  * 搜索好友.
@@ -984,4 +1007,40 @@ export function getAtAllTag(operationID: string): Promise<string>;
  * @param sessionType - 会话类型
  * @returns Promise<string>
  */
-export function getConversationIdBySessionType(operationID: string, sourceID: string, sessionType: number): Promise<string>;
+export function getConversationIdBySessionType(operationID: string, sourceID: string,
+  sessionType: number): Promise<string>;
+
+
+
+/**
+ * 上传文件
+ * @param operationID - 唯一操作标识
+ * @param req - 上传请求 JSON 字符串 (包含 name, contentType, uuid, filepath, cause)
+ * @param uploadCallback - 上传进度回调 (progress: number, data: string)
+ * @returns Promise<string>
+ */
+export function uploadFile(operationID: string, req: string, uploadCallback: (progress: number, data: string) => void): Promise<string>;
+
+/**
+ * 上传日志
+ * @param operationID - 唯一操作标识
+ * @param line - 行号
+ * @param ex - 扩展信息
+ * @param uploadLogProgressCallback - 上传进度回调 (progress: number, data: string)
+ * @returns Promise<string>
+ */
+export function uploadLogs(operationID: string, line: number, ex: string, uploadLogProgressCallback: (progress: number, data: string) => void): Promise<string>;
+
+/**
+ * 日志
+ * @param operationID - 唯一操作标识
+ * @param logLevel - 日志级别
+ * @param file - 文件名
+ * @param line - 行号
+ * @param msgs - 消息内容
+ * @param err - 错误信息
+ * @param keyAndValue - 键值对 JSON 字符串
+ * @returns Promise<string>
+ */
+export function logs(operationID: string, logLevel: number, file: string, line: number, msgs: string, err: string,
+  keyAndValue: string): Promise<string>;

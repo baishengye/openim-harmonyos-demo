@@ -59,8 +59,10 @@ struct TSFData {
     napi_threadsafe_function tsf = nullptr;
     napi_deferred deferred = nullptr;
     std::atomic<bool> completed{false};
+    std::string message;  // 保存原始 message，用于 progress 回调
     TSFData() = default;
     TSFData(napi_threadsafe_function t, napi_deferred d) : tsf(t), deferred(d) {}
+    TSFData(napi_threadsafe_function t, napi_deferred d, const std::string& msg) : tsf(t), deferred(d), message(msg) {}
 };
 
 struct CBSISSIData{
@@ -153,6 +155,101 @@ TsfRegistration CreateTSF(napi_env env, const std::string& opID, napi_value jsCB
     return result;
 }
 
+// 带 message 参数的 CreateTSF，用于 sendMessage 等需要保存原始 message 的场景
+TsfRegistration CreateTSFWithMessage(napi_env env, const std::string& opID, napi_value jsCB, const std::string& message) {
+    napi_deferred deferred;
+    napi_value promise;
+    napi_create_promise(env, &deferred, &promise);
+    TsfRegistration result{promise, false};
+
+    if (jsCB != nullptr) {
+        napi_valuetype type;
+        napi_typeof(env, jsCB, &type);
+        if (type != napi_function) {
+            RejectPromise(env, deferred, -1, "argument must be a function");
+            return result;
+        }
+    }
+
+    if (opID.empty()) {
+        RejectPromise(env, deferred, -1, "operationID cannot be empty");
+        return result;
+    }
+    TSFData *tsfCheck = nullptr;
+    if (getTsfMap().find(opID, tsfCheck)) {
+        RejectPromise(env, deferred, -1, "operationID is duplicate");
+        return result;
+    }
+    napi_value resource_name;
+    napi_create_string_utf8(
+        env,
+        opID.c_str(),
+        NAPI_AUTO_LENGTH,
+        &resource_name
+    );
+    napi_threadsafe_function tsf;
+    napi_status status = napi_create_threadsafe_function(env, jsCB, NULL, resource_name, 0, 1, NULL,NULL, NULL,
+                                                         jsCB != nullptr ? OnCallJSSISSI: OnCallJSSISS, &tsf);
+    if (status != napi_ok || tsf == nullptr) {
+        RejectPromise(env, deferred, -1, "Failed to create threadsafe function");
+        return result;
+    }
+    getTsfMap().insert(opID, new TSFData(tsf, deferred, message));
+    result.should_proceed = true;
+    return result;
+}
+
+napi_ref g_progressCallbackRef = nullptr;  // 进度回调引用
+napi_env g_progressCallbackEnv = nullptr;
+std::string g_progressOpID;  // 存储当前 progress 回调的 operationID
+
+void SendProgressEvent(int eventCode, const std::string& operationID, const std::string& payload) {
+    if (g_progressCallbackRef == nullptr) return;
+
+    napi_handle_scope scope = nullptr;
+    napi_status status = napi_open_handle_scope(g_progressCallbackEnv, &scope);
+    if (status != napi_ok || scope == nullptr) return;
+
+    napi_value callback = nullptr;
+    status = napi_get_reference_value(g_progressCallbackEnv, g_progressCallbackRef, &callback);
+    if (status != napi_ok || callback == nullptr) {
+        napi_close_handle_scope(g_progressCallbackEnv, scope);
+        return;
+    }
+
+    napi_value operationIDVal = SetJSString(g_progressCallbackEnv, operationID);
+    napi_value payloadVal = SetJSString(g_progressCallbackEnv, payload);
+    napi_value eventCodeVal = SetJSInt32(g_progressCallbackEnv, eventCode);
+
+    napi_value global = nullptr;
+    napi_get_global(g_progressCallbackEnv, &global);
+
+    napi_value argv[3] = { eventCodeVal, operationIDVal, payloadVal };
+    napi_call_function(g_progressCallbackEnv, global, callback, 3, argv, nullptr);
+
+    napi_close_handle_scope(g_progressCallbackEnv, scope);
+}
+
+void SetProgressCallback(napi_env env, napi_value callback, const std::string& opID) {
+    if (g_progressCallbackRef != nullptr) {
+        napi_delete_reference(env, g_progressCallbackRef);
+    }
+    napi_create_reference(env, callback, 1, &g_progressCallbackRef);
+    g_progressCallbackEnv = env;
+    g_progressOpID = opID;  // 存储 operationID
+}
+
+// 符合 CB_I_S 签名的进度回调（C 风格）
+void UploadProgressCallback(int eventCode, char* data) {
+    std::string payload = data ? std::string(data) : "";
+    SendProgressEvent(eventCode, g_progressOpID, payload);  // 使用存储的 operationID
+}
+
+// 注册上传进度回调（返回函数指针给 C 库调用）
+CB_I_S GetUploadProgressCallback() {
+    return UploadProgressCallback;
+}
+
 void RegisterSISSI(char *opID, int errCode, char* errMsg, char* data, int progress) {
     if (!opID) return;
     std::string opID_str = opID ? std::string(opID) : "";
@@ -194,9 +291,13 @@ void OnCallJSSISSI(napi_env env,napi_value js_callback,void* /*context*/,void* d
             return;
         }
 
-        napi_value progress;
-        napi_create_int32(env, msg->progress, &progress);
-        napi_status s = napi_call_function(env,nullptr,js_callback,1,&progress,nullptr);
+        // 发送 { progress: number, message: string } 对象，与 Android SendMsgCallBack.onProgress 一致
+        // message 使用保存的原始 message，而非回调中的 data
+        napi_value result;
+        napi_create_object(env, &result);
+        napi_set_named_property(env, result, "progress", SetJSInt32(env, msg->progress));
+        napi_set_named_property(env, result, "message", SetJSString(env, tsf->message));
+        napi_status s = napi_call_function(env, nullptr, js_callback, 1, &result, nullptr);
 
         if (s != napi_ok) {
             OH_LOG_ERROR(LOG_APP,"progress callback failed, opID=%{public}s",msg->opID.c_str());

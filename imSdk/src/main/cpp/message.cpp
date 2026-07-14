@@ -661,7 +661,7 @@ napi_value SendMessage(napi_env env, napi_callback_info info) {
     auto offlinePush = GetJSString(env, args[4]);
     auto isOnlineOnly = GetJSInt32(env, args[5]);
     napi_value onProgress = args[6];
-    auto result = CreateTSF(env, opID, onProgress);
+    auto result = CreateTSFWithMessage(env, opID, onProgress, message);
     if (result.should_proceed) {
     send_message(RegisterSISSI, const_cast<char*>(opID.c_str()), const_cast<char*>(message.c_str()),const_cast<char*>(recvID.c_str()),
                  const_cast<char*>(groupID.c_str()),const_cast<char*>(offlinePush.c_str()), isOnlineOnly);
@@ -699,7 +699,7 @@ napi_value SendMessageNotOss(napi_env env, napi_callback_info info) {
     auto offlinePush = GetJSString(env, args[4]);
     auto isOnlineOnly = GetJSInt32(env, args[5]);
     napi_value onProgress = args[6];
-    auto result = CreateTSF(env, opID, onProgress);
+    auto result = CreateTSFWithMessage(env, opID, onProgress, message);
     if (result.should_proceed) {
     send_message_not_oss(RegisterSISSI, const_cast<char*>(opID.c_str()), const_cast<char*>(message.c_str()),const_cast<char*>(recvID.c_str()),
                  const_cast<char*>(groupID.c_str()),const_cast<char*>(offlinePush.c_str()), isOnlineOnly);

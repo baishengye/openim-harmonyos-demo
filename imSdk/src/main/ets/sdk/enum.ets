@@ -195,5 +195,6 @@ export enum CbEvents {
   OnConversationUserInputStatusChanged = 55,
   OnRecvOnlineOnlyMessage = 56,
   OnUserTokenInvalid = 57,
-  OnProgress = 58
+  OnProgress = 58,
+  OnMessageProgress = 59
 }

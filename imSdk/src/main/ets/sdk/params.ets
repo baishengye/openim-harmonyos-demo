@@ -401,9 +401,9 @@ export interface UploadFileParams {
   name: string;
   contentType: string;
   uuid: string;
-  // file?: File;
   filepath?: string;
   cause?: string;
+  token:string;
 };
 export interface PartialUserItem {
   createTime: number;
@@ -434,4 +434,18 @@ export interface SetConversationMsgDestructParams {
 export interface SetConversationMsgDestructTimeParams {
   conversationID: string;
   msgDestructTime: number;
+};
+
+export interface UploadLogsParams {
+  line: number;
+  ex?: string;
+};
+
+export interface LogsParams {
+  logLevel: number;
+  file: string;
+  line: number;
+  msgs: string;
+  err: string;
+  keyAndValue: string[];
 };

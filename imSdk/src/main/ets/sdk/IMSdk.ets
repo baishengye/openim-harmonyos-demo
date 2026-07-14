@@ -83,7 +83,10 @@ import {
   VideoMsgParamsByFullPath,
   SoundMsgParamsByFullPath,
   ChangeGroupMemberMuteParams,
-  TypingUpdateParams } from './params';
+  TypingUpdateParams,
+  LogsParams,
+  UploadFileParams,
+  UploadLogsParams } from './params';
 import { uuidV4 } from './Utils';
 import { JSON } from '@kit.ArkTS';
 import { Listener } from './listener';
@@ -242,11 +245,14 @@ export class IMSdk extends Listener{
       iOSPushSound: '+1',
       iOSBadgeCount: true,
     };
-    const result = await  imapi.sendMessage(operationID,  JSON.stringify(params.message),
+    const result = await imapi.sendMessage(operationID, JSON.stringify(params.message),
       params.recvID,
       params.groupID,
       JSON.stringify(offlinePushInfo),
-      params.isOnlineOnly ?? false, (progress: number) => {});
+      params.isOnlineOnly ?? false,
+      (data: string) => {
+        this.callback(CbEvents.OnMessageProgress, data);
+      });
     return JSON.parse(result) as MessageItem;
   }
   async sendMessageNotOss(params: SendMsgParams, operationID: string = uuidV4()): Promise<MessageItem> {
@@ -257,11 +263,14 @@ export class IMSdk extends Listener{
       iOSPushSound: '+1',
       iOSBadgeCount: true,
     };
-    const result = await  imapi.sendMessageNotOss(operationID,  JSON.stringify(params.message),
+    const result = await imapi.sendMessageNotOss(operationID, JSON.stringify(params.message),
       params.recvID,
       params.groupID,
       JSON.stringify(offlinePushInfo),
-      params.isOnlineOnly ?? false, (progress: number) => {});
+      params.isOnlineOnly ?? false,
+      (data: string) => {
+        this.callback(CbEvents.OnMessageProgress, data);
+      });
     return JSON.parse(result) as MessageItem;
   }
   async setMessageLocalEx(params: SetMessageLocalExParams, operationID: string = uuidV4()): Promise<MessageItem> {
@@ -797,4 +806,24 @@ export class IMSdk extends Listener{
       return false;
     }
   }
+
+  async uploadFile(data: UploadFileParams, operationID: string = uuidV4()): Promise<string> {
+    const result = await imapi.uploadFile(operationID, JSON.stringify(data), (progress: number, info: string) => {
+      Logger.print(`uploadFile progress: ${progress}, info: ${info}`);
+    });
+    return result;
+  }
+
+  async uploadLogs(data: UploadLogsParams, operationID: string = uuidV4()): Promise<string> {
+    const result = await imapi.uploadLogs(operationID, data.line, data.ex ?? '', (progress: number, info: string) => {
+      Logger.print(`uploadLogs progress: ${progress}, info: ${info}`);
+    });
+    return result;
+  }
+
+  async logs(data: LogsParams, operationID: string = uuidV4()): Promise<string> {
+    const result = await imapi.logs(operationID, data.logLevel, data.file, data.line, data.msgs, data.err, JSON.stringify(data.keyAndValue));
+    return result;
+  }
+
 }
