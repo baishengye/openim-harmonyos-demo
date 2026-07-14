@@ -499,8 +499,14 @@ export interface WSEvent {
   errMsg: string;
 };
 
+export interface MessageProgress {
+  progress: number;
+  message: MessageItem;
+};
+
 export type CbEventData =
     | SDKError
+    | MessageProgress
     | MsgProgress
     | WSEvent
     | BlackUserItem

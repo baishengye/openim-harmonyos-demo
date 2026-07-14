@@ -72,9 +72,66 @@ struct CBSISSIData{
     std::string data;
     int progress;
 };
+
+// 文件上传进度数据结构
+struct UploadProgressData {
+    std::string opID;
+    int progress;
+    std::string info;
+};
+
 static ThreadSafeMap<std::string, TSFData*>& getTsfMap() {
     static ThreadSafeMap<std::string, TSFData*> instance;
     return instance;
+}
+
+// 当前上传操作的 opID（用于 CB_I_S 回调适配器）
+thread_local std::string g_currentUploadOpID;
+
+// 注册上传进度回调
+void RegisterUploadProgress(char *opID, int progress, char* info) {
+    if (!opID) return;
+    std::string opID_str(opID);
+    std::string info_str(info ? info : "");
+
+    TSFData *tsf = nullptr;
+    if (!getTsfMap().find(opID_str, tsf) || tsf == nullptr || tsf->tsf == nullptr) {
+        return;
+    }
+
+    auto* data = new UploadProgressData{std::move(opID_str), progress, std::move(info_str)};
+    napi_status status = napi_call_threadsafe_function(tsf->tsf, data, napi_tsfn_nonblocking);
+    if (status != napi_ok) {
+        delete data;
+    }
+}
+
+// CB_I_S 适配器：符合 void (*)(int, char*) 签名，供 upload_file/upload_logs 调用
+void UploadProgressCBAdapter(int eventCode, char* data) {
+    // 构建进度信息
+    // eventCode 作为进度值，data 作为额外信息
+    RegisterUploadProgress(
+        g_currentUploadOpID.empty() ? nullptr : const_cast<char*>(g_currentUploadOpID.c_str()),
+        eventCode,
+        data);
+}
+
+// 上传进度回调的 JS 调用处理
+void OnCallJSUploadProgress(napi_env env, napi_value js_callback, void* /*context*/, void* data) {
+    auto* uploadData = static_cast<UploadProgressData*>(data);
+    if (!uploadData) return;
+
+    // 构造 JSON 字符串传递给 JS: {"progress": number, "info": "string"}
+    char jsonBuffer[256];
+    snprintf(jsonBuffer, sizeof(jsonBuffer),
+             "{\"progress\":%d,\"info\":\"%s\"}",
+             uploadData->progress,
+             uploadData->info.c_str());
+
+    napi_value result = SetJSString(env, std::string(jsonBuffer));
+    napi_call_function(env, nullptr, js_callback, 1, &result, nullptr);
+
+    delete uploadData;
 }
 
 void ThrowError(napi_env env, int32_t errCode, const char* errorMsg) {
@@ -124,7 +181,7 @@ TsfRegistration CreateTSF(napi_env env, const std::string& opID, napi_value jsCB
         if (type != napi_function) {
             RejectPromise(env, deferred, -1, "argument must be a function");
             return result;
-        }        
+        }
     }
 
     if (opID.empty()) {
@@ -146,6 +203,50 @@ TsfRegistration CreateTSF(napi_env env, const std::string& opID, napi_value jsCB
     napi_threadsafe_function tsf;
     napi_status status = napi_create_threadsafe_function(env, jsCB, NULL, resource_name, 0, 1, NULL,NULL, NULL,
                                                          jsCB != nullptr ? OnCallJSSISSI: OnCallJSSISS, &tsf);
+    if (status != napi_ok || tsf == nullptr) {
+        RejectPromise(env, deferred, -1, "Failed to create threadsafe function");
+        return result;
+    }
+    getTsfMap().insert(opID, new TSFData(tsf, deferred));
+    result.should_proceed = true;
+    return result;
+}
+
+// 创建上传进度的 TSF（使用 UploadProgressData 和 OnCallJSUploadProgress）
+TsfRegistration CreateUploadTSF(napi_env env, const std::string& opID, napi_value jsCB) {
+    napi_deferred deferred;
+    napi_value promise;
+    napi_create_promise(env, &deferred, &promise);
+    TsfRegistration result{promise, false};
+
+    if (jsCB != nullptr) {
+        napi_valuetype type;
+        napi_typeof(env, jsCB, &type);
+        if (type != napi_function) {
+            RejectPromise(env, deferred, -1, "argument must be a function");
+            return result;
+        }
+    }
+
+    if (opID.empty()) {
+        RejectPromise(env, deferred, -1, "operationID cannot be empty");
+        return result;
+    }
+    TSFData *tsfCheck = nullptr;
+    if (getTsfMap().find(opID, tsfCheck)) {
+        RejectPromise(env, deferred, -1, "operationID is duplicate");
+        return result;
+    }
+    napi_value resource_name;
+    napi_create_string_utf8(
+        env,
+        opID.c_str(),
+        NAPI_AUTO_LENGTH,
+        &resource_name
+    );
+    napi_threadsafe_function tsf;
+    napi_status status = napi_create_threadsafe_function(env, jsCB, NULL, resource_name, 0, 1, NULL, NULL, NULL,
+                                                         OnCallJSUploadProgress, &tsf);
     if (status != napi_ok || tsf == nullptr) {
         RejectPromise(env, deferred, -1, "Failed to create threadsafe function");
         return result;
@@ -197,57 +298,6 @@ TsfRegistration CreateTSFWithMessage(napi_env env, const std::string& opID, napi
     getTsfMap().insert(opID, new TSFData(tsf, deferred, message));
     result.should_proceed = true;
     return result;
-}
-
-napi_ref g_progressCallbackRef = nullptr;  // 进度回调引用
-napi_env g_progressCallbackEnv = nullptr;
-std::string g_progressOpID;  // 存储当前 progress 回调的 operationID
-
-void SendProgressEvent(int eventCode, const std::string& operationID, const std::string& payload) {
-    if (g_progressCallbackRef == nullptr) return;
-
-    napi_handle_scope scope = nullptr;
-    napi_status status = napi_open_handle_scope(g_progressCallbackEnv, &scope);
-    if (status != napi_ok || scope == nullptr) return;
-
-    napi_value callback = nullptr;
-    status = napi_get_reference_value(g_progressCallbackEnv, g_progressCallbackRef, &callback);
-    if (status != napi_ok || callback == nullptr) {
-        napi_close_handle_scope(g_progressCallbackEnv, scope);
-        return;
-    }
-
-    napi_value operationIDVal = SetJSString(g_progressCallbackEnv, operationID);
-    napi_value payloadVal = SetJSString(g_progressCallbackEnv, payload);
-    napi_value eventCodeVal = SetJSInt32(g_progressCallbackEnv, eventCode);
-
-    napi_value global = nullptr;
-    napi_get_global(g_progressCallbackEnv, &global);
-
-    napi_value argv[3] = { eventCodeVal, operationIDVal, payloadVal };
-    napi_call_function(g_progressCallbackEnv, global, callback, 3, argv, nullptr);
-
-    napi_close_handle_scope(g_progressCallbackEnv, scope);
-}
-
-void SetProgressCallback(napi_env env, napi_value callback, const std::string& opID) {
-    if (g_progressCallbackRef != nullptr) {
-        napi_delete_reference(env, g_progressCallbackRef);
-    }
-    napi_create_reference(env, callback, 1, &g_progressCallbackRef);
-    g_progressCallbackEnv = env;
-    g_progressOpID = opID;  // 存储 operationID
-}
-
-// 符合 CB_I_S 签名的进度回调（C 风格）
-void UploadProgressCallback(int eventCode, char* data) {
-    std::string payload = data ? std::string(data) : "";
-    SendProgressEvent(eventCode, g_progressOpID, payload);  // 使用存储的 operationID
-}
-
-// 注册上传进度回调（返回函数指针给 C 库调用）
-CB_I_S GetUploadProgressCallback() {
-    return UploadProgressCallback;
 }
 
 void RegisterSISSI(char *opID, int errCode, char* errMsg, char* data, int progress) {

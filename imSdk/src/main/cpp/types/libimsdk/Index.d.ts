@@ -1016,20 +1016,20 @@ export function getConversationIdBySessionType(operationID: string, sourceID: st
  * 上传文件
  * @param operationID - 唯一操作标识
  * @param req - 上传请求 JSON 字符串 (包含 name, contentType, uuid, filepath, cause)
- * @param uploadCallback - 上传进度回调 (progress: number, data: string)
+ * @param onProgress - 上传进度回调 (data: string) => void
  * @returns Promise<string>
  */
-export function uploadFile(operationID: string, req: string, uploadCallback: (progress: number, data: string) => void): Promise<string>;
+export function uploadFile(operationID: string, req: string, onProgress: (data: string) => void): Promise<string>;
 
 /**
  * 上传日志
  * @param operationID - 唯一操作标识
  * @param line - 行号
  * @param ex - 扩展信息
- * @param uploadLogProgressCallback - 上传进度回调 (progress: number, data: string)
+ * @param onProgress - 上传进度回调 (data: string) => void
  * @returns Promise<string>
  */
-export function uploadLogs(operationID: string, line: number, ex: string, uploadLogProgressCallback: (progress: number, data: string) => void): Promise<string>;
+export function uploadLogs(operationID: string, line: number, ex: string, onProgress: (data: string) => void): Promise<string>;
 
 /**
  * 日志

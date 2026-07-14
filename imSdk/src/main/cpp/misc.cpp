@@ -201,9 +201,9 @@ napi_value GetSelfUserInfo(napi_env env, napi_callback_info info) {
 上传文件.
 @param operationID - 唯一操作标识
 @param req - 上传请求JSON字符串
-@param onProgress - 进度回调 (event: number, operationID: string, data: string) => void
+@param onProgress - 进度回调 (data: { progress: number, info: string }) => void
 @returns Promise<string>
-@signature export function uploadFile(operationID: string, req: string, onProgress: (event: number, operationID: string, data: string) => void): Promise<string>;
+@signature export function uploadFile(operationID: string, req: string, onProgress: (data: string) => void): Promise<string>;
 */
 napi_value UploadFile(napi_env env, napi_callback_info info) {
     constexpr size_t kArgc = 3;
@@ -218,21 +218,15 @@ napi_value UploadFile(napi_env env, napi_callback_info info) {
     auto req = GetJSString(env, args[1]);
     napi_value onProgress = args[2];
 
-    // 设置进度回调
-    if (onProgress != nullptr) {
-        napi_valuetype type;
-        napi_typeof(env, onProgress, &type);
-        if (type == napi_function) {
-            SetProgressCallback(env, onProgress, opID);
-        }
-    }
-
-    auto result = CreateTSF(env, opID, nullptr);
+    // 使用 CreateUploadTSF 创建线程安全函数（使用 OnCallJSUploadProgress 回调）
+    auto result = CreateUploadTSF(env, opID, onProgress);
     if (result.should_proceed) {
+        // 设置当前上传操作的 opID（供 CB_I_S 适配器使用）
+        g_currentUploadOpID = opID;
         upload_file(RegisterSISS,
                     const_cast<char*>(opID.c_str()),
                     const_cast<char*>(req.c_str()),
-                    GetUploadProgressCallback());  // 使用进度回调
+                    UploadProgressCBAdapter);  // 使用 CB_I_S 适配器
     }
     return result.promise;
 }
@@ -291,9 +285,9 @@ napi_value SetAppBadge(napi_env env, napi_callback_info info) {
 @param operationID - 唯一操作标识
 @param line - 日志行数
 @param ex - 额外信息
-@param onProgress - 进度回调 (event: number, operationID: string, data: string) => void
+@param onProgress - 进度回调 (data: string) => void
 @returns Promise<string>
-@signature export function uploadLogs(operationID: string, line: number, ex: string, onProgress: (event: number, operationID: string, data: string) => void): Promise<string>;
+@signature export function uploadLogs(operationID: string, line: number, ex: string, onProgress: (data: string) => void): Promise<string>;
 */
 napi_value UploadLogs(napi_env env, napi_callback_info info) {
     constexpr size_t kArgc = 4;
@@ -309,22 +303,16 @@ napi_value UploadLogs(napi_env env, napi_callback_info info) {
     auto ex = GetJSString(env, args[2]);
     napi_value onProgress = args[3];
 
-    // 设置进度回调
-    if (onProgress != nullptr) {
-        napi_valuetype type;
-        napi_typeof(env, onProgress, &type);
-        if (type == napi_function) {
-            SetProgressCallback(env, onProgress, opID);
-        }
-    }
-
-    auto result = CreateTSF(env, opID, nullptr);
+    // 使用 CreateUploadTSF 创建线程安全函数（使用 OnCallJSUploadProgress 回调）
+    auto result = CreateUploadTSF(env, opID, onProgress);
     if (result.should_proceed) {
+        // 设置当前上传操作的 opID（供 CB_I_S 适配器使用）
+        g_currentUploadOpID = opID;
         upload_logs(RegisterSISS,
                     const_cast<char*>(opID.c_str()),
                     line,
                     const_cast<char*>(ex.c_str()),
-                    GetUploadProgressCallback());
+                    UploadProgressCBAdapter);  // 使用 CB_I_S 适配器
     }
     return result.promise;
 }

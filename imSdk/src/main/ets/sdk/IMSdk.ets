@@ -808,15 +808,15 @@ export class IMSdk extends Listener{
   }
 
   async uploadFile(data: UploadFileParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.uploadFile(operationID, JSON.stringify(data), (progress: number, info: string) => {
-      Logger.print(`uploadFile progress: ${progress}, info: ${info}`);
+    const result = await imapi.uploadFile(operationID, JSON.stringify(data), (data: string) => {
+      Logger.print(`uploadFile progress: ${data}`);
     });
     return result;
   }
 
   async uploadLogs(data: UploadLogsParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.uploadLogs(operationID, data.line, data.ex ?? '', (progress: number, info: string) => {
-      Logger.print(`uploadLogs progress: ${progress}, info: ${info}`);
+    const result = await imapi.uploadLogs(operationID, data.line, data.ex ?? '', (data: string) => {
+      Logger.print(`uploadLogs progress: ${data}`);
     });
     return result;
   }
