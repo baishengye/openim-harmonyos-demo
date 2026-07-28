@@ -1,33 +1,31 @@
-//
-// Created on 2025/12/29.
-//
-// Node APIs are not fully supported. To solve the compilation error of the interface cannot be found,
-// please include "napi/native_api.h".
-#include <string>
-#include <unordered_map>
-#include "hilog/log.h" 
+#ifndef UTILS_H
+#define UTILS_H
+
+#include "libs/include/libopenimsdk.h"
 #include "napi/native_api.h"
-#include "libopenimsdk.h"
-#include <mutex>
-#ifndef IMDEMO_UTILS_H
-#define IMDEMO_UTILS_H
+#include <string>
 
-#undef LOG_DOMAIN
-#undef LOG_TAG
-#define LOG_DOMAIN 0x3200  // 全局domain宏，标识业务领域
-#define LOG_TAG "IMSDK"   // 全局tag宏，标识模块日志tag
+// Get values from JavaScript
+std::string GetStringFromJS(napi_env env, napi_value value);
+int GetIntFromJS(napi_env env, napi_value value);
+long long GetInt64FromJS(napi_env env, napi_value value);
+bool GetBoolFromJS(napi_env env, napi_value value);
+double GetDoubleFromJS(napi_env env, napi_value value);
 
-#define NO_ERR 0
-#define NO_PROGRESS 0
-#define NO_ERR_MSG ""
-#define ARG_ERR -1
-#define NO_DATA std::string("")
+// Create JavaScript values
+napi_value CreateJSString(napi_env env, const std::string& str);
+napi_value CreateJSInt(napi_env env, int val);
+napi_value CreateJSInt64(napi_env env, long long val);
+napi_value CreateJSDouble(napi_env env, double val);
+napi_value CreateJSBool(napi_env env, bool val);
+napi_value CreateJSUndefined(napi_env env);
+napi_value CreateJSNull(napi_env env);
+napi_value CreateJSError(napi_env env, int errCode, const char* errMsg);
 
-std::string GetJSString(napi_env env, napi_value value);
-int32_t GetJSInt32(napi_env env, napi_value value);
-napi_value SetJSString(napi_env env, const std::string& str);
-napi_value SetJSInt32(napi_env env, int32_t value);
-int64_t GetJSInt64(napi_env env, napi_value value);
-double GetJSDouble(napi_env env, napi_value value);
-bool GetJSBoolean(napi_env env, napi_value value);
-#endif //IMDEMO_UTILS_H
+// Utility functions
+void SafeStringCopy(char* dest, const char* src, size_t destSize);
+std::string GenerateOperationID();
+void LogInfo(const char* tag, const char* fmt, ...);
+void LogError(const char* tag, const char* fmt, ...);
+
+#endif // UTILS_H

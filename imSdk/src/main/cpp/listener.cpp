@@ -1,190 +1,235 @@
-//
-// Created on 2025/12/28.
-//
-// Node APIs are not fully supported. To solve the compilation error of the interface cannot be found,
-// please include "napi/native_api.h".
-
-#include "listener.h"
+#include "libs/include/libopenimsdk.h"
+#include "napi/native_api.h"
+#include "hilog/log.h"
+#include "callback.h"
 #include "utils.h"
-static napi_threadsafe_function tsfOnListener = nullptr;
 
-void releaseTSF() {
-    if (tsfOnListener != nullptr) {
-        napi_release_threadsafe_function(tsfOnListener,  napi_tsfn_release);
-    }
-}
-static void callJsCallbackIS(napi_env env, napi_value js_callback, void* /*context*/, void* data) {
-    if (!data) {
-        OH_LOG_INFO(LOG_APP, "callJsCallbackIS received null data");
-        return;
-    }
+// ==================== NAPI Functions ====================
 
-    auto* payload = static_cast<CBDataIS*>(data);
-    //OH_LOG_INFO(LOG_APP, "executing js callback, event:%{public}d, data:%{public}s",payload->event, payload->data.c_str());
-
-    napi_value argv[2];
-    napi_status value1 = napi_create_int64(env, payload->event, &argv[0]);
-    napi_status value2 = napi_create_string_utf8(env, payload->data.c_str(), NAPI_AUTO_LENGTH, &argv[1]);
-
-    if (value1 != napi_ok || value2 != napi_ok) {
-        OH_LOG_INFO(LOG_APP, "failed to create js callback args");
-        delete payload;
-        return;
-    }
-
-    napi_value global;
-    napi_get_global(env, &global);
-
-    napi_value result;
-    napi_status call_status = napi_call_function(env, global, js_callback, 2, argv, &result);
-    if (call_status != napi_ok) {
-        OH_LOG_INFO(LOG_APP, "failed to call js callback function");
-        napi_value error;
-        napi_get_and_clear_last_exception(env, &error);
-    }
-
-    delete payload;    
-}
-static void callJsCallbackSISSS(napi_env env, napi_value js_callback, void* /*context*/, void* data) {
-    if (!data) {
-        OH_LOG_INFO(LOG_APP, "callJsCallbackIS received null data");
-        return;
-    }
-
-    auto* payload = static_cast<CBDataSISS*>(data);
-    //OH_LOG_INFO(LOG_APP, "executing js callback, operationID:%{public}s, errCode:%{public}d, errMsg:%{public}s, data:%{public}s",
-    //            payload->operationID.c_str(), payload->errCode, payload->errMsg.c_str(), payload->data.c_str());
-
-    napi_value argv[4];
-    napi_status value1 = napi_create_string_utf8(env, payload->operationID.c_str(), NAPI_AUTO_LENGTH, &argv[0]);
-    napi_status value2 = napi_create_int64(env, payload->errCode, &argv[1]);
-    napi_status value3 = napi_create_string_utf8(env, payload->errMsg.c_str(), NAPI_AUTO_LENGTH, &argv[2]);
-    napi_status value4 = napi_create_string_utf8(env, payload->data.c_str(), NAPI_AUTO_LENGTH, &argv[3]);
-
-    if (value1 != napi_ok || value2 != napi_ok || value3 != napi_ok || value4 != napi_ok) {
-        OH_LOG_INFO(LOG_APP, "failed to create js callback args");
-        delete payload;
-        return;
-    }
-
-    napi_value global;
-    napi_get_global(env, &global);
-
-    napi_value result;
-    napi_status call_status = napi_call_function(env, global, js_callback, 4, argv, &result);
-    if (call_status != napi_ok) {
-        OH_LOG_INFO(LOG_APP, "failed to call js callback function");
-        napi_value error;
-        napi_get_and_clear_last_exception(env, &error);
-    }
-
-    delete payload;     
-}
-
-static napi_value setListener(napi_env env, napi_callback_info info, char *tsf_name, napi_threadsafe_function_call_js call_js_cb) {
+napi_value NAPI_setConnListener(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value args[1];
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    if (argc != 1) {
-        napi_throw_error(env, nullptr, "expected 1 argument");
+
+    if (!args[0]) {
+        DeleteConnListener();
         return nullptr;
     }
 
-    napi_valuetype type;
-    napi_typeof(env, args[0], &type);
-    if (type != napi_function) {
-        napi_throw_error(env, nullptr, "argument must be a function");
+    napi_value listener = args[0];
+    // 提取各个回调方法
+    napi_value onConnecting, onConnectSuccess, onConnectFailed, onKickedOffline, onUserTokenExpired, onUserTokenInvalid;
+    napi_get_named_property(env, listener, "onConnecting", &onConnecting);
+    napi_get_named_property(env, listener, "onConnectSuccess", &onConnectSuccess);
+    napi_get_named_property(env, listener, "onConnectFailed", &onConnectFailed);
+    napi_get_named_property(env, listener, "onKickedOffline", &onKickedOffline);
+    napi_get_named_property(env, listener, "onUserTokenExpired", &onUserTokenExpired);
+    napi_get_named_property(env, listener, "onUserTokenInvalid", &onUserTokenInvalid);
+
+    StoreConnListener(env, onConnecting, onConnectSuccess, onConnectFailed, onKickedOffline, onUserTokenExpired, onUserTokenInvalid);
+
+    return nullptr;
+}
+
+napi_value NAPI_setAdvancedMsgListener(napi_env env, napi_callback_info info) {
+    size_t argc = 1;
+    napi_value args[1];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+
+    if (!args[0]) {
+        DeleteMsgListener();
         return nullptr;
     }
 
-    if (tsfOnListener != nullptr) {
-        OH_LOG_INFO(LOG_APP, "tsf [%{public}s] default is not null", tsf_name);
-        napi_release_threadsafe_function(tsfOnListener, napi_tsfn_release);
-        tsfOnListener = nullptr;
-    }
-    napi_value resource_name;
-    napi_create_string_utf8(
-        env,
-        tsf_name,
-        NAPI_AUTO_LENGTH,
-        &resource_name
-    );
-    napi_status status = napi_create_threadsafe_function(
-        env,
-        args[0],
-        nullptr,
-        resource_name,
-        0,
-        1,
-        nullptr,
-        nullptr,
-        nullptr,
-        call_js_cb,
-        &tsfOnListener
-    );
+    napi_value listener = args[0];
+    // 提取各个回调方法
+    napi_value onRecvNewMsg, onRecvReceipt, onMsgRevoked, onRecvOffline, onMsgDeleted, onRecvOnline;
+    napi_get_named_property(env, listener, "onRecvNewMessage", &onRecvNewMsg);
+    napi_get_named_property(env, listener, "onRecvC2CReadReceipt", &onRecvReceipt);
+    napi_get_named_property(env, listener, "onNewRecvMessageRevoked", &onMsgRevoked);
+    napi_get_named_property(env, listener, "onRecvOfflineNewMessage", &onRecvOffline);
+    napi_get_named_property(env, listener, "onMsgDeleted", &onMsgDeleted);
+    napi_get_named_property(env, listener, "onRecvOnlineOnlyMessage", &onRecvOnline);
 
-    if (status != napi_ok || tsfOnListener == nullptr) {
-        OH_LOG_ERROR(LOG_APP, "tsf [%{public}s] create failed, status=%{public}d", tsf_name, static_cast<int>(status));
-        napi_throw_error(env, nullptr, "failed to create tsf");
+    StoreMsgListener(env, onRecvNewMsg, onRecvReceipt, onMsgRevoked, onRecvOffline, onMsgDeleted, onRecvOnline);
+
+    return nullptr;
+}
+
+napi_value NAPI_setBatchMsgListener(napi_env env, napi_callback_info info) {
+    // BatchMsgListener 暂未在 callback.cpp 中实现，保持原有逻辑
+    return nullptr;
+}
+
+napi_value NAPI_setConversationListener(napi_env env, napi_callback_info info) {
+    size_t argc = 1;
+    napi_value args[1];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+
+    if (!args[0]) {
+        DeleteConvListener();
         return nullptr;
     }
 
-    OH_LOG_INFO(LOG_APP, "im_sdk tsf [%{public}s] create success", tsf_name);
-    return nullptr;   
-}
-static void onListenerIS(int event, char* data, napi_threadsafe_function tsf) {
-    if (tsfOnListener == nullptr) {
-        OH_LOG_INFO(LOG_APP, "im_sdk onListenerIS event: %{public}d, data: %{public}s, onListenerIS == nullptr", event, data);
-        return;
-    }
-    auto* payload = new CBDataIS{event, data ? std::string(data) : std::string()};
-    napi_status status = napi_call_threadsafe_function(tsf, payload, napi_tsfn_nonblocking);
+    napi_value listener = args[0];
+    // 提取各个回调方法
+    napi_value onSyncStart, onSyncFinish, onSyncProgress, onSyncFailed, onConvChanged, onNewConv, onUnreadChanged, onInputStatus;
+    napi_get_named_property(env, listener, "onSyncServerStart", &onSyncStart);
+    napi_get_named_property(env, listener, "onSyncServerFinish", &onSyncFinish);
+    napi_get_named_property(env, listener, "onSyncServerProgress", &onSyncProgress);
+    napi_get_named_property(env, listener, "onSyncServerFailed", &onSyncFailed);
+    napi_get_named_property(env, listener, "onConversationChanged", &onConvChanged);
+    napi_get_named_property(env, listener, "onNewConversation", &onNewConv);
+    napi_get_named_property(env, listener, "onTotalUnreadMessageCountChanged", &onUnreadChanged);
+    napi_get_named_property(env, listener, "onConversationUserInputStatusChanged", &onInputStatus);
 
-    if (status != napi_ok) {
-        OH_LOG_INFO(LOG_APP, "napi_call_threadsafe_function failed: %{public}d", static_cast<int>(status));
-        delete payload;
-    }
-}
-static void onListenerSISS(char * operationID ,int errCode,char * errMsg,char *data, napi_threadsafe_function tsf) {
-    if (tsf == nullptr) {
-        return;
-    }
-    auto* payload = new CBDataSISS{
-        operationID ? std::string(operationID) : std::string(), 
-        errCode,
-        errMsg ? std::string(errMsg) : std::string(), 
-        data ? std::string(data) : std::string(),
-    };
-    napi_status status = napi_call_threadsafe_function(tsf, payload, napi_tsfn_nonblocking);
+    StoreConvListener(env, onSyncStart, onSyncFinish, onSyncProgress, onSyncFailed, onConvChanged, onNewConv, onUnreadChanged, onInputStatus);
 
-    if (status != napi_ok) {
-        OH_LOG_INFO(LOG_APP, "napi_call_threadsafe_function failed: %{public}d", static_cast<int>(status));
-        delete payload;
-    }
-}
-void onListener(int event, char* data) {
-    //OH_LOG_INFO(LOG_APP, "imsdk onListener event: %{public}d, data: %{public}s", event, data);
-    onListenerIS(event, data, tsfOnListener);
+    return nullptr;
 }
 
-/*
-@napi-ts
-设置连接状态回调监听函数.
-@param callback - 监听函数
-@param callback.event - 状态类型
-@param callback.data - 状态描述
-@returns void
-@signature export function setListener(callback: (event: number, data: string) => void): void;
-*/
-napi_value setListener(napi_env env, napi_callback_info info) {
-    char tsf_name[] = "tsfOnListener";
-    napi_value result = setListener(env, info, tsf_name, callJsCallbackIS);    
-    set_group_listener(onListener);
-    set_conversation_listener(onListener);
-    set_advanced_msg_listener(onListener);
-    set_batch_msg_listener(onListener);
-    set_user_listener(onListener);
-    set_friend_listener(onListener);
-    set_custom_business_listener(onListener);
-    return result;
+napi_value NAPI_setGroupListener(napi_env env, napi_callback_info info) {
+    size_t argc = 1;
+    napi_value args[1];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+
+    if (!args[0]) {
+        DeleteGroupListener();
+        return nullptr;
+    }
+
+    napi_value listener = args[0];
+    // 提取各个回调方法
+    napi_value onJoinedAdd, onJoinedDel, onMemberAdd, onMemberDel, onAppAdd, onAppDel, onInfoChanged, onDismissed, onMemberInfo, onAppAccept, onAppReject;
+    napi_get_named_property(env, listener, "onJoinedGroupAdded", &onJoinedAdd);
+    napi_get_named_property(env, listener, "onJoinedGroupDeleted", &onJoinedDel);
+    napi_get_named_property(env, listener, "onGroupMemberAdded", &onMemberAdd);
+    napi_get_named_property(env, listener, "onGroupMemberDeleted", &onMemberDel);
+    napi_get_named_property(env, listener, "onGroupApplicationAdded", &onAppAdd);
+    napi_get_named_property(env, listener, "onGroupApplicationDeleted", &onAppDel);
+    napi_get_named_property(env, listener, "onGroupInfoChanged", &onInfoChanged);
+    napi_get_named_property(env, listener, "onGroupDismissed", &onDismissed);
+    napi_get_named_property(env, listener, "onGroupMemberInfoChanged", &onMemberInfo);
+    napi_get_named_property(env, listener, "onGroupApplicationAccepted", &onAppAccept);
+    napi_get_named_property(env, listener, "onGroupApplicationRejected", &onAppReject);
+
+    StoreGroupListener(env, onJoinedAdd, onJoinedDel, onMemberAdd, onMemberDel, onAppAdd, onAppDel, onInfoChanged, onDismissed, onMemberInfo, onAppAccept, onAppReject);
+
+    return nullptr;
+}
+
+napi_value NAPI_setFriendListener(napi_env env, napi_callback_info info) {
+    size_t argc = 1;
+    napi_value args[1];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+
+    if (!args[0]) {
+        DeleteFriendListener();
+        return nullptr;
+    }
+
+    napi_value listener = args[0];
+    // 提取各个回调方法
+    napi_value onAppAdd, onAppDel, onAppAccept, onAppReject, onFriendAdd, onFriendDel, onFriendInfo, onBlackAdd, onBlackDel;
+    napi_get_named_property(env, listener, "onFriendApplicationAdded", &onAppAdd);
+    napi_get_named_property(env, listener, "onFriendApplicationDeleted", &onAppDel);
+    napi_get_named_property(env, listener, "onFriendApplicationAccepted", &onAppAccept);
+    napi_get_named_property(env, listener, "onFriendApplicationRejected", &onAppReject);
+    napi_get_named_property(env, listener, "onFriendAdded", &onFriendAdd);
+    napi_get_named_property(env, listener, "onFriendDeleted", &onFriendDel);
+    napi_get_named_property(env, listener, "onFriendInfoChanged", &onFriendInfo);
+    napi_get_named_property(env, listener, "onBlackAdded", &onBlackAdd);
+    napi_get_named_property(env, listener, "onBlackDeleted", &onBlackDel);
+
+    StoreFriendListener(env, onAppAdd, onAppDel, onAppAccept, onAppReject, onFriendAdd, onFriendDel, onFriendInfo, onBlackAdd, onBlackDel);
+
+    return nullptr;
+}
+
+napi_value NAPI_setUserListener(napi_env env, napi_callback_info info) {
+    size_t argc = 1;
+    napi_value args[1];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+
+    if (!args[0]) {
+        DeleteUserListener();
+        return nullptr;
+    }
+
+    napi_value listener = args[0];
+    // 提取各个回调方法
+    napi_value onSelfInfo, onUserStatus;
+    napi_get_named_property(env, listener, "onSelfInfoUpdated", &onSelfInfo);
+    napi_get_named_property(env, listener, "onUserStatusChanged", &onUserStatus);
+
+    StoreUserListener(env, onSelfInfo, onUserStatus);
+
+    return nullptr;
+}
+
+napi_value NAPI_setSignalingListener(napi_env env, napi_callback_info info) {
+    size_t argc = 1;
+    napi_value args[1];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+
+    if (!args[0]) {
+        DeleteSignalingListener();
+        return nullptr;
+    }
+
+    napi_value listener = args[0];
+    // 提取各个回调方法
+    napi_value onReceiveNewInvitation, onInviteeAccepted, onInviteeAcceptedByOtherDevice, onInviteeRejected, onInviteeRejectedByOtherDevice, onInvitationCancelled, onInvitationTimeout, onHangUp, onRoomParticipantConnected, onRoomParticipantDisconnected;
+    napi_get_named_property(env, listener, "onReceiveNewInvitation", &onReceiveNewInvitation);
+    napi_get_named_property(env, listener, "onInviteeAccepted", &onInviteeAccepted);
+    napi_get_named_property(env, listener, "onInviteeAcceptedByOtherDevice", &onInviteeAcceptedByOtherDevice);
+    napi_get_named_property(env, listener, "onInviteeRejected", &onInviteeRejected);
+    napi_get_named_property(env, listener, "onInviteeRejectedByOtherDevice", &onInviteeRejectedByOtherDevice);
+    napi_get_named_property(env, listener, "onInvitationCancelled", &onInvitationCancelled);
+    napi_get_named_property(env, listener, "onInvitationTimeout", &onInvitationTimeout);
+    napi_get_named_property(env, listener, "onHangUp", &onHangUp);
+    napi_get_named_property(env, listener, "onRoomParticipantConnected", &onRoomParticipantConnected);
+    napi_get_named_property(env, listener, "onRoomParticipantDisconnected", &onRoomParticipantDisconnected);
+
+    StoreSignalingListener(env, onReceiveNewInvitation, onInviteeAccepted, onInviteeAcceptedByOtherDevice, onInviteeRejected, onInviteeRejectedByOtherDevice, onInvitationCancelled, onInvitationTimeout, onHangUp, onRoomParticipantConnected, onRoomParticipantDisconnected);
+
+    return nullptr;
+}
+
+napi_value NAPI_setCustomBusinessListener(napi_env env, napi_callback_info info) {
+    size_t argc = 1;
+    napi_value args[1];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+
+    if (!args[0]) {
+        DeleteCustomBusinessListener();
+        return nullptr;
+    }
+
+    napi_value listener = args[0];
+    napi_value onRecvCustomBusinessMessage;
+    napi_get_named_property(env, listener, "onRecvCustomBusinessMessage", &onRecvCustomBusinessMessage);
+
+    StoreCustomBusinessListener(env, onRecvCustomBusinessMessage);
+
+    return nullptr;
+}
+
+napi_value NAPI_setMsgKvInfoListener(napi_env env, napi_callback_info info) {
+    size_t argc = 1;
+    napi_value args[1];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+
+    if (!args[0]) {
+        DeleteMsgKvInfoListener();
+        return nullptr;
+    }
+
+    napi_value listener = args[0];
+    napi_value onMessageKvInfoChanged;
+    napi_get_named_property(env, listener, "onMessageKvInfoChanged", &onMessageKvInfoChanged);
+
+    StoreMsgKvInfoListener(env, onMessageKvInfoChanged);
+
+    return nullptr;
 }

@@ -1,360 +1,210 @@
 //
-// Created on 2025/12/31.
+// Created on 2026/7/27.
 //
-// Node APIs are not fully supported. To solve the compilation error of the interface cannot be found,
-// please include "napi/native_api.h".
 
-#include "misc.h"
+#include "libs/include/libopenimsdk.h"
+#include "napi/native_api.h"
+#include "hilog/log.h"
 #include "callback.h"
+#include "utils.h"
+#include <string>
+#include <chrono>
 
-/*
-@napi-ts
-订阅用户在线状态.
-@param operationID - 唯一操作标识
-@param userIDs - 用户ID列表
-@returns Promise<string>
-@signature export function subscribeUsersStatus(operationID: string, userIDs: string): Promise<string>;
-*/
-napi_value SubscribeUsersStatus(napi_env env, napi_callback_info info) {
-    constexpr size_t kArgc = 2;
-    napi_value args[kArgc];
-    size_t argc = kArgc;
+// ==================== Misc Functions ====================
+
+napi_value NAPI_updateFcmToken(napi_env env, napi_callback_info info) {
+    size_t argc = 4;
+    napi_value args[4];
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    if (argc < kArgc) {
-        ThrowError(env, ARG_ERR, "missing arguments");
-        return nullptr;
+    std::string fcmToken = GetStringFromJS(env, args[2]);
+    long long expireTime = GetInt64FromJS(env, args[3]);
+    std::string operationID = GetStringFromJS(env, args[1]);
+    if (operationID.empty()) {
+        operationID = "napi_updateFcmToken_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
-    auto operationID = GetJSString(env, args[0]);
-    auto userIDs = GetJSString(env, args[1]);
-    auto result = CreateTSF(env, operationID, nullptr);
-    if (result.should_proceed) {
-        subscribe_users_status(RegisterSISS,
-                             const_cast<char*>(operationID.c_str()),
-                             const_cast<char*>(userIDs.c_str()));
-    }
-    return result.promise;   
+    int cbId = StoreBaseCallback(env, args[0]);
+    // New signature: UpdateFcmToken(int baseCallbackID, char* operationID, char* fcmToken, long long expireTime)
+    UpdateFcmToken(cbId, (char*)operationID.c_str(), (char*)fcmToken.c_str(), expireTime);
+    return CreateJSUndefined(env);
 }
 
-/*
-@napi-ts
-取消订阅用户在线状态.
-@param operationID - 唯一操作标识
-@param userIDs - 用户ID列表
-@returns Promise<string>
-@signature export function unSubscribeUsersStatus(operationID: string, userIDs: string): Promise<string>;
-*/
-napi_value UnSubscribeUsersStatus(napi_env env, napi_callback_info info) {
-    constexpr size_t kArgc = 2;
-    napi_value args[kArgc];
-    size_t argc = kArgc;
+napi_value NAPI_setAppBadge(napi_env env, napi_callback_info info) {
+    size_t argc = 3;
+    napi_value args[3];
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    if (argc < kArgc) {
-        ThrowError(env, ARG_ERR, "missing arguments");
-        return nullptr;
+    int appUnreadCount = GetIntFromJS(env, args[2]);
+    std::string operationID = GetStringFromJS(env, args[1]);
+    if (operationID.empty()) {
+        operationID = "napi_setAppBadge_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
-    auto operationID = GetJSString(env, args[0]);
-    auto userIDs = GetJSString(env, args[1]);
-    auto result = CreateTSF(env, operationID, nullptr);
-    if (result.should_proceed) {
-        unsubscribe_users_status(RegisterSISS,
-                             const_cast<char*>(operationID.c_str()),
-                             const_cast<char*>(userIDs.c_str()));
-    }
-    return result.promise;   
+    int cbId = StoreBaseCallback(env, args[0]);
+    // New signature: SetAppBadge(int baseCallbackID, char* operationID, int appUnreadCount)
+    SetAppBadge(cbId, (char*)operationID.c_str(), appUnreadCount);
+    return CreateJSUndefined(env);
 }
 
-/*
-@napi-ts
-获取订阅的用户在线状态.
-@param operationID - 唯一操作标识
-@returns Promise<string>
-@signature export function getSubscribeUsersStatus(operationID: string): Promise<string>;
-*/
-napi_value GetSubscribeUsersStatus(napi_env env, napi_callback_info info) {
-    constexpr size_t kArgc = 1;
-    napi_value args[kArgc];
-    size_t argc = kArgc;
+napi_value NAPI_uploadLogs(napi_env env, napi_callback_info info) {
+    size_t argc = 5;
+    napi_value args[5];
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    if (argc < kArgc) {
-        ThrowError(env, ARG_ERR, "missing arguments");
-        return nullptr;
+    std::string operationID = GetStringFromJS(env, args[1]);
+    if (operationID.empty()) {
+        operationID = "napi_uploadLogs_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
-    auto operationID = GetJSString(env, args[0]);
-    auto result = CreateTSF(env, operationID, nullptr);
-    if (result.should_proceed) {
-        get_subscribe_users_status(RegisterSISS,
-                             const_cast<char*>(operationID.c_str()));
-    }
-    return result.promise;   
+    int line = GetIntFromJS(env, args[2]);
+    std::string ex = GetStringFromJS(env, args[3]);
+    // args[0] = baseCallback, args[4] = uploadLogProgress
+    napi_value baseCallback = args[0];
+    napi_value uploadLogProgress = args[4];
+    // 提取 uploadLogProgress 中的 onProgress
+    napi_value onProgress;
+    napi_get_named_property(env, uploadLogProgress, "onProgress", &onProgress);
+    int baseCbId = StoreBaseCallback(env, baseCallback);
+    int uploadCbId = StoreUploadLogCallback(env, onProgress);
+    // New signature: UploadLogs(int baseCallbackID, int uploadLogCallbackID, char* operationID, int line, char* ex)
+    UploadLogs(baseCbId, uploadCbId, (char*)operationID.c_str(), line, (char*)ex.c_str());
+    return CreateJSUndefined(env);
 }
 
-/*
-@napi-ts
-获取指定用户在线状态.
-@param operationID - 唯一操作标识
-@param userIDs - 用户ID列表
-@returns Promise<string>
-@signature export function getUserStatus(operationID: string, userIDs: string): Promise<string>;
-*/
-napi_value GetUserStatus(napi_env env, napi_callback_info info) {
-    constexpr size_t kArgc = 2;
-    napi_value args[kArgc];
-    size_t argc = kArgc;
+napi_value NAPI_uploadFile(napi_env env, napi_callback_info info) {
+    size_t argc = 4;
+    napi_value args[4];
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    if (argc < kArgc) {
-        ThrowError(env, ARG_ERR, "missing arguments");
-        return nullptr;
+    std::string reqData = GetStringFromJS(env, args[2]);
+    std::string operationID = GetStringFromJS(env, args[1]);
+    if (operationID.empty()) {
+        operationID = "napi_uploadFile_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
-    auto operationID = GetJSString(env, args[0]);
-    auto userIDs = GetJSString(env, args[1]);
-    auto result = CreateTSF(env, operationID, nullptr);
-    if (result.should_proceed) {
-        get_user_status(RegisterSISS,
-                             const_cast<char*>(operationID.c_str()),
-                             const_cast<char*>(userIDs.c_str()));
+
+    // args[0] is baseCallback (onSuccess/onError), args[3] is uploadFileCallback
+    napi_value baseCallback = args[0];
+    napi_value uploadFileCallback = (argc > 3) ? args[3] : nullptr;
+
+    // 存储 Base 回调
+    int baseCbId = StoreBaseCallback(env, baseCallback);
+
+    // 从 uploadFileCallback 中提取 8 个回调方法
+    napi_value onOpen, onPartSize, onHashPartProgress, onHashPartComplete;
+    napi_value onUploadID, onUploadPartComplete, onUploadComplete, onComplete;
+
+    if (uploadFileCallback) {
+        napi_get_named_property(env, uploadFileCallback, "onOpen", &onOpen);
+        napi_get_named_property(env, uploadFileCallback, "onPartSize", &onPartSize);
+        napi_get_named_property(env, uploadFileCallback, "onHashPartProgress", &onHashPartProgress);
+        napi_get_named_property(env, uploadFileCallback, "onHashPartComplete", &onHashPartComplete);
+        napi_get_named_property(env, uploadFileCallback, "onUploadID", &onUploadID);
+        napi_get_named_property(env, uploadFileCallback, "onUploadPartComplete", &onUploadPartComplete);
+        napi_get_named_property(env, uploadFileCallback, "onUploadComplete", &onUploadComplete);
+        napi_get_named_property(env, uploadFileCallback, "onComplete", &onComplete);
     }
-    return result.promise;   
+
+    // 存储上传文件回调
+    int uploadCbId = StoreUploadCallbacks(
+        env, onOpen, onPartSize, onHashPartProgress, onHashPartComplete,
+        onUploadID, onUploadPartComplete, onUploadComplete, onComplete
+    );
+
+    // 调用 SDK
+    UploadFile(baseCbId, uploadCbId, (char*)operationID.c_str(), (char*)reqData.c_str());
+    return CreateJSUndefined(env);
 }
 
-/*
-@napi-ts
-获取用户信息.
-@param operationID - 唯一操作标识
-@param userIDs - 用户ID列表
-@returns Promise<string>
-@signature export function getUsersInfo(operationID: string, userIDs: string): Promise<string>;
-*/
-napi_value GetUsersInfo(napi_env env, napi_callback_info info) {
-    constexpr size_t kArgc = 2;
-    napi_value args[kArgc];
-    size_t argc = kArgc;
+napi_value NAPI_logs(napi_env env, napi_callback_info info) {
+    size_t argc = 7;
+    napi_value args[7];
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    if (argc < kArgc) {
-        ThrowError(env, ARG_ERR, "missing arguments");
-        return nullptr;
+    int cbId = StoreBaseCallback(env, args[0]);
+    int logLevel = GetIntFromJS(env, args[3]);
+    std::string file = GetStringFromJS(env, args[4]);
+    long long line = GetInt64FromJS(env, args[5]);
+    std::string msgs = GetStringFromJS(env, args[6]);
+    std::string err = GetStringFromJS(env, args[7]);
+    std::string operationID = GetStringFromJS(env, args[1]);
+    if (operationID.empty()) {
+        operationID = "napi_logs_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
-    auto operationID = GetJSString(env, args[0]);
-    auto userIDs = GetJSString(env, args[1]);
-    auto result = CreateTSF(env, operationID, nullptr);
-    if (result.should_proceed) {
-        get_users_info(RegisterSISS,
-                             const_cast<char*>(operationID.c_str()),
-                             const_cast<char*>(userIDs.c_str()));
-    }
-    return result.promise;
+    // New signature: Logs(int baseCallbackID, char* operationID, int logLevel, char* file, long long line, char* msgs, char* err, char* ex)
+    Logs(cbId, (char*)operationID.c_str(), logLevel, (char*)file.c_str(), line, (char*)msgs.c_str(), (char*)err.c_str(), nullptr);
+    return CreateJSUndefined(env);
 }
 
-/*
-@napi-ts
-设置我的信息.
-@param operationID - 唯一操作标识
-@param userInfo - 用户信息
-@returns Promise<string>
-@signature export function setSelfInfo(operationID: string, userInfo: string): Promise<string>;
-*/
-napi_value SetSelfInfo(napi_env env, napi_callback_info info) {
-    constexpr size_t kArgc = 2;
-    napi_value args[kArgc];
-    size_t argc = kArgc;
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    if (argc < kArgc) {
-        ThrowError(env, ARG_ERR, "missing arguments");
-        return nullptr;
-    }
-    auto operationID = GetJSString(env, args[0]);
-    auto userIDs = GetJSString(env, args[1]);
-    auto result = CreateTSF(env, operationID, nullptr);
-    if (result.should_proceed) {
-        set_self_info(RegisterSISS,
-                             const_cast<char*>(operationID.c_str()),
-                             const_cast<char*>(userIDs.c_str()));
-    }
-    return result.promise;
+napi_value NAPI_getSdkVersion(napi_env env, napi_callback_info info) {
+    char* version = GetSdkVersion();
+    std::string result = version ? version : "";
+    if (version) FreeString(version);
+    return CreateJSString(env, result);
 }
 
-/*
-@napi-ts
-获取我的信息.
-@param operationID - 唯一操作标识
-@returns Promise<string>
-@signature export function getSelfUserInfo(operationID: string): Promise<string>;
-*/
-napi_value GetSelfUserInfo(napi_env env, napi_callback_info info) {
-    constexpr size_t kArgc = 1;
-    napi_value args[kArgc];
-    size_t argc = kArgc;
+napi_value NAPI_unInitSDK(napi_env env, napi_callback_info info) {
+    size_t argc = 2;
+    napi_value args[2];
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    if (argc < kArgc) {
-        ThrowError(env, ARG_ERR, "missing arguments");
-        return nullptr;
+    std::string operationID = GetStringFromJS(env, args[1]);
+    if (operationID.empty()) {
+        operationID = "napi_unInitSDK_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
-    auto operationID = GetJSString(env, args[0]);
-    auto result = CreateTSF(env, operationID, nullptr);
-    if (result.should_proceed) {
-        get_self_user_info(RegisterSISS,
-                             const_cast<char*>(operationID.c_str()));
-    }
-    return result.promise;
-}
-/*
-@napi-ts
-上传文件.
-@param operationID - 唯一操作标识
-@param req - 上传请求JSON字符串
-@param onProgress - 进度回调 (data: { progress: number, info: string }) => void
-@returns Promise<string>
-@signature export function uploadFile(operationID: string, req: string, onProgress: (data: string) => void): Promise<string>;
-*/
-napi_value UploadFile(napi_env env, napi_callback_info info) {
-    constexpr size_t kArgc = 3;
-    napi_value args[kArgc];
-    size_t argc = kArgc;
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    if (argc < 2) {
-        ThrowError(env, ARG_ERR, "missing arguments");
-        return nullptr;
-    }
-    auto opID = GetJSString(env, args[0]);
-    auto req = GetJSString(env, args[1]);
-    napi_value onProgress = args[2];
-
-    // 使用 CreateUploadTSF 创建线程安全函数（使用 OnCallJSUploadProgress 回调）
-    auto result = CreateUploadTSF(env, opID, onProgress);
-    if (result.should_proceed) {
-        // 设置当前上传操作的 opID（供 CB_I_S 适配器使用）
-        g_currentUploadOpID = opID;
-        upload_file(RegisterSISS,
-                    const_cast<char*>(opID.c_str()),
-                    const_cast<char*>(req.c_str()),
-                    UploadProgressCBAdapter);  // 使用 CB_I_S 适配器
-    }
-    return result.promise;
-}
-napi_value UpdateFcmToken(napi_env env, napi_callback_info info) {
-    constexpr size_t kArgc = 3;
-    napi_value args[kArgc];
-    size_t argc = kArgc;
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    if (argc < kArgc) {
-        ThrowError(env, ARG_ERR, "missing arguments");
-        return nullptr;
-    }
-    auto operationID = GetJSString(env, args[0]);
-    auto conversationID = GetJSString(env, args[1]);
-    auto expireTime = GetJSInt64(env, args[2]);
-    auto result = CreateTSF(env, operationID, nullptr);
-    if (result.should_proceed) {
-        update_fcm_token(RegisterSISS,
-                             const_cast<char*>(operationID.c_str()),
-                             const_cast<char*>(conversationID.c_str()),
-                             expireTime);
-    }
-    return result.promise;
+    // New signature: UnInitSDK(char* operationID)
+    UnInitSDK((char*)operationID.c_str());
+    return CreateJSUndefined(env);
 }
 
-/*
-@napi-ts
-设置APP角标.
-@param operationID - 唯一操作标识
-@param appUnreadCount - 未读数量
-@returns Promise<string>
-@signature export function setAppBadge(operationID: string, appUnreadCount: number): Promise<string>;
-*/
-napi_value SetAppBadge(napi_env env, napi_callback_info info) {
-    constexpr size_t kArgc = 2;
-    napi_value args[kArgc];
-    size_t argc = kArgc;
+napi_value NAPI_getAtAllTag(napi_env env, napi_callback_info info) {
+    size_t argc = 2;
+    napi_value args[2];
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    if (argc < kArgc) {
-        ThrowError(env, ARG_ERR, "missing arguments");
-        return nullptr;
+    std::string operationID = GetStringFromJS(env, args[1]);
+    if (operationID.empty()) {
+        operationID = "napi_getAtAllTag_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
-    auto operationID = GetJSString(env, args[0]);
-    auto appUnreadCount = GetJSInt32(env, args[1]);
-    auto result = CreateTSF(env, operationID, nullptr);
-    if (result.should_proceed) {
-        set_app_Badge(RegisterSISS,
-                             const_cast<char*>(operationID.c_str()),
-                             appUnreadCount);
-    }
-    return result.promise;
+    char* result = GetAtAllTag((char*)operationID.c_str());
+    std::string tag = result ? result : "";
+    if (result) FreeString(result);
+    return CreateJSString(env, tag);
 }
-/*
-@napi-ts
-上传日志.
-@param operationID - 唯一操作标识
-@param line - 日志行数
-@param ex - 额外信息
-@param onProgress - 进度回调 (data: string) => void
-@returns Promise<string>
-@signature export function uploadLogs(operationID: string, line: number, ex: string, onProgress: (data: string) => void): Promise<string>;
-*/
-napi_value UploadLogs(napi_env env, napi_callback_info info) {
-    constexpr size_t kArgc = 4;
-    napi_value args[kArgc];
-    size_t argc = kArgc;
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    if (argc < 3) {
-        ThrowError(env, ARG_ERR, "missing arguments");
-        return nullptr;
-    }
-    auto opID = GetJSString(env, args[0]);
-    auto line = GetJSInt32(env, args[1]);
-    auto ex = GetJSString(env, args[2]);
-    napi_value onProgress = args[3];
 
-    // 使用 CreateUploadTSF 创建线程安全函数（使用 OnCallJSUploadProgress 回调）
-    auto result = CreateUploadTSF(env, opID, onProgress);
-    if (result.should_proceed) {
-        // 设置当前上传操作的 opID（供 CB_I_S 适配器使用）
-        g_currentUploadOpID = opID;
-        upload_logs(RegisterSISS,
-                    const_cast<char*>(opID.c_str()),
-                    line,
-                    const_cast<char*>(ex.c_str()),
-                    UploadProgressCBAdapter);  // 使用 CB_I_S 适配器
-    }
-    return result.promise;
-}
-/*
-@napi-ts
-记录日志.
-@param operationID - 唯一操作标识
-@param logLevel - 日志级别
-@param file - 文件名
-@param line - 行号
-@param msgs - 消息内容
-@param err - 错误信息
-@param keyAndValue - 键值对
-@returns Promise<string>
-@signature export function logs(operationID: string, logLevel: number, file: string, line: number, msgs: string, err: string, keyAndValue: string): Promise<string>;
-*/
-napi_value Logs(napi_env env, napi_callback_info info) {
-    constexpr size_t kArgc = 7;
-    napi_value args[kArgc];
-    size_t argc = kArgc;
+napi_value NAPI_setGlobalRecvMessageOpt(napi_env env, napi_callback_info info) {
+    size_t argc = 3;
+    napi_value args[3];
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    if (argc < kArgc) {
-        ThrowError(env, ARG_ERR, "missing arguments");
-        return nullptr;
+    int recvOpt = GetIntFromJS(env, args[2]);
+    std::string operationID = GetStringFromJS(env, args[1]);
+    if (operationID.empty()) {
+        operationID = "napi_setGlobalRecvMessageOpt_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
-    auto operationID = GetJSString(env, args[0]);
-    auto logLevel = GetJSInt32(env, args[1]);
-    auto file = GetJSString(env, args[2]);
-    auto line = GetJSInt32(env, args[3]);
-    auto msgs = GetJSString(env, args[4]);
-    auto err = GetJSString(env, args[5]);
-    auto keyAndValue = GetJSString(env, args[6]);
-    auto result = CreateTSF(env, operationID, nullptr);
-    if (result.should_proceed) {
-        logs(RegisterSISS,
-             const_cast<char*>(operationID.c_str()),
-             logLevel,
-             const_cast<char*>(file.c_str()),
-             line,
-             const_cast<char*>(msgs.c_str()),
-             const_cast<char*>(err.c_str()),
-             const_cast<char*>(keyAndValue.c_str()));
+    int cbId = StoreBaseCallback(env, args[0]);
+    // New signature: SetGlobalRecvMessageOpt(int baseCallbackID, char* operationID, int recvOpt)
+    SetGlobalRecvMessageOpt(cbId, (char*)operationID.c_str(), recvOpt);
+    return CreateJSUndefined(env);
+}
+
+napi_value NAPI_changeInputStates(napi_env env, napi_callback_info info) {
+    size_t argc = 4;
+    napi_value args[4];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    std::string conversationID = GetStringFromJS(env, args[2]);
+    int focus = GetIntFromJS(env, args[3]);
+    std::string operationID = GetStringFromJS(env, args[1]);
+    if (operationID.empty()) {
+        operationID = "napi_changeInputStates_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
-    return result.promise;
+    int cbId = StoreBaseCallback(env, args[0]);
+    // New signature: ChangeInputStates(int baseCallbackID, char* operationID, char* conversationID, int focus)
+    ChangeInputStates(cbId, (char*)operationID.c_str(), (char*)conversationID.c_str(), focus);
+    return CreateJSUndefined(env);
+}
+
+napi_value NAPI_getInputStates(napi_env env, napi_callback_info info) {
+    size_t argc = 4;
+    napi_value args[4];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    std::string conversationID = GetStringFromJS(env, args[2]);
+    std::string userID = GetStringFromJS(env, args[3]);
+    std::string operationID = GetStringFromJS(env, args[1]);
+    if (operationID.empty()) {
+        operationID = "napi_getInputStates_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+    }
+    int cbId = StoreBaseCallback(env, args[0]);
+    // New signature: GetInputStates(int baseCallbackID, char* operationID, char* conversationID, char* userID)
+    GetInputStates(cbId, (char*)operationID.c_str(), (char*)conversationID.c_str(), (char*)userID.c_str());
+    return CreateJSUndefined(env);
 }

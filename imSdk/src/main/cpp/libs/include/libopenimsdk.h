@@ -115,7 +115,6 @@ typedef void (*UploadIDCb)(char*);
 typedef void (*UploadPartCompleteCb)(int, long long, char*);
 typedef void (*UploadCompleteCb)(long long, long long, long long);
 typedef void (*UploadFinishCb)(long long, char*, int);
-typedef void (*UploadProgressCb)(long long, long long);
 
 static UploadOpenCb gUploadOpen[CB_MAX];
 static UploadPartSizeCb gUploadPartSize[CB_MAX];
@@ -125,7 +124,6 @@ static UploadIDCb gUploadID[CB_MAX];
 static UploadPartCompleteCb gUploadPartComplete[CB_MAX];
 static UploadCompleteCb gUploadComplete[CB_MAX];
 static UploadFinishCb gUploadFinish[CB_MAX];
-static UploadProgressCb gUploadProgress[CB_MAX];
 
 // Upload log progress callback
 typedef void (*UploadLogProgressCb)(long long, long long);
@@ -221,7 +219,6 @@ static void callUploadID(int cb, char* u) { if(gUploadID[cb]) gUploadID[cb](u); 
 static void callUploadPartComplete(int cb, int i, long long s, char* h) { if(gUploadPartComplete[cb]) gUploadPartComplete[cb](i, s, h); }
 static void callUploadComplete(int cb, long long f, long long s, long long st) { if(gUploadComplete[cb]) gUploadComplete[cb](f, s, st); }
 static void callUploadFinish(int cb, long long s, char* u, int t) { if(gUploadFinish[cb]) gUploadFinish[cb](s, u, t); }
-static void callUploadProgress(int cb, long long c, long long t) { if(gUploadProgress[cb]) gUploadProgress[cb](c, t); }
 
 // Upload log progress callback
 static void callUploadLogProgress(int cb, long long c, long long t) { if(gUploadLogProgress[cb]) gUploadLogProgress[cb](c, t); }
@@ -428,7 +425,7 @@ extern void RegisterUserListener(int onSelfInfo, int onUserStatus);
 extern void RegisterSignalingListener(int onReceiveNewInvitation, int onInviteeAccepted, int onInviteeAcceptedByOtherDevice, int onInviteeRejected, int onInviteeRejectedByOtherDevice, int onInvitationCancelled, int onInvitationTimeout, int onHangUp, int onRoomParticipantConnected, int onRoomParticipantDisconnected);
 extern void RegisterCustomBusinessListener(int onRecvCustomBusinessMessage);
 extern void RegisterMsgKvInfoListener(int onMessageKvInfoChanged);
-extern void RegisterUploadFileCallback(int uploadCallbackID, int onOpen, int onPartSize, int onHashPartProgress, int onHashPartComplete, int onUploadID, int onUploadPartComplete, int onUploadComplete, int onComplete, int onUploadProgress);
+extern void RegisterUploadFileCallback(int uploadCallbackID, int onOpen, int onPartSize, int onHashPartProgress, int onHashPartComplete, int onUploadID, int onUploadPartComplete, int onUploadComplete, int onComplete);
 extern void RegisterUploadLogProgress(int uploadLogsCallbackID, int onProgress);
 extern void RegisterBaseCallback(int baseCallbackID, int onSuccess, int onError);
 extern void RegisterSendMsgCallback(int sendReceiptCallbackID, int onProgress);

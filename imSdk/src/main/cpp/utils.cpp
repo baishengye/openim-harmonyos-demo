@@ -1,113 +1,148 @@
-//
-// Created on 2025/12/29.
-//
-// Node APIs are not fully supported. To solve the compilation error of the interface cannot be found,
-// please include "napi/native_api.h".
+#include "libs/include/libopenimsdk.h"
+#include "napi/native_api.h"
+#include "hilog/log.h"
+#include <string>
+#include <cstring>
+#include <cstdarg>
+#include <chrono>
 
-#include "utils.h"
+// Get string from napi_value
+std::string GetStringFromJS(napi_env env, napi_value value) {
+    if (!value) return "";
 
-std::string GetJSString(napi_env env, napi_value value) {
-    if (value == nullptr) return "";
+    napi_valuetype type;
+    napi_typeof(env, value, &type);
+    if (type != napi_string) return "";
 
     size_t len;
     napi_get_value_string_utf8(env, value, nullptr, 0, &len);
     if (len == 0) return "";
 
-    std::vector<char> buf(len + 1);
-    napi_get_value_string_utf8(env, value, buf.data(), buf.size(), &len);
-    return std::string(buf.data(), len);
-}
-napi_value SetJSString(napi_env env, const std::string& str) {
-    napi_value result;
-    napi_status status = napi_create_string_utf8(
-        env,
-        str.c_str(),
-        str.size(),         
-        &result
-    );
-    if (status != napi_ok) {
-        return nullptr;
-    }
-    return result;
-}
-int32_t GetJSInt32(napi_env env, napi_value value) {
-    if (value == nullptr) {
-        return 0;
-    }
-
-    napi_valuetype type;
-    if (napi_typeof(env, value, &type) != napi_ok || type != napi_number) {
-        return 0;
-    }
-
-    int32_t int_val = 0;
-    if (napi_get_value_int32(env, value, &int_val) != napi_ok) {
-        return 0;
-    }
-
-    return int_val;
-}
-
-napi_value SetJSInt32(napi_env env, int32_t value) {
-    napi_value result;
-    napi_status status = napi_create_int32(env, value, &result);
-    if (status != napi_ok) {
-        return nullptr;
-    }
+    std::string result(len, '\0');
+    napi_get_value_string_utf8(env, value, &result[0], len + 1, &len);
     return result;
 }
 
-int64_t GetJSInt64(napi_env env, napi_value value) {
-    if (value == nullptr) {
-        return 0;
-    }
-
-    napi_valuetype type;
-    if (napi_typeof(env, value, &type) != napi_ok || type != napi_number) {
-        return 0;
-    }
-
-    int64_t int_val = 0;
-    if (napi_get_value_int64(env, value, &int_val) != napi_ok) {
-        // 超出 int64 范围时，N-API 会返回 napi_number_expected 或类似错误
-        return 0;
-    }
-
-    return int_val;
+// Get int from napi_value
+int GetIntFromJS(napi_env env, napi_value value) {
+    int32_t result = 0;
+    napi_get_value_int32(env, value, &result);
+    return result;
 }
 
-double GetJSDouble(napi_env env, napi_value value) {
-    if (value == nullptr) {
-        return 0.0; // 或 NaN？见下方说明
-    }
-
-    napi_valuetype type;
-    if (napi_typeof(env, value, &type) != napi_ok || type != napi_number) {
-        return 0.0; // 类型不是 number
-    }
-
-    double double_val = 0.0;
-    if (napi_get_value_double(env, value, &double_val) != napi_ok) {
-        return 0.0; // 理论上不会失败，但保留健壮性
-    }
-
-    return double_val;
+// Get int64 from napi_value
+long long GetInt64FromJS(napi_env env, napi_value value) {
+    double result = 0;
+    napi_get_value_double(env, value, &result);
+    return (long long)result;
 }
 
-bool GetJSBoolean(napi_env env, napi_value value) {
-    if (value == nullptr) {
-        return false; // 默认值
-    }
+// Get bool from napi_value
+bool GetBoolFromJS(napi_env env, napi_value value) {
+    bool result = false;
+    napi_get_value_bool(env, value, &result);
+    return result;
+}
 
-    napi_valuetype type;
-    if (napi_typeof(env, value, &type) != napi_ok || type != napi_boolean) {
-        return false; // 类型不匹配，返回 false
-    }
+// Get double from napi_value
+double GetDoubleFromJS(napi_env env, napi_value value) {
+    double result = 0;
+    napi_get_value_double(env, value, &result);
+    return result;
+}
 
-    bool bool_val = false;
-    if (napi_get_value_bool(env, value, &bool_val) != napi_ok) {
-        return false; // 获取失败，返回 false
-    }
+// Create string napi_value
+napi_value CreateJSString(napi_env env, const std::string& str) {
+    napi_value result;
+    napi_create_string_utf8(env, str.c_str(), str.length(), &result);
+    return result;
+}
 
-    return bool_val;
+// Create int napi_value
+napi_value CreateJSInt(napi_env env, int val) {
+    napi_value result;
+    napi_create_int32(env, val, &result);
+    return result;
+}
+
+// Create int64 napi_value
+napi_value CreateJSInt64(napi_env env, long long val) {
+    napi_value result;
+    napi_create_int64(env, val, &result);
+    return result;
+}
+
+// Create double napi_value
+napi_value CreateJSDouble(napi_env env, double val) {
+    napi_value result;
+    napi_create_double(env, val, &result);
+    return result;
+}
+
+// Create bool napi_value
+napi_value CreateJSBool(napi_env env, bool val) {
+    napi_value result;
+    napi_get_boolean(env, val, &result);
+    return result;
+}
+
+// Create undefined napi_value
+napi_value CreateJSUndefined(napi_env env) {
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+// Create null napi_value
+napi_value CreateJSNull(napi_env env) {
+    napi_value result;
+    napi_get_null(env, &result);
+    return result;
+}
+
+// Create error napi_value
+napi_value CreateJSError(napi_env env, int errCode, const char* errMsg) {
+    napi_value err;
+    napi_create_error(env, nullptr, nullptr, &err);
+    napi_value code;
+    napi_create_int32(env, errCode, &code);
+    napi_set_named_property(env, err, "code", code);
+    napi_value msg;
+    napi_create_string_utf8(env, errMsg ? errMsg : "", NAPI_AUTO_LENGTH, &msg);
+    napi_set_named_property(env, err, "message", msg);
+    return err;
+}
+
+// Safe string copy
+void SafeStringCopy(char* dest, const char* src, size_t destSize) {
+    if (!dest || !src || destSize == 0) return;
+    strncpy(dest, src, destSize - 1);
+    dest[destSize - 1] = '\0';
+}
+
+// Generate operation ID
+std::string GenerateOperationID() {
+    auto now = std::chrono::system_clock::now();
+    auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+        now.time_since_epoch()).count();
+    return "napi_" + std::to_string(timestamp);
+}
+
+// Log helper
+void LogInfo(const char* tag, const char* fmt, ...) {
+    char buf[512];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, args);
+    va_end(args);
+    OH_LOG_INFO(LOG_APP, "[%s] %{public}s", tag, buf);
+}
+
+void LogError(const char* tag, const char* fmt, ...) {
+    char buf[512];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, args);
+    va_end(args);
+    OH_LOG_ERROR(LOG_APP, "[%s] %{public}s", tag, buf);
 }
