@@ -139,6 +139,12 @@ static SendProgressCb gSendProgress[CB_MAX];
 typedef void (*SendProgressWithIDCb)(int, int);
 static SendProgressWithIDCb gSendProgressWithID[CB_MAX];
 
+// Base callback type - for OnSuccess/OnError
+typedef void (*BaseSuccessCb)(int, char*);
+typedef void (*BaseErrorCb)(int, int, char*);
+static BaseSuccessCb gBaseSuccess[CB_MAX];
+static BaseErrorCb gBaseError[CB_MAX];
+
 // Callbacks - invoked by Go
 static void callConnConnecting(int v) { if(gConnConnecting[0]) gConnConnecting[0](v); }
 static void callConnSuccess(int v) { if(gConnSuccess[0]) gConnSuccess[0](v); }
@@ -207,21 +213,23 @@ static void callCustomBusiness(char* m) { if(gCustomBusiness[0]) gCustomBusiness
 static void callMsgKvInfoChanged(char* m) { if(gMsgKvInfoChanged[0]) gMsgKvInfoChanged[0](m); }
 
 // Upload callbacks
-static void callUploadOpen(long long s) { if(gUploadOpen[0]) gUploadOpen[0](s); }
-static void callUploadPartSize(long long s, int n) { if(gUploadPartSize[0]) gUploadPartSize[0](s, n); }
-static void callUploadHashProgress(int i, long long s, char* h) { if(gUploadHashProgress[0]) gUploadHashProgress[0](i, s, h); }
-static void callUploadHashComplete(char* p, char* f) { if(gUploadHashComplete[0]) gUploadHashComplete[0](p, f); }
-static void callUploadID(char* u) { if(gUploadID[0]) gUploadID[0](u); }
-static void callUploadPartComplete(int i, long long s, char* h) { if(gUploadPartComplete[0]) gUploadPartComplete[0](i, s, h); }
-static void callUploadComplete(long long f, long long s, long long st) { if(gUploadComplete[0]) gUploadComplete[0](f, s, st); }
-static void callUploadFinish(long long s, char* u, int t) { if(gUploadFinish[0]) gUploadFinish[0](s, u, t); }
-static void callUploadProgress(long long c, long long t) { if(gUploadProgress[0]) gUploadProgress[0](c, t); }
+static void callUploadOpen(int cb, long long s) { if(gUploadOpen[cb]) gUploadOpen[cb](s); }
+static void callUploadPartSize(int cb, long long s, int n) { if(gUploadPartSize[cb]) gUploadPartSize[cb](s, n); }
+static void callUploadHashProgress(int cb, int i, long long s, char* h) { if(gUploadHashProgress[cb]) gUploadHashProgress[cb](i, s, h); }
+static void callUploadHashComplete(int cb, char* p, char* f) { if(gUploadHashComplete[cb]) gUploadHashComplete[cb](p, f); }
+static void callUploadID(int cb, char* u) { if(gUploadID[cb]) gUploadID[cb](u); }
+static void callUploadPartComplete(int cb, int i, long long s, char* h) { if(gUploadPartComplete[cb]) gUploadPartComplete[cb](i, s, h); }
+static void callUploadComplete(int cb, long long f, long long s, long long st) { if(gUploadComplete[cb]) gUploadComplete[cb](f, s, st); }
+static void callUploadFinish(int cb, long long s, char* u, int t) { if(gUploadFinish[cb]) gUploadFinish[cb](s, u, t); }
+static void callUploadProgress(int cb, long long c, long long t) { if(gUploadProgress[cb]) gUploadProgress[cb](c, t); }
 
 // Upload log progress callback
-static void callUploadLogProgress(long long c, long long t) { if(gUploadLogProgress[0]) gUploadLogProgress[0](c, t); }
+static void callUploadLogProgress(int cb, long long c, long long t) { if(gUploadLogProgress[cb]) gUploadLogProgress[cb](c, t); }
 
 static void callSendProgress(int v) { if(gSendProgress[0]) gSendProgress[0](v); }
 static void callSendProgressWithID(int id, int v) { if(gSendProgressWithID[id]) gSendProgressWithID[id](id, v); }
+static void callBaseSuccess(int cb, char* d) { if(gBaseSuccess[cb]) gBaseSuccess[cb](cb, d); }
+static void callBaseError(int cb, int code, char* m) { if(gBaseError[cb]) gBaseError[cb](cb, code, m); }
 
 #line 1 "cgo-generated-wrapper"
 
@@ -267,6 +275,8 @@ typedef double _Complex GoComplex128;
   static assertion to make sure the file is being used on architecture
   at least with matching size of GoInt.
 */
+typedef char _check_for_64_bit_pointer_matching_GoInt[sizeof(void*)==64/8 ? 1:-1];
+
 #ifndef GO_CGO_GOSTRING_TYPEDEF
 typedef _GoString_ GoString;
 #endif
@@ -284,11 +294,11 @@ extern "C" {
 #endif
 
 extern int InitSDK(char* config, char* operationID);
-extern void Login(char* uid, char* token, char* operationID);
-extern void Logout(char* operationID);
+extern void Login(int baseCallbackID, char* uid, char* token, char* operationID);
+extern void Logout(int baseCallbackID, char* operationID);
 extern int GetLoginStatus(char* operationID);
 extern char* GetLoginUserID(void);
-extern void UploadFile(char* operationID, char* reqData, int callbackID);
+extern void UploadFile(int baseCallbackID, int uploadCallbackID, char* operationID, char* reqData);
 extern char* CreateTextMessage(char* text, char* operationID);
 extern char* CreateImageMessage(char* imagePath, char* operationID);
 extern char* CreateSoundMessage(char* soundPath, long long duration, char* operationID);
@@ -306,98 +316,98 @@ extern char* CreateImageMessageByURL(char* operationID, char* sourcePath, char* 
 extern char* CreateSoundMessageByURL(char* operationID, char* params);
 extern char* CreateVideoMessageByURL(char* operationID, char* params);
 extern char* CreateFileMessageByURL(char* operationID, char* params);
-extern void SendMessage(int callbackID, char* message, char* recvID, char* groupID, char* offlinePushInfo, char* operationID, int isOnlineOnly);
-extern void SendMessageNotOss(int callbackID, char* message, char* recvID, char* groupID, char* offlinePushInfo, char* operationID, int isOnlineOnly);
-extern void GetAllConversationList(char* operationID);
-extern void GetConversationListSplit(char* operationID, int offset, int count);
-extern void GetOneConversation(char* operationID, int sessionType, char* isSession);
-extern void GetMultipleConversation(char* operationID, char* conversationIDList);
-extern void SetConversation(char* operationID, char* conversationID, char* params);
+extern void SendMessage(int baseCallbackID, int sendReceiptCallbackID, char* message, char* recvID, char* groupID, char* offlinePushInfo, char* operationID, int isOnlineOnly);
+extern void SendMessageNotOss(int baseCallbackID, int sendReceiptCallbackID, char* message, char* recvID, char* groupID, char* offlinePushInfo, char* operationID, int isOnlineOnly);
+extern void GetAllConversationList(int baseCallbackID, char* operationID);
+extern void GetConversationListSplit(int baseCallbackID, char* operationID, int offset, int count);
+extern void GetOneConversation(int baseCallbackID, char* operationID, int sessionType, char* isSession);
+extern void GetMultipleConversation(int baseCallbackID, char* operationID, char* conversationIDList);
+extern void SetConversation(int baseCallbackID, char* operationID, char* conversationID, char* params);
 extern char* GetConversationIDBySessionType(char* operationID, char* sourceID, int sessionType);
-extern void HideAllConversations(char* operationID);
-extern void ClearConversationAndDeleteAllMsg(char* operationID, char* conversationID);
-extern void DeleteConversationAndDeleteAllMsg(char* operationID, char* conversationID);
-extern void SetConversationDraft(char* operationID, char* conversationID, char* draftText);
-extern void SetPinnedConversation(char* operationID, char* conversationID, int isPinned);
-extern void GetTotalUnreadMsgCount(char* operationID);
+extern void HideAllConversations(int baseCallbackID, char* operationID);
+extern void ClearConversationAndDeleteAllMsg(int baseCallbackID, char* operationID, char* conversationID);
+extern void DeleteConversationAndDeleteAllMsg(int baseCallbackID, char* operationID, char* conversationID);
+extern void SetConversationDraft(int baseCallbackID, char* operationID, char* conversationID, char* draftText);
+extern void SetPinnedConversation(int baseCallbackID, char* operationID, char* conversationID, int isPinned);
+extern void GetTotalUnreadMsgCount(int baseCallbackID, char* operationID);
 extern void GetConversationRecvMessageOpt(char* operationID, char* conversationIDList);
-extern void SearchConversation(char* operationID, char* searchParam);
-extern void SearchLocalMessages(char* operationID, char* searchParam);
-extern void GetAdvancedHistoryMessageList(char* operationID, char* getMessageOptions);
+extern void SearchConversation(int baseCallbackID, char* operationID, char* searchParam);
+extern void SearchLocalMessages(int baseCallbackID, char* operationID, char* searchParam);
+extern void GetAdvancedHistoryMessageList(int baseCallbackID, char* operationID, char* getMessageOptions);
 extern void GetHistoryMessageList(char* operationID, char* conversationID, int count, int startSeq);
-extern void FindMessageList(char* operationID, char* findOptions);
-extern void MarkConversationMessageAsRead(char* operationID, char* conversationID);
-extern void MarkAllConversationMessageAsRead(char* operationID);
-extern void DeleteMessageFromLocalStorage(char* operationID, char* conversationID, char* seqList);
-extern void DeleteMessage(char* operationID, char* conversationID, char* seqList);
-extern void DeleteAllMsgFromLocalAndSvr(char* operationID);
-extern void InsertSingleMessageToLocal(char* operationID, char* message, char* recvID, char* sendID);
-extern void TypingStatusUpdate(char* operationID, char* conversationID, char* msgTip);
-extern void ChangeInputStates(char* operationID, char* conversationID, int focus);
-extern void GetInputStates(char* operationID, char* conversationID, char* userID);
-extern void RevokeMessage(char* operationID, char* conversationID, char* clientMsgID);
-extern void DeleteMessageFromLocal(char* operationID, char* conversationID, char* clientMsgID);
-extern void DeleteAllMsgFromLocal(char* operationID);
-extern void InsertGroupMessageToLocalStorage(char* operationID, char* message, char* groupID, char* sendID);
-extern void SetMessageLocalEx(char* operationID, char* conversationID, char* clientMsgID, char* localEx);
-extern void SetAppBadge(char* operationID, int appUnreadCount);
-extern void GetUsersInfo(char* operationID, char* userIDList);
-extern void GetSelfUserInfo(char* operationID);
-extern void SetSelfInfo(char* operationID, char* userInfo);
+extern void FindMessageList(int baseCallbackID, char* operationID, char* findOptions);
+extern void MarkConversationMessageAsRead(int baseCallbackID, char* operationID, char* conversationID);
+extern void MarkAllConversationMessageAsRead(int baseCallbackID, char* operationID);
+extern void DeleteMessageFromLocalStorage(int baseCallbackID, char* operationID, char* conversationID, char* seqList);
+extern void DeleteMessage(int baseCallbackID, char* operationID, char* conversationID, char* seqList);
+extern void DeleteAllMsgFromLocalAndSvr(int baseCallbackID, char* operationID);
+extern void InsertSingleMessageToLocal(int baseCallbackID, char* operationID, char* message, char* recvID, char* sendID);
+extern void TypingStatusUpdate(int baseCallbackID, char* operationID, char* conversationID, char* msgTip);
+extern void ChangeInputStates(int baseCallbackID, char* operationID, char* conversationID, int focus);
+extern void GetInputStates(int baseCallbackID, char* operationID, char* conversationID, char* userID);
+extern void RevokeMessage(int baseCallbackID, char* operationID, char* conversationID, char* clientMsgID);
+extern void DeleteMessageFromLocal(int baseCallbackID, char* operationID, char* conversationID, char* clientMsgID);
+extern void DeleteAllMsgFromLocal(int baseCallbackID, char* operationID);
+extern void InsertGroupMessageToLocalStorage(int baseCallbackID, char* operationID, char* message, char* groupID, char* sendID);
+extern void SetMessageLocalEx(int baseCallbackID, char* operationID, char* conversationID, char* clientMsgID, char* localEx);
+extern void SetAppBadge(int baseCallbackID, char* operationID, int appUnreadCount);
+extern void GetUsersInfo(int baseCallbackID, char* operationID, char* userIDList);
+extern void GetSelfUserInfo(int baseCallbackID, char* operationID);
+extern void SetSelfInfo(int baseCallbackID, char* operationID, char* userInfo);
 extern void SetSelfInfoEx(char* operationID, char* userInfo);
-extern void GetUserStatus(char* operationID, char* userIDList);
-extern void SubscribeUsersStatus(char* operationID, char* userIDList);
-extern void UnsubscribeUsersStatus(char* operationID, char* userIDList);
-extern void GetSubscribeUsersStatus(char* operationID);
-extern void SetAppBackgroundStatus(char* operationID, int isBackground);
-extern void NetworkStatusChanged(char* operationID);
-extern void SetGlobalRecvMessageOpt(char* operationID, int recvOpt);
-extern void CreateGroup(char* operationID, char* groupInfo);
-extern void GetJoinedGroupList(char* operationID);
-extern void GetGroupsInfo(char* operationID, char* groupIDList);
-extern void SetGroupInfo(char* operationID, char* groupInfo);
+extern void GetUserStatus(int baseCallbackID, char* operationID, char* userIDList);
+extern void SubscribeUsersStatus(int baseCallbackID, char* operationID, char* userIDList);
+extern void UnsubscribeUsersStatus(int baseCallbackID, char* operationID, char* userIDList);
+extern void GetSubscribeUsersStatus(int baseCallbackID, char* operationID);
+extern void SetAppBackgroundStatus(int baseCallbackID, char* operationID, int isBackground);
+extern void NetworkStatusChanged(int baseCallbackID, char* operationID);
+extern void SetGlobalRecvMessageOpt(int baseCallbackID, char* operationID, int recvOpt);
+extern void CreateGroup(int baseCallbackID, char* operationID, char* groupInfo);
+extern void GetJoinedGroupList(int baseCallbackID, char* operationID);
+extern void GetGroupsInfo(int baseCallbackID, char* operationID, char* groupIDList);
+extern void SetGroupInfo(int baseCallbackID, char* operationID, char* groupInfo);
 extern void SetGroupInfoEx(char* operationID, char* groupInfo);
-extern void GetJoinedGroupListPage(char* operationID, int offset, int count);
-extern void ChangeGroupMute(char* operationID, char* groupID, int isMute);
-extern void ChangeGroupMemberMute(char* operationID, char* groupID, char* userID, long long mutedSeconds);
-extern void GetGroupMemberList(char* operationID, char* groupID, int filter, int offset, int count);
-extern void GetGroupMemberOwnerAndAdmin(char* operationID, char* groupID);
-extern void GetUsersInGroup(char* operationID, char* groupID, char* userIDList);
-extern void SearchGroupMembers(char* operationID, char* searchParam);
-extern void SetGroupMemberInfo(char* operationID, char* groupMemberInfo);
-extern void InviteUserToGroup(char* operationID, char* groupID, char* userIDList, char* reason);
-extern void KickGroupMember(char* operationID, char* groupID, char* userIDList, char* reason);
-extern void GetGroupApplicationUnhandledCount(char* operationID, char* req);
-extern void AcceptGroupApplication(char* operationID, char* groupID, char* userID, char* handleMsg);
-extern void RefuseGroupApplication(char* operationID, char* groupID, char* userID, char* handleMsg);
-extern void TransferGroupOwner(char* operationID, char* groupID, char* newOwnerUserID);
-extern void QuitGroup(char* operationID, char* groupID);
-extern void DismissGroup(char* operationID, char* groupID);
+extern void GetJoinedGroupListPage(int baseCallbackID, char* operationID, int offset, int count);
+extern void ChangeGroupMute(int baseCallbackID, char* operationID, char* groupID, int isMute);
+extern void ChangeGroupMemberMute(int baseCallbackID, char* operationID, char* groupID, char* userID, long long mutedSeconds);
+extern void GetGroupMemberList(int baseCallbackID, char* operationID, char* groupID, int filter, int offset, int count);
+extern void GetGroupMemberOwnerAndAdmin(int baseCallbackID, char* operationID, char* groupID);
+extern void GetUsersInGroup(int baseCallbackID, char* operationID, char* groupID, char* userIDList);
+extern void SearchGroupMembers(int baseCallbackID, char* operationID, char* searchParam);
+extern void SetGroupMemberInfo(int baseCallbackID, char* operationID, char* groupMemberInfo);
+extern void InviteUserToGroup(int baseCallbackID, char* operationID, char* groupID, char* userIDList, char* reason);
+extern void KickGroupMember(int baseCallbackID, char* operationID, char* groupID, char* userIDList, char* reason);
+extern void GetGroupApplicationUnhandledCount(int baseCallbackID, char* operationID, char* req);
+extern void AcceptGroupApplication(int baseCallbackID, char* operationID, char* groupID, char* userID, char* handleMsg);
+extern void RefuseGroupApplication(int baseCallbackID, char* operationID, char* groupID, char* userID, char* handleMsg);
+extern void TransferGroupOwner(int baseCallbackID, char* operationID, char* groupID, char* newOwnerUserID);
+extern void QuitGroup(int baseCallbackID, char* operationID, char* groupID);
+extern void DismissGroup(int baseCallbackID, char* operationID, char* groupID);
 extern void GetSendMessageOpt(char* operationID, char* groupID);
-extern void GetGroupApplicationListAsRecipient(char* operationID, char* req);
-extern void GetGroupApplicationListAsApplicant(char* operationID, char* req);
-extern void JoinGroup(char* operationID, char* groupID, char* reqMsg, int joinSource, char* ex);
-extern void SearchGroups(char* operationID, char* searchParam);
-extern void IsJoinGroup(char* operationID, char* groupID);
-extern void GetSpecifyFriendsInfo(char* operationID, char* userIDList, int filterBlack);
-extern void GetFriendList(char* operationID, int filterBlack);
-extern void GetFriendListPage(char* operationID, int offset, int count, int filterBlack);
-extern void SearchFriends(char* operationID, char* searchParam);
-extern void CheckFriend(char* operationID, char* userIDList);
-extern void AddFriend(char* operationID, char* userIDReqMsg);
-extern void UpdateFriends(char* operationID, char* req);
-extern void DeleteFriend(char* operationID, char* friendUserID);
-extern void GetFriendApplicationListAsRecipient(char* operationID, char* req);
-extern void GetFriendApplicationListAsApplicant(char* operationID, char* req);
-extern void AcceptFriendApplication(char* operationID, char* userIDHandleMsg);
-extern void RefuseFriendApplication(char* operationID, char* userIDHandleMsg);
-extern void AddBlack(char* operationID, char* blackUserID, char* ex);
-extern void GetBlackList(char* operationID);
-extern void RemoveBlack(char* operationID, char* removeUserID);
-extern void GetFriendApplicationUnhandledCount(char* operationID, char* req);
-extern void SetFriendRemark(char* operationID, char* friendUserID, char* remark);
-extern void UpdateFcmToken(char* operationID, char* fcmToken, long long expireTime);
-extern void Logs(char* operationID, int logLevel, char* file, long long line, char* msgs, char* err, char* keyAndValue);
+extern void GetGroupApplicationListAsRecipient(int baseCallbackID, char* operationID, char* req);
+extern void GetGroupApplicationListAsApplicant(int baseCallbackID, char* operationID, char* req);
+extern void JoinGroup(int baseCallbackID, char* operationID, char* groupID, char* reqMsg, int joinSource, char* ex);
+extern void SearchGroups(int baseCallbackID, char* operationID, char* searchParam);
+extern void IsJoinGroup(int baseCallbackID, char* operationID, char* groupID);
+extern void GetSpecifyFriendsInfo(int baseCallbackID, char* operationID, char* userIDList, int filterBlack);
+extern void GetFriendList(int baseCallbackID, char* operationID, int filterBlack);
+extern void GetFriendListPage(int baseCallbackID, char* operationID, int offset, int count, int filterBlack);
+extern void SearchFriends(int baseCallbackID, char* operationID, char* searchParam);
+extern void CheckFriend(int baseCallbackID, char* operationID, char* userIDList);
+extern void AddFriend(int baseCallbackID, char* operationID, char* userIDReqMsg);
+extern void UpdateFriends(int baseCallbackID, char* operationID, char* req);
+extern void DeleteFriend(int baseCallbackID, char* operationID, char* friendUserID);
+extern void GetFriendApplicationListAsRecipient(int baseCallbackID, char* operationID, char* req);
+extern void GetFriendApplicationListAsApplicant(int baseCallbackID, char* operationID, char* req);
+extern void AcceptFriendApplication(int baseCallbackID, char* operationID, char* userIDHandleMsg);
+extern void RefuseFriendApplication(int baseCallbackID, char* operationID, char* userIDHandleMsg);
+extern void AddBlack(int baseCallbackID, char* operationID, char* blackUserID, char* ex);
+extern void GetBlackList(int baseCallbackID, char* operationID);
+extern void RemoveBlack(int baseCallbackID, char* operationID, char* removeUserID);
+extern void GetFriendApplicationUnhandledCount(int baseCallbackID, char* operationID, char* req);
+extern void SetFriendRemark(int baseCallbackID, char* operationID, char* friendUserID, char* remark);
+extern void UpdateFcmToken(int baseCallbackID, char* operationID, char* fcmToken, long long expireTime);
+extern void Logs(int baseCallbackID, char* operationID, int logLevel, char* file, long long line, char* msgs, char* err, char* keyAndValue);
 extern char* GetSdkVersion(void);
 extern void UnInitSDK(char* operationID);
 extern void FreeString(char* str);
@@ -405,10 +415,10 @@ extern char* GetAtAllTag(char* operationID);
 extern char* CreateFileMessageFromFullPath(char* operationID, char* fileFullPath, char* fileName);
 extern char* CreateSoundMessageFromFullPath(char* operationID, char* soundPath, long long duration);
 extern char* CreateVideoMessageFromFullPath(char* operationID, char* videoFullPath, char* videoType, long long duration, char* snapshotFullPath);
-extern void GetAdvancedHistoryMessageListReverse(char* operationID, char* getMessageOptions);
-extern void GetSpecifiedGroupMembersInfo(char* operationID, char* groupID, char* userIDList);
-extern void UploadLogs(char* operationID, int line, char* ex);
-extern void GetGroupMemberListByJoinTimeFilter(char* operationID, char* groupID, long long offset, long long count, long long joinTimeBegin, long long joinTimeEnd, char* filterUserIDList);
+extern void GetAdvancedHistoryMessageListReverse(int baseCallbackID, char* operationID, char* getMessageOptions);
+extern void GetSpecifiedGroupMembersInfo(int baseCallbackID, char* operationID, char* groupID, char* userIDList);
+extern void UploadLogs(int baseCallbackID, int uploadLogsCallbackID, char* operationID, int line, char* ex);
+extern void GetGroupMemberListByJoinTimeFilter(int baseCallbackID, char* operationID, char* groupID, long long offset, long long count, long long joinTimeBegin, long long joinTimeEnd, char* filterUserIDList);
 extern void RegisterConnListener(int onConnecting, int onConnectSuccess, int onConnectFailed, int onKickedOffline, int onUserTokenExpired, int onUserTokenInvalid);
 extern void RegisterMsgListener(int onRecvNewMsg, int onRecvReceipt, int onMsgRevoked, int onRecvOffline, int onMsgDeleted, int onRecvOnline);
 extern void RegisterConvListener(int onSyncStart, int onSyncFinish, int onSyncProgress, int onSyncFailed, int onConvChanged, int onNewConv, int onUnreadChanged, int onInputStatus);
@@ -418,8 +428,24 @@ extern void RegisterUserListener(int onSelfInfo, int onUserStatus);
 extern void RegisterSignalingListener(int onReceiveNewInvitation, int onInviteeAccepted, int onInviteeAcceptedByOtherDevice, int onInviteeRejected, int onInviteeRejectedByOtherDevice, int onInvitationCancelled, int onInvitationTimeout, int onHangUp, int onRoomParticipantConnected, int onRoomParticipantDisconnected);
 extern void RegisterCustomBusinessListener(int onRecvCustomBusinessMessage);
 extern void RegisterMsgKvInfoListener(int onMessageKvInfoChanged);
-extern void RegisterUploadFileCallback(int onOpen, int onPartSize, int onHashPartProgress, int onHashPartComplete, int onUploadID, int onUploadPartComplete, int onUploadComplete, int onComplete, int onUploadProgress);
-extern void RegisterUploadLogProgress(int onProgress);
+extern void RegisterUploadFileCallback(int baseCallbackID, int onOpen, int onPartSize, int onHashPartProgress, int onHashPartComplete, int onUploadID, int onUploadPartComplete, int onUploadComplete, int onComplete, int onUploadProgress);
+extern void RegisterUploadLogProgress(int baseCallbackID, int onProgress);
+extern void RegisterBaseCallback(int baseCallbackID, int onSuccess, int onError);
+extern void UnregisterUploadFileCallback(int baseCallbackID);
+extern void UnregisterUploadLogProgress(int baseCallbackID);
+extern void UnregisterSendProgress(int baseCallbackID);
+extern void UnregisterBaseCallback(int baseCallbackID);
+extern void UnregisterAllUploadCallbacks(void);
+extern void UnregisterAllListeners(void);
+extern void UnregisterConnListener(void);
+extern void UnregisterMsgListener(void);
+extern void UnregisterConvListener(void);
+extern void UnregisterGroupListener(void);
+extern void UnregisterFriendListener(void);
+extern void UnregisterUserListener(void);
+extern void UnregisterSignalingListener(void);
+extern void UnregisterCustomBusinessListener(void);
+extern void UnregisterMsgKvInfoListener(void);
 
 #ifdef __cplusplus
 }
