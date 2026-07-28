@@ -132,12 +132,12 @@ typedef void (*UploadLogProgressCb)(long long, long long);
 static UploadLogProgressCb gUploadLogProgress[CB_MAX];
 
 // Send message callback
-typedef void (*SendProgressCb)(int);
-static SendProgressCb gSendProgress[CB_MAX];
+typedef void (*SendMsgCb)(int);
+static SendMsgCb gSendMsg[CB_MAX];
 
 // Send message callback with ID
-typedef void (*SendProgressWithIDCb)(int, int);
-static SendProgressWithIDCb gSendProgressWithID[CB_MAX];
+typedef void (*SendMsgWithIDCb)(int, int);
+static SendMsgWithIDCb gSendMsgWithID[CB_MAX];
 
 // Base callback type - for OnSuccess/OnError
 typedef void (*BaseSuccessCb)(int, char*);
@@ -226,8 +226,8 @@ static void callUploadProgress(int cb, long long c, long long t) { if(gUploadPro
 // Upload log progress callback
 static void callUploadLogProgress(int cb, long long c, long long t) { if(gUploadLogProgress[cb]) gUploadLogProgress[cb](c, t); }
 
-static void callSendProgress(int v) { if(gSendProgress[0]) gSendProgress[0](v); }
-static void callSendProgressWithID(int id, int v) { if(gSendProgressWithID[id]) gSendProgressWithID[id](id, v); }
+static void callSendMsg(int v) { if(gSendMsg[0]) gSendMsg[0](v); }
+static void callSendMsgWithID(int id, int v) { if(gSendMsgWithID[id]) gSendMsgWithID[id](id, v); }
 static void callBaseSuccess(int cb, char* d) { if(gBaseSuccess[cb]) gBaseSuccess[cb](cb, d); }
 static void callBaseError(int cb, int code, char* m) { if(gBaseError[cb]) gBaseError[cb](cb, code, m); }
 
@@ -428,12 +428,13 @@ extern void RegisterUserListener(int onSelfInfo, int onUserStatus);
 extern void RegisterSignalingListener(int onReceiveNewInvitation, int onInviteeAccepted, int onInviteeAcceptedByOtherDevice, int onInviteeRejected, int onInviteeRejectedByOtherDevice, int onInvitationCancelled, int onInvitationTimeout, int onHangUp, int onRoomParticipantConnected, int onRoomParticipantDisconnected);
 extern void RegisterCustomBusinessListener(int onRecvCustomBusinessMessage);
 extern void RegisterMsgKvInfoListener(int onMessageKvInfoChanged);
-extern void RegisterUploadFileCallback(int baseCallbackID, int onOpen, int onPartSize, int onHashPartProgress, int onHashPartComplete, int onUploadID, int onUploadPartComplete, int onUploadComplete, int onComplete, int onUploadProgress);
-extern void RegisterUploadLogProgress(int baseCallbackID, int onProgress);
+extern void RegisterUploadFileCallback(int uploadCallbackID, int onOpen, int onPartSize, int onHashPartProgress, int onHashPartComplete, int onUploadID, int onUploadPartComplete, int onUploadComplete, int onComplete, int onUploadProgress);
+extern void RegisterUploadLogProgress(int uploadLogsCallbackID, int onProgress);
 extern void RegisterBaseCallback(int baseCallbackID, int onSuccess, int onError);
-extern void UnregisterUploadFileCallback(int baseCallbackID);
-extern void UnregisterUploadLogProgress(int baseCallbackID);
-extern void UnregisterSendProgress(int baseCallbackID);
+extern void RegisterSendMsgCallback(int sendReceiptCallbackID, int onProgress);
+extern void UnregisterUploadFileCallback(int uploadCallbackID);
+extern void UnregisterUploadLogProgress(int uploadLogsCallbackID);
+extern void UnregisterSendMsgCallback(int sendReceiptCallbackID);
 extern void UnregisterBaseCallback(int baseCallbackID);
 extern void UnregisterAllUploadCallbacks(void);
 extern void UnregisterAllListeners(void);
