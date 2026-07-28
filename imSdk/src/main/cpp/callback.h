@@ -19,21 +19,21 @@
 typedef void (*BaseSuccessCb)(int callbackID, const char* data);
 typedef void (*BaseErrorCb)(int callbackID, int code, const char* message);
 
-// 上传文件回调（SDK UploadFileCallback 接口，8个方法）
-typedef void (*UploadOpenCb)(long long fileSize);
-typedef void (*UploadPartSizeCb)(long long partSize, int partNumber);
-typedef void (*UploadHashProgressCb)(int index, long long size, const char* partHash);
-typedef void (*UploadHashCompleteCb)(const char* partsHash, const char* fileHash);
-typedef void (*UploadIDCb)(const char* uploadID);
-typedef void (*UploadPartCompleteCb)(int index, long long partSize, const char* partHash);
-typedef void (*UploadCompleteCb)(long long fileSize, long long streamSize, long long storageSize);
-typedef void (*UploadFinishCb)(long long size, const char* url, int fileType);
+// 上传文件回调（SDK UploadFileCallback 接口，8个方法，第一个参数为 cbId）
+typedef void (*UploadOpenCb)(int cbId, long long fileSize);
+typedef void (*UploadPartSizeCb)(int cbId, long long partSize, int partNumber);
+typedef void (*UploadHashProgressCb)(int cbId, int index, long long size, const char* partHash);
+typedef void (*UploadHashCompleteCb)(int cbId, const char* partsHash, const char* fileHash);
+typedef void (*UploadIDCb)(int cbId, const char* uploadID);
+typedef void (*UploadPartCompleteCb)(int cbId, int index, long long partSize, const char* partHash);
+typedef void (*UploadCompleteCb)(int cbId, long long fileSize, long long streamSize, long long storageSize);
+typedef void (*UploadFinishCb)(int cbId, long long size, const char* url, int fileType);
 
-// 日志上传回调
-typedef void (*UploadLogProgressCb)(long long current, long long total);
+// 日志上传回调（第一个参数为 cbId）
+typedef void (*UploadLogProgressCb)(int cbId, long long current, long long total);
 
-// 发送进度回调
-typedef void (*SendMsgWithIDCb)(int callbackID, int progress);
+// 发送进度回调（第一个参数为 cbId）
+typedef void (*SendMsgWithIDCb)(int cbId, int progress);
 
 // 连接回调
 typedef void (*ConnNoMsgCb)();
@@ -127,10 +127,6 @@ BaseCallbackContext* GetBaseCallback(int cbId);
 UploadCallbackContext* GetUploadCallback(int cbId);
 UploadLogCallbackContext* GetUploadLogCallback(int cbId);
 SendMsgCallbackContext* GetSendMsgCallback(int cbId);
-
-// 设置/获取当前上传回调 ID（SDK 上传回调不包含 cbId）
-void SetCurrentUploadCallbackId(int cbId);
-int GetCurrentUploadCallbackId();
 
 // ============================================================
 // Base 回调封装声明

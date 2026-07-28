@@ -12,18 +12,18 @@ extern "C" {
 void CAPI_OnBaseSuccess(int cbId, const char* data);
 void CAPI_OnBaseError(int cbId, int code, const char* message);
 
-// 上传文件回调
-void CAPI_OnUploadOpen(long long fileSize);
-void CAPI_OnUploadPartSize(long long partSize, int partNumber);
-void CAPI_OnUploadHashProgress(int index, long long size, const char* partHash);
-void CAPI_OnUploadHashComplete(const char* partsHash, const char* fileHash);
-void CAPI_OnUploadID(const char* uploadID);
-void CAPI_OnUploadPartComplete(int index, long long partSize, const char* partHash);
-void CAPI_OnUploadComplete(long long fileSize, long long streamSize, long long storageSize);
-void CAPI_OnUploadFinish(long long size, const char* url, int fileType);
+// 上传文件回调（SDK 现在传递 cbId 作为第一个参数）
+void CAPI_OnUploadOpen(int cbId, long long fileSize);
+void CAPI_OnUploadPartSize(int cbId, long long partSize, int partNumber);
+void CAPI_OnUploadHashProgress(int cbId, int index, long long size, const char* partHash);
+void CAPI_OnUploadHashComplete(int cbId, const char* partsHash, const char* fileHash);
+void CAPI_OnUploadID(int cbId, const char* uploadID);
+void CAPI_OnUploadPartComplete(int cbId, int index, long long partSize, const char* partHash);
+void CAPI_OnUploadComplete(int cbId, long long fileSize, long long streamSize, long long storageSize);
+void CAPI_OnUploadFinish(int cbId, long long size, const char* url, int fileType);
 
-// 日志上传回调
-void CAPI_OnUploadLogProgress(long long current, long long total);
+// 日志上传回调（SDK 现在传递 cbId 作为第一个参数）
+void CAPI_OnUploadLogProgress(int cbId, long long current, long long total);
 
 // 发送进度回调
 void CAPI_OnSendMsg(int cbId, int progress);
@@ -180,10 +180,6 @@ struct ListenerCallbacks {
 static std::mutex g_callback_mutex;
 static bool g_callback_ids[CB_MAX] = {false};
 
-// 当前上传回调 ID（SDK 的上传回调不包含 cbId 参数，需要从上下文获取）
-static int g_currentUploadCallbackId = INVALID_CALLBACK_ID;
-static std::mutex g_upload_mutex;
-
 // ============================================================
 // 工具函数实现
 // ============================================================
@@ -258,22 +254,6 @@ void DeleteBaseCallback(int cbId) {
 // 上传文件回调实现
 // ============================================================
 
-// ============================================================
-// 上传回调上下文管理
-// ============================================================
-
-// 设置当前上传回调 ID（SDK 上传回调不包含 cbId，需从上下文获取）
-void SetCurrentUploadCallbackId(int cbId) {
-    std::lock_guard<std::mutex> lock(g_upload_mutex);
-    g_currentUploadCallbackId = cbId;
-}
-
-// 获取当前上传回调 ID
-int GetCurrentUploadCallbackId() {
-    std::lock_guard<std::mutex> lock(g_upload_mutex);
-    return g_currentUploadCallbackId;
-}
-
 int StoreUploadCallbacks(
     napi_env env,
     napi_value onOpen,
@@ -299,9 +279,6 @@ int StoreUploadCallbacks(
     napi_create_reference(env, onComplete, 1, &ctx.onCompleteRef);
     ctx.env = env;
     ctx.isValid = true;
-
-    // 设置当前上传回调 ID
-    SetCurrentUploadCallbackId(cbId);
 
     // Register with SDK
     RegisterUploadFileCallback(
@@ -1137,53 +1114,42 @@ void CAPI_OnBaseError(int cbId, int code, const char* message) {
     CallBaseErrorCallback(cbId, code, message);
 }
 
-// 上传文件回调
-void CAPI_OnUploadOpen(long long fileSize) {
-    int cbId = GetCurrentUploadCallbackId();
+// 上传文件回调（SDK 现在传递 cbId）
+void CAPI_OnUploadOpen(int cbId, long long fileSize) {
     CallUploadOpenCallback(cbId, fileSize);
 }
 
-void CAPI_OnUploadPartSize(long long partSize, int partNumber) {
-    int cbId = GetCurrentUploadCallbackId();
+void CAPI_OnUploadPartSize(int cbId, long long partSize, int partNumber) {
     CallUploadPartSizeCallback(cbId, partSize, partNumber);
 }
 
-void CAPI_OnUploadHashProgress(int index, long long size, const char* partHash) {
-    int cbId = GetCurrentUploadCallbackId();
+void CAPI_OnUploadHashProgress(int cbId, int index, long long size, const char* partHash) {
     CallUploadHashProgressCallback(cbId, index, size, partHash);
 }
 
-void CAPI_OnUploadHashComplete(const char* partsHash, const char* fileHash) {
-    int cbId = GetCurrentUploadCallbackId();
+void CAPI_OnUploadHashComplete(int cbId, const char* partsHash, const char* fileHash) {
     CallUploadHashCompleteCallback(cbId, partsHash, fileHash);
 }
 
-void CAPI_OnUploadID(const char* uploadID) {
-    int cbId = GetCurrentUploadCallbackId();
+void CAPI_OnUploadID(int cbId, const char* uploadID) {
     CallUploadIDCallback(cbId, uploadID);
 }
 
-void CAPI_OnUploadPartComplete(int index, long long partSize, const char* partHash) {
-    int cbId = GetCurrentUploadCallbackId();
+void CAPI_OnUploadPartComplete(int cbId, int index, long long partSize, const char* partHash) {
     CallUploadPartCompleteCallback(cbId, index, partSize, partHash);
 }
 
-void CAPI_OnUploadComplete(long long fileSize, long long streamSize, long long storageSize) {
-    int cbId = GetCurrentUploadCallbackId();
+void CAPI_OnUploadComplete(int cbId, long long fileSize, long long streamSize, long long storageSize) {
     CallUploadCompleteCallback(cbId, fileSize, streamSize, storageSize);
 }
 
-void CAPI_OnUploadFinish(long long size, const char* url, int fileType) {
-    int cbId = GetCurrentUploadCallbackId();
+void CAPI_OnUploadFinish(int cbId, long long size, const char* url, int fileType) {
     CallUploadFinishCallback(cbId, size, url, fileType);
-    // 上传完成后清除当前上传回调 ID
-    SetCurrentUploadCallbackId(INVALID_CALLBACK_ID);
 }
 
-// 日志上传回调
-void CAPI_OnUploadLogProgress(long long current, long long total) {
-    // 日志上传回调也需要类似处理，但 SDK 中没有包含 cbId
-    // 这里需要使用一个单独的机制来跟踪
+// 日志上传回调（SDK 现在传递 cbId）
+void CAPI_OnUploadLogProgress(int cbId, long long current, long long total) {
+    CallUploadLogProgressCallback(cbId, current, total);
 }
 
 // 发送进度回调

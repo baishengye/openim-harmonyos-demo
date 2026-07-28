@@ -25,7 +25,7 @@ include_directories(
     ${NATIVERENDER_ROOT_PATH}/libs/include
 )
 
-add_library(imsdk SHARED napi_init.cpp utils.cpp listener.cpp callback.cpp)
+add_library(imsdk SHARED napi_init.cpp utils.cpp listener.cpp callback.cpp friend.cpp group.cpp listener.cpp message.cpp misc.cpp user.cpp utils.cpp)
 
 # =============== 4. 链接依赖 =============================
 target_link_libraries(imsdk

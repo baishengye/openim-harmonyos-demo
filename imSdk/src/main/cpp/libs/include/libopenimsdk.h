@@ -107,14 +107,14 @@ typedef void (*MsgKvInfoCb)(char*);
 static MsgKvInfoCb gMsgKvInfoChanged[CB_MAX];
 
 // Upload callbacks
-typedef void (*UploadOpenCb)(long long);
-typedef void (*UploadPartSizeCb)(long long, int);
-typedef void (*UploadHashProgressCb)(int, long long, char*);
-typedef void (*UploadHashCompleteCb)(char*, char*);
-typedef void (*UploadIDCb)(char*);
-typedef void (*UploadPartCompleteCb)(int, long long, char*);
-typedef void (*UploadCompleteCb)(long long, long long, long long);
-typedef void (*UploadFinishCb)(long long, char*, int);
+typedef void (*UploadOpenCb)(int, long long);
+typedef void (*UploadPartSizeCb)(int, long long, int);
+typedef void (*UploadHashProgressCb)(int, int, long long, char*);
+typedef void (*UploadHashCompleteCb)(int, char*, char*);
+typedef void (*UploadIDCb)(int, char*);
+typedef void (*UploadPartCompleteCb)(int, int, long long, char*);
+typedef void (*UploadCompleteCb)(int, long long, long long, long long);
+typedef void (*UploadFinishCb)(int, long long, char*, int);
 
 static UploadOpenCb gUploadOpen[CB_MAX];
 static UploadPartSizeCb gUploadPartSize[CB_MAX];
@@ -126,16 +126,12 @@ static UploadCompleteCb gUploadComplete[CB_MAX];
 static UploadFinishCb gUploadFinish[CB_MAX];
 
 // Upload log progress callback
-typedef void (*UploadLogProgressCb)(long long, long long);
+typedef void (*UploadLogProgressCb)(int, long long, long long);
 static UploadLogProgressCb gUploadLogProgress[CB_MAX];
 
 // Send message callback
-typedef void (*SendMsgCb)(int);
+typedef void (*SendMsgCb)(int, int);
 static SendMsgCb gSendMsg[CB_MAX];
-
-// Send message callback with ID
-typedef void (*SendMsgWithIDCb)(int, int);
-static SendMsgWithIDCb gSendMsgWithID[CB_MAX];
 
 // Base callback type - for OnSuccess/OnError
 typedef void (*BaseSuccessCb)(int, char*);
@@ -211,20 +207,19 @@ static void callCustomBusiness(char* m) { if(gCustomBusiness[0]) gCustomBusiness
 static void callMsgKvInfoChanged(char* m) { if(gMsgKvInfoChanged[0]) gMsgKvInfoChanged[0](m); }
 
 // Upload callbacks
-static void callUploadOpen(int cb, long long s) { if(gUploadOpen[cb]) gUploadOpen[cb](s); }
-static void callUploadPartSize(int cb, long long s, int n) { if(gUploadPartSize[cb]) gUploadPartSize[cb](s, n); }
-static void callUploadHashProgress(int cb, int i, long long s, char* h) { if(gUploadHashProgress[cb]) gUploadHashProgress[cb](i, s, h); }
-static void callUploadHashComplete(int cb, char* p, char* f) { if(gUploadHashComplete[cb]) gUploadHashComplete[cb](p, f); }
-static void callUploadID(int cb, char* u) { if(gUploadID[cb]) gUploadID[cb](u); }
-static void callUploadPartComplete(int cb, int i, long long s, char* h) { if(gUploadPartComplete[cb]) gUploadPartComplete[cb](i, s, h); }
-static void callUploadComplete(int cb, long long f, long long s, long long st) { if(gUploadComplete[cb]) gUploadComplete[cb](f, s, st); }
-static void callUploadFinish(int cb, long long s, char* u, int t) { if(gUploadFinish[cb]) gUploadFinish[cb](s, u, t); }
+static void callUploadOpen(int cb, long long s) { if(gUploadOpen[cb]) gUploadOpen[cb](cb, s); }
+static void callUploadPartSize(int cb, long long s, int n) { if(gUploadPartSize[cb]) gUploadPartSize[cb](cb, s, n); }
+static void callUploadHashProgress(int cb, int i, long long s, char* h) { if(gUploadHashProgress[cb]) gUploadHashProgress[cb](cb, i, s, h); }
+static void callUploadHashComplete(int cb, char* p, char* f) { if(gUploadHashComplete[cb]) gUploadHashComplete[cb](cb, p, f); }
+static void callUploadID(int cb, char* u) { if(gUploadID[cb]) gUploadID[cb](cb, u); }
+static void callUploadPartComplete(int cb, int i, long long s, char* h) { if(gUploadPartComplete[cb]) gUploadPartComplete[cb](cb, i, s, h); }
+static void callUploadComplete(int cb, long long f, long long s, long long st) { if(gUploadComplete[cb]) gUploadComplete[cb](cb, f, s, st); }
+static void callUploadFinish(int cb, long long s, char* u, int t) { if(gUploadFinish[cb]) gUploadFinish[cb](cb, s, u, t); }
 
 // Upload log progress callback
-static void callUploadLogProgress(int cb, long long c, long long t) { if(gUploadLogProgress[cb]) gUploadLogProgress[cb](c, t); }
+static void callUploadLogProgress(int cb, long long c, long long t) { if(gUploadLogProgress[cb]) gUploadLogProgress[cb](cb, c, t); }
 
-static void callSendMsg(int v) { if(gSendMsg[0]) gSendMsg[0](v); }
-static void callSendMsgWithID(int id, int v) { if(gSendMsgWithID[id]) gSendMsgWithID[id](id, v); }
+static void callSendMsg(int cb, int v) { if(gSendMsg[cb]) gSendMsg[cb](cb, v); }
 static void callBaseSuccess(int cb, char* d) { if(gBaseSuccess[cb]) gBaseSuccess[cb](cb, d); }
 static void callBaseError(int cb, int code, char* m) { if(gBaseError[cb]) gBaseError[cb](cb, code, m); }
 
