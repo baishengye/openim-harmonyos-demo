@@ -23,6 +23,9 @@ extern const char *_GoStringPtr(_GoString_ s);
 
 #line 17 "harmony_bridge.go"
 
+#ifndef LIBOPENIMSDK_H
+#define LIBOPENIMSDK_H
+
 #include <stdlib.h>
 
 // Callback types
@@ -222,6 +225,8 @@ static void callUploadLogProgress(int cb, long long c, long long t) { if(gUpload
 static void callSendMsg(int cb, int v) { if(gSendMsg[cb]) gSendMsg[cb](cb, v); }
 static void callBaseSuccess(int cb, char* d) { if(gBaseSuccess[cb]) gBaseSuccess[cb](cb, d); }
 static void callBaseError(int cb, int code, char* m) { if(gBaseError[cb]) gBaseError[cb](cb, code, m); }
+
+#endif // LIBOPENIMSDK_H
 
 #line 1 "cgo-generated-wrapper"
 
