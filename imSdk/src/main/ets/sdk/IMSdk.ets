@@ -1,829 +1,483 @@
-// src/main/ets/sdk/NativeSdk.ts
-import imapi from 'libimsdk.so';
-import { AdvancedGetMessageResult,
-  BlackUserItem,
-  ConversationItem,
-  FriendApplicationItem,
-  FriendshipInfo,
-  FriendUserItem,
-  GroupApplicationItem,
-  GroupItem, GroupMemberItem, IMConfig,
-  MessageItem,
-  PublicUserItem,
-  SearchedFriendsInfo,
-  SearchMessageResult,
-  SelfUserInfo,
-  UserOnlineState} from './entity';
-import { CbEvents, GroupAtType, LoginStatus, MessageReceiveOptType, Platform } from './enum';
-import {
-  AccessFriendApplicationParams,
-  AccessGroupApplicationParams,
-  AccessMessageParams,
-  AccessToGroupParams,
-  AddBlackParams,
-  AddFriendParams,
-  AdvancedMsgParams,
-  AdvancedQuoteMsgParams,
-  AtMsgParams,
-  ChangeGroupMuteParams,
-  ChangeInputStatesParams,
-  CreateGroupParams,
-  CustomMsgParams,
-  FaceMessageParams,
-  FileMsgParamsByURL,
-  FindMessageParams,
-  FriendApplicationListAsApplicantParams,
-  FriendApplicationListAsRecipientParams,
-  GetAdvancedHistoryMsgParams,
-  GetGroupMemberByTimeParams,
-  GetGroupMemberParams,
-  GetHistoryMsgParams,
-  GetInputstatesParams,
-  GetOneConversationParams,
-  GetSpecifiedFriendsParams,
-  ImageMsgParamsByURL,
-  InitAndLoginConfig,
-  InsertGroupMsgParams,
-  InsertSingleMsgParams,
-  JoinGroupParams,
-  LocationMsgParams,
-  MergerMsgParams,
-  CardElem,
-  OffsetParams,
-  PartialUserItem,
-  PinFriendParams,
-  QuoteMsgParams,
-  RemarkFriendParams,
-  SearchFriendParams,
-  SearchGroupMemberParams,
-  SearchGroupParams,
-  SearchLocalParams,
-  SendMsgParams,
-  SetBurnDurationParams,
-  SetConversationDraftParams,
-  SetConversationExParams,
-  SetConversationMsgDestructParams,
-  SetConversationMsgDestructTimeParams,
-  SetConversationParams,
-  SetConversationPinParams,
-  SetConversationPrivateStateParams,
-  SetConversationRecvOptParams,
-  SetFriendExParams,
-  SetGroupMemberNickParams,
-  SetGroupRoleParams,
-  SetGroupVerificationParams,
-  SetMemberPermissionParams,
-  SetMessageLocalExParams,
-  SoundMsgParamsByURL,
-  SplitConversationParams,
-  TransferGroupParams,
-  UpdateFriendsParams,
-  UpdateMemberInfoParams,
-  VideoMsgParamsByURL,
-  VideoMsgParamsByFullPath,
-  SoundMsgParamsByFullPath,
-  ChangeGroupMemberMuteParams,
-  TypingUpdateParams,
-  LogsParams,
-  UploadFileParams,
-  UploadLogsParams } from './params';
-import { uuidV4 } from './Utils';
-import { JSON } from '@kit.ArkTS';
-import { Listener } from './listener';
-import { Logger } from './Logger';
-import { notificationManager } from '@kit.NotificationKit';
+/**
+ * OpenIM SDK for HarmonyOS
+ * SDK主入口 - 提供SDK初始化、登录、管理器等功能
+ */
 
-export function getSDK() { return IMSdk.getInstance(); }
+import im from 'libimsdk.so';
+import { buildOperationID } from './Utils';
+import { info, debug, error } from './Logger';
+import { toString } from './JsonUtil';
+import { InitConfig } from './entity';
+import { LoginStatus } from './constant';
+import { MessageManager } from './MessageManager';
+import { ConversationManager } from './ConversationManager';
+import { FriendshipManager } from './FriendshipManager';
+import { GroupManager } from './GroupManager';
+import { UserInfoManager } from './UserInfoManager';
 
-export class IMSdk extends Listener{
-  private static _instance: IMSdk | null = null;
-  public static getInstance(): IMSdk {
-    if (IMSdk._instance === null) {
-      IMSdk._instance = new IMSdk();
+/**
+ * 连接状态监听器
+ */
+export interface OnConnListener {
+  onConnecting?: () => void;
+  onConnectSuccess?: () => void;
+  onConnectFailed?: (errCode: number, errMsg: string) => void;
+  onKickedOffline?: () => void;
+  onUserTokenExpired?: () => void;
+  onUserTokenInvalid?: (errMsg: string) => void;
+}
+
+/**
+ * 消息监听器
+ */
+export interface OnMsgListener {
+  onRecvNewMessage?: (msg: string) => void;
+  onRecvC2CReadReceipt?: (msgReceiptList: string) => void;
+  onMsgRevoked?: (msgRevoked: string) => void;
+  onRecvOfflineNewMessage?: (msg: string) => void;
+  onMsgDeleted?: (msg: string) => void;
+  onRecvOnlineOnlyMessage?: (msg: string) => void;
+}
+
+/**
+ * 会话监听器
+ */
+export interface OnConvListener {
+  onSyncServerStart?: (reinstalled: boolean) => void;
+  onSyncServerFinish?: (reinstalled: boolean) => void;
+  onSyncServerProgress?: (progress: number) => void;
+  onSyncServerFailed?: (reinstalled: boolean) => void;
+  onNewConversation?: (convList: string) => void;
+  onConversationChanged?: (convList: string) => void;
+  onTotalUnreadChanged?: (count: number) => void;
+  onInputStatusChanged?: (change: string) => void;
+}
+
+/**
+ * 群组监听器
+ */
+export interface OnGroupListener {
+  onJoinedGroupAdded?: (groupInfo: string) => void;
+  onJoinedGroupDeleted?: (groupInfo: string) => void;
+  onGroupMemberAdded?: (memberInfo: string) => void;
+  onGroupMemberDeleted?: (memberInfo: string) => void;
+  onGroupApplicationAdded?: (application: string) => void;
+  onGroupApplicationDeleted?: (application: string) => void;
+  onGroupInfoChanged?: (groupInfo: string) => void;
+  onGroupDismissed?: (groupInfo: string) => void;
+  onGroupMemberInfoChanged?: (memberInfo: string) => void;
+  onGroupApplicationAccepted?: (application: string) => void;
+  onGroupApplicationRejected?: (application: string) => void;
+}
+
+/**
+ * 好友监听器
+ */
+export interface OnFriendListener {
+  onFriendApplicationAdded?: (application: string) => void;
+  onFriendApplicationDeleted?: (application: string) => void;
+  onFriendApplicationAccepted?: (application: string) => void;
+  onFriendApplicationRejected?: (application: string) => void;
+  onFriendAdded?: (friendInfo: string) => void;
+  onFriendDeleted?: (friendInfo: string) => void;
+  onFriendInfoChanged?: (friendInfo: string) => void;
+  onBlackAdded?: (blackInfo: string) => void;
+  onBlackDeleted?: (blackInfo: string) => void;
+}
+
+/**
+ * 用户监听器
+ */
+export interface OnUserListener {
+  onSelfInfoUpdated?: (userInfo: string) => void;
+  onUserStatusChanged?: (status: string) => void;
+}
+
+/**
+ * SDK事件监听器
+ */
+export interface SDKListener {
+  onConnListener?: OnConnListener;
+  onMsgListener?: OnMsgListener;
+  onConvListener?: OnConvListener;
+  onGroupListener?: OnGroupListener;
+  onFriendListener?: OnFriendListener;
+  onUserListener?: OnUserListener;
+}
+
+/**
+ * OpenIM客户端SDK
+ * 单例模式，提供SDK的所有功能
+ */
+export class OpenIM {
+  private static instance: OpenIM;
+
+  /** 消息管理器 */
+  public messageManager: MessageManager = new MessageManager();
+  /** 会话管理器 */
+  public conversationManager: ConversationManager = new ConversationManager();
+  /** 好友管理器 */
+  public friendshipManager: FriendshipManager = new FriendshipManager();
+  /** 群组管理器 */
+  public groupManager: GroupManager = new GroupManager();
+  /** 用户信息管理器 */
+  public userInfoManager: UserInfoManager = new UserInfoManager();
+
+  private sdkListener: SDKListener = {};
+  private initialized: boolean = false;
+
+  private constructor() {}
+
+  /**
+   * 获取OpenIM单例实例
+   */
+  static getInstance(): OpenIM {
+    if (!OpenIM.instance) {
+      OpenIM.instance = new OpenIM();
     }
-    return IMSdk._instance;
-  }
-  private constructor() {
-    super(); // 必须调用父类构造函数
-  }
-  initSDK(config: IMConfig, operationID: string = uuidV4()): number {
-    const state = imapi.initSdk(operationID, JSON.stringify(config))
-    Logger.print(`startListener`)
-    this.startListener();
-    return state
-  }
-  unInitSDK(operationID: string = uuidV4()) {
-    return imapi.unInitSdk(operationID)
-  }
-  async login(params: InitAndLoginConfig, operationID: string = uuidV4()): Promise<string> {
-    return imapi.login(operationID, params.userID, params.token);
-  }
-  async logout(operationID: string = uuidV4()): Promise<string> {
-    return imapi.logout(operationID);
-  }
-  async getAllConversationList(operationID: string = uuidV4()): Promise<ConversationItem[]> {
-    const result = await imapi.getAllConversationList(operationID);
-    return JSON.parse(result) as ConversationItem[];
-  }
-  async getOneConversation(params: GetOneConversationParams, operationID: string = uuidV4()): Promise<ConversationItem> {
-    const result = await imapi.getOneConversation(operationID, params.sessionType, params.sourceID);
-    return JSON.parse(result) as ConversationItem;
-  }
-  async getAdvancedHistoryMessageList(params: GetAdvancedHistoryMsgParams, operationID: string = uuidV4()): Promise<AdvancedGetMessageResult> {
-    const result = await imapi.getAdvancedHistoryMessageList(operationID, JSON.stringify(params));
-    return JSON.parse(result) as AdvancedGetMessageResult;
-  }
-  async getAdvancedHistoryMessageListReverse(params: GetAdvancedHistoryMsgParams, operationID: string = uuidV4()): Promise<AdvancedGetMessageResult> {
-    const result = await imapi.getAdvancedHistoryMessageListReverse(operationID, JSON.stringify(params));
-    return JSON.parse(result) as AdvancedGetMessageResult;
-  }
-  async getSpecifiedGroupsInfo(params: string[], operationID: string = uuidV4()): Promise<GroupItem[]> {
-    const result = await imapi.getSpecifiedGroupsInfo(operationID, JSON.stringify(params));
-    return JSON.parse(result) as GroupItem[];
-  }
-  async deleteConversationAndDeleteAllMsg(conversationID: string, operationID: string = uuidV4()): Promise<string> {
-   return imapi.deleteConversationAndDeleteAllMsg(operationID, conversationID);
-  }
-  async markConversationMessageAsRead(conversationID: string, operationID: string = uuidV4()): Promise<string> {
-    return imapi.markConversationMessageAsRead(operationID, conversationID);
-  }
-  async getGroupMemberList(params: GetGroupMemberParams, operationID: string = uuidV4()): Promise<GroupMemberItem[]> {
-    const result = await  imapi.getGroupMemberList(operationID, params.groupID, params.filter, params.offset, params.count);
-    return JSON.parse(result) as GroupMemberItem[];
-  }
-  async createTextMessage(text: string, operationID: string = uuidV4()): Promise<MessageItem> {
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.createTextMessage(operationID, text);
-        resolve(JSON.parse(result) as MessageItem)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async createImageMessageByURL(params: ImageMsgParamsByURL, operationID: string = uuidV4()): Promise<MessageItem> {
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.createImageMessageByUrl(operationID,  params.sourcePath,
-          JSON.stringify(params.sourcePicture),
-          JSON.stringify(params.bigPicture),
-          JSON.stringify(params.snapshotPicture));
-        resolve(JSON.parse(result) as MessageItem)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async createImageMessageByFile(params: ImageMsgParamsByURL, operationID: string = uuidV4()): Promise<MessageItem> {
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.createImageMessageByUrl(operationID,  params.sourcePath,
-          JSON.stringify(params.sourcePicture),
-          JSON.stringify(params.bigPicture),
-          JSON.stringify(params.snapshotPicture));
-        resolve(JSON.parse(result) as MessageItem)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async createImageMessageFromFullPath(imageFullPath: string, operationID: string = uuidV4()): Promise<MessageItem> {
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.createImageMessageFromFullPath(operationID,  imageFullPath);
-        resolve(JSON.parse(result) as MessageItem)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async createCustomMessage(params: CustomMsgParams, operationID: string = uuidV4()): Promise<MessageItem> {
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.createCustomMessage(operationID,  params.data, params.extension, params.description);
-        resolve(JSON.parse(result) as MessageItem)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async createQuoteMessage(params: QuoteMsgParams, operationID: string = uuidV4()): Promise<MessageItem> {
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.createQuoteMessage(operationID,  params.text, JSON.stringify(params.message));
-        resolve(JSON.parse(result) as MessageItem)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async createAdvancedQuoteMessage(params: AdvancedQuoteMsgParams, operationID: string = uuidV4()): Promise<MessageItem> {
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.createAdvancedQuoteMessage(operationID,  params.text, JSON.stringify(params.message), JSON.stringify(params.messageEntityList));
-        resolve(JSON.parse(result) as MessageItem)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async createAdvancedTextMessage(params: AdvancedMsgParams, operationID: string = uuidV4()): Promise<MessageItem> {
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.createAdvancedTextMessage(operationID,  params.text, JSON.stringify(params.messageEntityList));
-        resolve(JSON.parse(result) as MessageItem)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async sendMessage(params: SendMsgParams, operationID: string = uuidV4()): Promise<MessageItem> {
-    const offlinePushInfo = params.offlinePushInfo ?? {
-      title: 'You have a new message.',
-      desc: '',
-      ex: '',
-      iOSPushSound: '+1',
-      iOSBadgeCount: true,
-    };
-    const result = await imapi.sendMessage(operationID, JSON.stringify(params.message),
-      params.recvID,
-      params.groupID,
-      JSON.stringify(offlinePushInfo),
-      params.isOnlineOnly ?? false,
-      (data: string) => {
-        this.callback(CbEvents.OnMessageProgress, data);
-      });
-    return JSON.parse(result) as MessageItem;
-  }
-  async sendMessageNotOss(params: SendMsgParams, operationID: string = uuidV4()): Promise<MessageItem> {
-    const offlinePushInfo = params.offlinePushInfo ?? {
-      title: 'You have a new message.',
-      desc: '',
-      ex: '',
-      iOSPushSound: '+1',
-      iOSBadgeCount: true,
-    };
-    const result = await imapi.sendMessageNotOss(operationID, JSON.stringify(params.message),
-      params.recvID,
-      params.groupID,
-      JSON.stringify(offlinePushInfo),
-      params.isOnlineOnly ?? false,
-      (data: string) => {
-        this.callback(CbEvents.OnMessageProgress, data);
-      });
-    return JSON.parse(result) as MessageItem;
-  }
-  async setMessageLocalEx(params: SetMessageLocalExParams, operationID: string = uuidV4()): Promise<MessageItem> {
-    const result = await imapi.setMessageLocalEx(operationID,  params.conversationID, params.clientMsgID, params.localEx);
-    return JSON.parse(result) as MessageItem;
-  }
-  async getHistoryMessageListReverse(params: GetHistoryMsgParams, operationID: string = uuidV4()): Promise<AdvancedGetMessageResult> {
-    const result = await imapi.getAdvancedHistoryMessageListReverse(operationID,  JSON.stringify(params));
-    return JSON.parse(result) as AdvancedGetMessageResult;
-  }
-  async revokeMessage(params: AccessMessageParams, operationID: string = uuidV4()): Promise<string> {
-    return imapi.revokeMessage(operationID, params.conversationID, params.clientMsgID);
-  }
-  async setConversation(params: SetConversationParams, operationID: string = uuidV4()): Promise<string> {
-    return imapi.setConversation(operationID, params.conversationID, JSON.stringify(params));
-  }
-  async setConversationPrivateChat(params: SetConversationPrivateStateParams, operationID: string = uuidV4()): Promise<string> {
-    return imapi.setConversation(operationID, params.conversationID, JSON.stringify({isPrivateChat: params.isPrivate}));
-  }
-  async setConversationBurnDuration(params: SetBurnDurationParams, operationID: string = uuidV4()): Promise<string> {
-    return imapi.setConversation(operationID, params.conversationID, JSON.stringify({burnDuration: params.burnDuration}));
-  }
-  async getLoginStatus(operationID: string = uuidV4()): Promise<LoginStatus> {
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.getLoginStatus(operationID);
-        resolve(result)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async setAppBackgroundStatus(operationID: string = uuidV4(), status: boolean): Promise<string> {
-    return imapi.setAppBackgroundStatus(operationID, status);
-  }
-  async networkStatusChanged(operationID: string = uuidV4()): Promise<string> {
-    return imapi.networkStatusChanged(operationID);
-  }
-  async getLoginUserID(operationID: string = uuidV4()): Promise<string> {
-    return imapi.getLoginUser(operationID);
-  }
-  async getSelfUserInfo(operationID: string = uuidV4()): Promise<SelfUserInfo> {
-    const result = await imapi.getSelfUserInfo(operationID);
-    return JSON.parse(result) as SelfUserInfo;
-  }
-  async getUsersInfo(data: string[], operationID: string = uuidV4()): Promise<PublicUserItem> {
-    const result = await imapi.getUsersInfo(operationID,  JSON.stringify(data));
-    return JSON.parse(result) as PublicUserItem;
-  }
-  async setSelfInfoEx(data: PartialUserItem, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.setSelfInfo(operationID,  JSON.stringify(data));
-    return result
-  }
-  async setSelfInfo(data: PartialUserItem, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.setSelfInfo(operationID,  JSON.stringify(data));
-    return result
-  }
-  async createTextAtMessage(data: AtMsgParams, operationID: string = uuidV4()): Promise<MessageItem> {
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.createTextAtMessage(operationID, data.text, JSON.stringify(data.atUserIDList), JSON.stringify(data.atUsersInfo), JSON.stringify(data.message) ?? '');
-        resolve(JSON.parse(result) as MessageItem)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async createSoundMessageByURL(data: SoundMsgParamsByURL, operationID: string = uuidV4()): Promise<MessageItem> {
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.createSoundMessageByUrl(operationID, JSON.stringify(data));
-        resolve(JSON.parse(result) as MessageItem)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async createSoundMessageByFile(data: SoundMsgParamsByURL, operationID: string = uuidV4()): Promise<MessageItem> {
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.createSoundMessageByUrl(operationID, JSON.stringify(data));
-        resolve(JSON.parse(result) as MessageItem)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async createSoundMessageFromFullPath(data:SoundMsgParamsByFullPath,operationID: string = uuidV4()): Promise<MessageItem>{
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.createSoundMessageFromFullPath(operationID,data.soundPath,data.duration);
-        resolve(JSON.parse(result) as MessageItem)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async createVideoMessageByURL(data: VideoMsgParamsByURL, operationID: string = uuidV4()): Promise<MessageItem> {
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.createVideoMessageByUrl(operationID, JSON.stringify(data));
-        resolve(JSON.parse(result) as MessageItem)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async createVideoMessageByFile(data: VideoMsgParamsByURL, operationID: string = uuidV4()): Promise<MessageItem> {
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.createVideoMessageByUrl(operationID, JSON.stringify(data));
-        resolve(JSON.parse(result) as MessageItem)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async createVideoMessageFromFullPath(data:VideoMsgParamsByFullPath,operationID: string = uuidV4()): Promise<MessageItem>{
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.createVideoMessageFromFullPath(operationID,data.videoFullPath,data.videoType,data.duration,data.snapshotFullPath);
-        resolve(JSON.parse(result) as MessageItem)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async createFileMessageByURL(data: FileMsgParamsByURL, operationID: string = uuidV4()): Promise<MessageItem> {
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.createFileMessageByUrl(operationID, JSON.stringify(data));
-        resolve(JSON.parse(result) as MessageItem)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async createFileMessageByFile(data: FileMsgParamsByURL, operationID: string = uuidV4()): Promise<MessageItem> {
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.createFileMessageByUrl(operationID, JSON.stringify(data));
-        resolve(JSON.parse(result) as MessageItem)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async createMergerMessage(data: MergerMsgParams, operationID: string = uuidV4()): Promise<MessageItem> {
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.createMergerMessage(operationID, JSON.stringify(data.messageList), data.title, JSON.stringify(data.summaryList));
-        resolve(JSON.parse(result) as MessageItem)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async createForwardMessage(data: MessageItem, operationID: string = uuidV4()): Promise<MessageItem> {
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.createForwardMessage(operationID, JSON.stringify(data));
-        resolve(JSON.parse(result) as MessageItem)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async createFaceMessage(data: FaceMessageParams, operationID: string = uuidV4()): Promise<MessageItem> {
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.createFaceMessage(operationID, data.index, data.data);
-        resolve(JSON.parse(result) as MessageItem)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async createLocationMessage(data: LocationMsgParams, operationID: string = uuidV4()): Promise<MessageItem> {
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.createLocationMessage(operationID, data.description, data.longitude, data.latitude);
-        resolve(JSON.parse(result) as MessageItem)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async createCardMessage(data: CardElem, operationID: string = uuidV4()): Promise<MessageItem> {
-    return new Promise((resolve, reject) => {
-      try {
-        const result = imapi.createCardMessage(operationID, JSON.stringify(data));
-        resolve(JSON.parse(result) as MessageItem)
-      } catch (e) {
-        reject(e)
-      }
-    });
-  }
-  async deleteMessageFromLocalStorage(data: AccessMessageParams, operationID: string = uuidV4()): Promise<string> {
-    return imapi.deleteMessageFromLocalStorage(operationID, data.conversationID, data.clientMsgID);
-  }
-  async deleteMessage(data: AccessMessageParams, operationID: string = uuidV4()): Promise<string> {
-    return imapi.deleteMessage(operationID, data.conversationID, data.clientMsgID);
-  }
-  async deleteAllMsgFromLocal(operationID: string = uuidV4()): Promise<string> {
-    return imapi.deleteAllMsgFromLocal(operationID);
-  }
-  async deleteAllMsgFromLocalAndSvr(operationID: string = uuidV4()): Promise<string> {
-    return imapi.deleteAllMsgFromLocalAndSvr(operationID);
-  }
-  async insertSingleMessageToLocalStorage( data: InsertSingleMsgParams,  operationID: string = uuidV4()): Promise<string> {
-    return imapi.insertSingleMessageToLocalStorage(operationID, JSON.stringify(data.message), data.recvID, data.sendID);
-  }
-  async insertGroupMessageToLocalStorage( data: InsertGroupMsgParams,  operationID: string = uuidV4()): Promise<string> {
-    return imapi.insertGroupMessageToLocalStorage(operationID, JSON.stringify(data.message), data.groupID, data.sendID);
-  }
-  async changeInputStates( data: ChangeInputStatesParams,  operationID: string = uuidV4()): Promise<string> {
-    return imapi.changeInputStates(operationID, data.conversationID, data.focus);
-  }
-  async getInputStates( data: GetInputstatesParams,  operationID: string = uuidV4()): Promise<Platform[]> {
-    const result = await imapi.getInputStates(operationID, data.conversationID, data.userID);
-    return JSON.parse(result) as Platform[];
-  }
-  async clearConversationAndDeleteAllMsg( data: string,  operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.clearConversationAndDeleteAllMsg(operationID, data);
-    return result;
-  }
-  async hideConversation( data: string,  operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.hideConversation(operationID, data);
-    return result;
-  }
-  async getConversationListSplit( data: SplitConversationParams,  operationID: string = uuidV4()): Promise<ConversationItem[]> {
-    const result = await imapi.getConversationListSplit(operationID, data.offset, data.count);
-    return JSON.parse(result) as ConversationItem[];
-  }
-  async setConversationEx( data: SetConversationExParams,  operationID: string = uuidV4()): Promise<ConversationItem[]> {
-    const result = await imapi.setConversation(operationID, data.conversationID, JSON.stringify({ ex: data.ex}));
-    return JSON.parse(result) as ConversationItem[];
-  }
-  async getConversationIDBySessionType( data: GetOneConversationParams,  operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.getConversationIdBySessionType(operationID, data.sourceID, data.sessionType);
-    return result;
-  }
-  async getMultipleConversation( data: string[],  operationID: string = uuidV4()): Promise<ConversationItem[]> {
-    const result = await imapi.getMultipleConversation(operationID, JSON.stringify(data));
-    return JSON.parse(result) as ConversationItem[];
-  }
-  async deleteConversation( conversationID: string,  operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.deleteConversationAndDeleteAllMsg(operationID, conversationID);
-    return result;
-  }
-  async setConversationDraft( data: SetConversationDraftParams,  operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.setConversationDraft(operationID, data.conversationID, data.draftText);
-    return result;
-  }
-  async pinConversation( data: SetConversationPinParams,  operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.setConversation(operationID, data.conversationID, JSON.stringify({ isPinned: data.isPinned}));
-    return result;
-  }
-  async getTotalUnreadMsgCount(operationID: string = uuidV4()): Promise<number> {
-    const result = await imapi.getTotalUnreadMsgCount(operationID);
-    return Number(result);
-  }
-  async setConversationRecvMessageOpt( data: SetConversationRecvOptParams,  operationID: string = uuidV4()): Promise<ConversationItem[]> {
-    const result = await imapi.setConversation(operationID, data.conversationID, JSON.stringify({ recvMsgOpt: data.opt}));
-    return JSON.parse(result) as ConversationItem[];
-  }
-  async searchLocalMessages( data: SearchLocalParams,  operationID: string = uuidV4()): Promise<SearchMessageResult> {
-    const result = await imapi.searchLocalMessages(operationID, JSON.stringify(data));
-    return JSON.parse(result) as SearchMessageResult;
-  }
-  async addFriend( data: AddFriendParams,  operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.addFriend(operationID, JSON.stringify(data));
-    return result;
-  }
-  async searchFriends( data: SearchFriendParams,  operationID: string = uuidV4()): Promise<SearchedFriendsInfo[]> {
-    const result = await imapi.searchFriends(operationID, JSON.stringify(data));
-    return JSON.parse(result) as SearchedFriendsInfo[];
-  }
-  async getSpecifiedFriendsInfo(data: GetSpecifiedFriendsParams,  operationID: string = uuidV4()): Promise<FriendUserItem[]> {
-    const result = await imapi.getSpecifiedFriendsInfo(operationID, JSON.stringify(data.friendUserIDList), data.filterBlack);
-    return JSON.parse(result) as SearchedFriendsInfo[];
-  }
-  async getFriendApplicationListAsRecipient(data: FriendApplicationListAsRecipientParams, operationID: string = uuidV4()): Promise<FriendApplicationItem[]> {
-    const result = await imapi.getFriendApplicationListAsRecipient(operationID, JSON.stringify(data));
-    return JSON.parse(result) as FriendApplicationItem[];
-  }
-  async getFriendApplicationListAsApplicant(data: FriendApplicationListAsApplicantParams, operationID: string = uuidV4()): Promise<FriendApplicationItem[]> {
-    const result = await imapi.getFriendApplicationListAsApplicant(operationID, JSON.stringify(data));
-    return JSON.parse(result) as FriendApplicationItem[];
-  }
-  async getFriendList(filterBlack = false, operationID: string = uuidV4()): Promise<FriendUserItem[]> {
-    const result = await imapi.getFriendList(operationID, filterBlack);
-    return JSON.parse(result) as FriendUserItem[];
-  }
-  async getFriendListPage(offset: number, count: number, filterBlack = false, operationID: string = uuidV4()): Promise<FriendUserItem[]> {
-    const result = await imapi.getFriendListPage(operationID, offset, count, filterBlack);
-    return JSON.parse(result) as FriendUserItem[];
-  }
-  async updateFriends(data: UpdateFriendsParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.updateFriends(operationID, JSON.stringify(data));
-    return result;
-  }
-  async setFriendRemark(data: RemarkFriendParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.updateFriends(operationID, JSON.stringify({ friendUserIDs: [data.toUserID], remark: data.remark, }));
-    return result;
-  }
-  async pinFriends(data: PinFriendParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.updateFriends(operationID, JSON.stringify({friendUserIDs: data.toUserIDs,isPinned: data.isPinned}));
-    return result;
-  }
-  async setFriendsEx(data: SetFriendExParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.updateFriends(operationID, JSON.stringify({ friendUserIDs: data.toUserIDs, ex: data.ex}));
-    return result;
-  }
-  async checkFriend(data: string[], operationID: string = uuidV4()): Promise<FriendshipInfo[]> {
-    const result = await imapi.checkFriend(operationID, JSON.stringify(data));
-    return JSON.parse(result) as FriendshipInfo[];
-  }
-  async acceptFriendApplication(data: AccessFriendApplicationParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.acceptFriendApplication(operationID, JSON.stringify(data));
-    return result;
-  }
-  async refuseFriendApplication(data: AccessFriendApplicationParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.refuseFriendApplication(operationID, JSON.stringify(data));
-    return result;
-  }
-  async getFriendApplicationUnhandledCount(req: string, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.getFriendApplicationUnhandledCount(operationID, req);
-    return result;
-  }
-  async deleteFriend(data: string, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.deleteFriend(operationID, JSON.stringify(data));
-    return result;
-  }
-  async addBlack(data: AddBlackParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.addBlack(operationID, data.toUserID, data.ex ?? '');
-    return result;
-  }
-  async removeBlack(removeUserID: string, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.removeBlack(operationID, removeUserID);
-    return result;
-  }
-  async getBlackList(operationID: string = uuidV4()): Promise<BlackUserItem[]> {
-    const result = await imapi.getBlackList(operationID);
-    return JSON.parse(result) as BlackUserItem[];
-  }
-  async inviteUserToGroup(data: AccessToGroupParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.inviteUserToGroup(operationID, data.groupID, data.reason, JSON.stringify(data.userIDList));
-    return result;
-  }
-  async kickGroupMember(data: AccessToGroupParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.kickGroupMember(operationID, data.groupID, data.reason, JSON.stringify(data.userIDList));
-    return result;
-  }
-  async isJoinGroup(groupID: string, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.isJoinGroup(operationID, groupID);
-    return result;
-  }
-  async getSpecifiedGroupMembersInfo(data: AccessToGroupParams, operationID: string = uuidV4()): Promise<GroupMemberItem[]> {
-    const result = await imapi.getSpecifiedGroupMembersInfo(operationID, data.groupID, JSON.stringify(data.userIDList));
-    return JSON.parse(result) as GroupMemberItem[];
-  }
-  async getUsersInGroup(data: AccessToGroupParams, operationID: string = uuidV4()): Promise<string[]> {
-    const result = await imapi.getUsersInGroup(operationID, data.groupID, JSON.stringify(data.userIDList));
-    return JSON.parse(result) as string[];
-  }
-  async getGroupMemberListByJoinTimeFilter(data: GetGroupMemberByTimeParams, operationID: string = uuidV4()): Promise<GroupMemberItem[]> {
-    const result = await imapi.getGroupMemberListByJoinTimeFilter(operationID, data.groupID,
-      data.offset,
-      data.count,
-      data.joinTimeBegin,
-      data.joinTimeEnd,
-      JSON.stringify(data.filterUserIDList));
-    return JSON.parse(result) as GroupMemberItem[];
-  }
-  async searchGroupMembers(data: SearchGroupMemberParams, operationID: string = uuidV4()): Promise<GroupMemberItem[]> {
-    const result = await imapi.searchGroupMembers(operationID, JSON.stringify(data));
-    return JSON.parse(result) as GroupMemberItem[];
-  }
-  async setGroupApplyMemberFriend(data: SetMemberPermissionParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.searchGroupMembers(operationID, JSON.stringify(data));
-    return result;
-  }
-  async setGroupLookMemberInfo(data: SetMemberPermissionParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.setGroupInfo(operationID, JSON.stringify({
-      groupID: data.groupID,
-      lookMemberInfo: data.rule,
-    }));
-    return result;
-  }
-  async getJoinedGroupList(operationID: string = uuidV4()): Promise<GroupItem[]> {
-    const result = await imapi.getJoinedGroupList(operationID);
-    return JSON.parse(result) as GroupItem[];
-  }
-  async getJoinedGroupListPage(data: OffsetParams, operationID: string = uuidV4()): Promise<GroupItem[]> {
-    const result = await imapi.getJoinedGroupListPage(operationID, data.offset, data.count);
-    return JSON.parse(result) as GroupItem[];
-  }
-  async createGroup(data: CreateGroupParams, operationID: string = uuidV4()): Promise<GroupItem> {
-    const result = await imapi.createGroup(operationID, JSON.stringify(data));
-    return JSON.parse(result) as GroupItem;
-  }
-  async setGroupInfo(data: GroupItem, operationID: string = uuidV4()): Promise<GroupItem> {
-    const result = await imapi.setGroupInfo(operationID, JSON.stringify(data));
-    return JSON.parse(result) as GroupItem;
-  }
-  async setGroupMemberNickname(data: SetGroupMemberNickParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.setGroupMemberInfo(operationID, JSON.stringify({
-      groupID: data.groupID,
-      userID: data.userID,
-      nickname: data.groupMemberNickname,
-    }));
-    return result;
-  }
-  async setGroupMemberInfo(data: UpdateMemberInfoParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.setGroupMemberInfo(operationID, JSON.stringify(data));
-    return result;
-  }
-  async joinGroup(data: JoinGroupParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.joinGroup(operationID, data.groupID,
-      data.reqMsg,
-      data.joinSource,
-      data.ex ?? '');
-    return result;
-  }
-  async searchGroups(data: SearchGroupParams, operationID: string = uuidV4()): Promise<GroupItem[]> {
-    const result = await imapi.searchGroups(operationID, JSON.stringify(data));
-    return JSON.parse(result) as GroupItem[];
-  }
-  async quitGroup(data: string, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.quitGroup(operationID, data);
-    return result;
-  }
-  async dismissGroup(data: string, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.dismissGroup(operationID, data);
-    return result;
-  }
-  async changeGroupMute(data: ChangeGroupMuteParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.changeGroupMute(operationID, data.groupID, data.isMute);
-    return result;
-  }
-  async changeGroupMemberMute(data: ChangeGroupMemberMuteParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.changeGroupMemberMute(operationID, data.groupID, data.userID, data.mutedSeconds);
-    return result;
-  }
-  async typingStatusUpdate(data: TypingUpdateParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.typingStatusUpdate(operationID, data.recvID, data.msgTip);
-    return result;
+    return OpenIM.instance;
   }
 
-  async transferGroupOwner(data: TransferGroupParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.transferGroupOwner(operationID, data.groupID, data.newOwnerUserID);
-    return result;
-  }
-  async getGroupApplicationListAsApplicant(operationID: string = uuidV4()): Promise<GroupApplicationItem[]> {
-    const result = await imapi.getGroupApplicationListAsApplicant(operationID, "");
-    return JSON.parse(result) as GroupApplicationItem[];
-  }
-  async getGroupApplicationListAsRecipient(operationID: string = uuidV4()): Promise<GroupApplicationItem[]> {
-    const result = await imapi.getGroupApplicationListAsRecipient(operationID, "");
-    return JSON.parse(result) as GroupApplicationItem[];
-  }
-  async acceptGroupApplication(data: AccessGroupApplicationParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.acceptGroupApplication(operationID, data.groupID, data.fromUserID, data.handleMsg);
-    return result;
-  }
-  async refuseGroupApplication(data: AccessGroupApplicationParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.refuseGroupApplication(operationID, data.groupID, data.fromUserID, data.handleMsg);
-    return result;
-  }
-  async resetConversationGroupAtType(data: string, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.setConversation(operationID,  data, JSON.stringify({
-      groupAtType: GroupAtType.AtNormal,
-    }));
-    return result;
-  }
-  async setGroupMemberRoleLevel(data: SetGroupRoleParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.setGroupMemberInfo(operationID,  JSON.stringify({
-      groupID: data.groupID,
-      userID: data.userID,
-      roleLevel: data.roleLevel,
-    }));
-    return result;
-  }
-  async setGroupVerification(data: SetGroupVerificationParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.setGroupMemberInfo(operationID, JSON.stringify({
-      groupID: data.groupID,
-      needVerification: data.verification,
-    }));
-    return result;
-  }
-  async getGroupMemberOwnerAndAdmin(data: string, operationID: string = uuidV4()): Promise<GroupMemberItem[]> {
-    const result = await imapi.getGroupMemberOwnerAndAdmin(operationID, data);
-    return JSON.parse(result) as GroupMemberItem[];
-  }
-  async setGlobalRecvMessageOpt(opt: MessageReceiveOptType, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.setSelfInfo(operationID, JSON.stringify({ globalRecvMsgOpt: opt }));
-    return result;
-  }
-  async findMessageList(data: FindMessageParams[], operationID: string = uuidV4()): Promise<SearchMessageResult> {
-    const result = await imapi.findMessageList(operationID, JSON.stringify(data));
-    return JSON.parse(result) as SearchMessageResult;
-  }
-  async subscribeUsersStatus(data: string[], operationID: string = uuidV4()): Promise<UserOnlineState[]> {
-    const result = await imapi.subscribeUsersStatus(operationID, JSON.stringify(data));
-    return JSON.parse(result) as UserOnlineState[];
-  }
-  async unsubscribeUsersStatus(data: string[], operationID: string = uuidV4()): Promise<UserOnlineState[]> {
-    const result = await imapi.unSubscribeUsersStatus(operationID, JSON.stringify(data));
-    return JSON.parse(result) as UserOnlineState[];
-  }
-  async getUserStatus(data: string[], operationID: string = uuidV4()): Promise<UserOnlineState[]> {
-    const result = await imapi.getUserStatus(operationID, JSON.stringify(data));
-    return JSON.parse(result) as UserOnlineState[];
-  }
-  async getSubscribeUsersStatus(operationID: string = uuidV4()): Promise<UserOnlineState[]> {
-    const result = await imapi.getSubscribeUsersStatus(operationID);
-    return JSON.parse(result) as UserOnlineState[];
-  }
-  async setConversationIsMsgDestruct(data: SetConversationMsgDestructParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.setConversation(operationID, data.conversationID, JSON.stringify({ isMsgDestruct: data.isMsgDestruct }));
-    return result;
-  }
-  async setConversationMsgDestructTime(data: SetConversationMsgDestructTimeParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.setConversation(operationID, data.conversationID, JSON.stringify({ msgDestructTime: data.msgDestructTime }));
-    return result;
-  }
-  async setAppBadge(appUnreadCount: number, operationID: string = uuidV4()): Promise<boolean> {
-    try {
-      await notificationManager.setBadgeNumber(appUnreadCount);
-      return true;
-    } catch (error) {
-      return false;
+  /**
+   * 设置SDK事件监听器（统一入口）
+   * @param listener SDK事件监听器
+   */
+  setListener(listener: SDKListener): void {
+    this.sdkListener = listener;
+
+    // 设置连接监听器（通过initSdk传入）
+    // 设置消息监听器
+    if (listener.onMsgListener) {
+      this.setAdvancedMsgListener(listener.onMsgListener);
+    }
+
+    // 设置会话监听器
+    if (listener.onConvListener) {
+      this.setConversationListener(listener.onConvListener);
+    }
+
+    // 设置群组监听器
+    if (listener.onGroupListener) {
+      this.setGroupListener(listener.onGroupListener);
+    }
+
+    // 设置好友监听器
+    if (listener.onFriendListener) {
+      this.setFriendListener(listener.onFriendListener);
+    }
+
+    // 设置用户监听器
+    if (listener.onUserListener) {
+      this.setUserListener(listener.onUserListener);
     }
   }
 
-  async uploadFile(data: UploadFileParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.uploadFile(operationID, JSON.stringify(data), (data: string) => {
-      Logger.print(`uploadFile progress: ${data}`);
+  /**
+   * 设置连接监听器
+   * @param listener 连接监听器
+   */
+  private setConnListener(listener: OnConnListener): void {
+    this.sdkListener.onConnListener = listener;
+  }
+
+  /**
+   * 设置消息监听器
+   * @param listener 消息监听器
+   */
+  setAdvancedMsgListener(listener: OnMsgListener): void {
+    this.sdkListener.onMsgListener = listener;
+
+    im.setAdvancedMsgListener({
+      onRecvNewMessage: (message: string) => {
+        this.sdkListener.onMsgListener?.onRecvNewMessage?.(message);
+      },
+      onRecvC2CReadReceipt: (msgReceiptList: string) => {
+        this.sdkListener.onMsgListener?.onRecvC2CReadReceipt?.(msgReceiptList);
+      },
+      onNewRecvMessageRevoked: (messageRevoked: string) => {
+        this.sdkListener.onMsgListener?.onMsgRevoked?.(messageRevoked);
+      },
+      onRecvOfflineNewMessage: (message: string) => {
+        this.sdkListener.onMsgListener?.onRecvOfflineNewMessage?.(message);
+      },
+      onMsgDeleted: (message: string) => {
+        this.sdkListener.onMsgListener?.onMsgDeleted?.(message);
+      },
+      onRecvOnlineOnlyMessage: (message: string) => {
+        this.sdkListener.onMsgListener?.onRecvOnlineOnlyMessage?.(message);
+      }
     });
-    return result;
   }
 
-  async uploadLogs(data: UploadLogsParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.uploadLogs(operationID, data.line, data.ex ?? '', (data: string) => {
-      Logger.print(`uploadLogs progress: ${data}`);
+  /**
+   * 设置会话监听器
+   * @param listener 会话监听器
+   */
+  setConversationListener(listener: OnConvListener): void {
+    this.sdkListener.onConvListener = listener;
+
+    im.setConversationListener({
+      onSyncServerStart: (reinstalled: boolean) => {
+        this.sdkListener.onConvListener?.onSyncServerStart?.(reinstalled);
+      },
+      onSyncServerFinish: (reinstalled: boolean) => {
+        this.sdkListener.onConvListener?.onSyncServerFinish?.(reinstalled);
+      },
+      onSyncServerProgress: (progress: number) => {
+        this.sdkListener.onConvListener?.onSyncServerProgress?.(progress);
+      },
+      onSyncServerFailed: (reinstalled: boolean) => {
+        this.sdkListener.onConvListener?.onSyncServerFailed?.(reinstalled);
+      },
+      onNewConversation: (conversationList: string) => {
+        this.sdkListener.onConvListener?.onNewConversation?.(conversationList);
+      },
+      onConversationChanged: (conversationList: string) => {
+        this.sdkListener.onConvListener?.onConversationChanged?.(conversationList);
+      },
+      onTotalUnreadMessageCountChanged: (totalUnreadCount: number) => {
+        this.sdkListener.onConvListener?.onTotalUnreadChanged?.(totalUnreadCount);
+      },
+      onConversationUserInputStatusChanged: (change: string) => {
+        this.sdkListener.onConvListener?.onInputStatusChanged?.(change);
+      }
     });
+  }
+
+  /**
+   * 设置群组监听器
+   * @param listener 群组监听器
+   */
+  setGroupListener(listener: OnGroupListener): void {
+    this.sdkListener.onGroupListener = listener;
+
+    im.setGroupListener({
+      onJoinedGroupAdded: (groupInfo: string) => {
+        this.sdkListener.onGroupListener?.onJoinedGroupAdded?.(groupInfo);
+      },
+      onJoinedGroupDeleted: (groupInfo: string) => {
+        this.sdkListener.onGroupListener?.onJoinedGroupDeleted?.(groupInfo);
+      },
+      onGroupMemberAdded: (groupMemberInfo: string) => {
+        this.sdkListener.onGroupListener?.onGroupMemberAdded?.(groupMemberInfo);
+      },
+      onGroupMemberDeleted: (groupMemberInfo: string) => {
+        this.sdkListener.onGroupListener?.onGroupMemberDeleted?.(groupMemberInfo);
+      },
+      onGroupApplicationAdded: (groupApplication: string) => {
+        this.sdkListener.onGroupListener?.onGroupApplicationAdded?.(groupApplication);
+      },
+      onGroupApplicationDeleted: (groupApplication: string) => {
+        this.sdkListener.onGroupListener?.onGroupApplicationDeleted?.(groupApplication);
+      },
+      onGroupInfoChanged: (groupInfo: string) => {
+        this.sdkListener.onGroupListener?.onGroupInfoChanged?.(groupInfo);
+      },
+      onGroupDismissed: (groupInfo: string) => {
+        this.sdkListener.onGroupListener?.onGroupDismissed?.(groupInfo);
+      },
+      onGroupMemberInfoChanged: (groupMemberInfo: string) => {
+        this.sdkListener.onGroupListener?.onGroupMemberInfoChanged?.(groupMemberInfo);
+      },
+      onGroupApplicationAccepted: (groupApplication: string) => {
+        this.sdkListener.onGroupListener?.onGroupApplicationAccepted?.(groupApplication);
+      },
+      onGroupApplicationRejected: (groupApplication: string) => {
+        this.sdkListener.onGroupListener?.onGroupApplicationRejected?.(groupApplication);
+      }
+    });
+  }
+
+  /**
+   * 设置好友监听器
+   * @param listener 好友监听器
+   */
+  setFriendListener(listener: OnFriendListener): void {
+    this.sdkListener.onFriendListener = listener;
+
+    im.setFriendListener({
+      onFriendApplicationAdded: (friendApplication: string) => {
+        this.sdkListener.onFriendListener?.onFriendApplicationAdded?.(friendApplication);
+      },
+      onFriendApplicationDeleted: (friendApplication: string) => {
+        this.sdkListener.onFriendListener?.onFriendApplicationDeleted?.(friendApplication);
+      },
+      onFriendApplicationAccepted: (friendApplication: string) => {
+        this.sdkListener.onFriendListener?.onFriendApplicationAccepted?.(friendApplication);
+      },
+      onFriendApplicationRejected: (friendApplication: string) => {
+        this.sdkListener.onFriendListener?.onFriendApplicationRejected?.(friendApplication);
+      },
+      onFriendAdded: (friendInfo: string) => {
+        this.sdkListener.onFriendListener?.onFriendAdded?.(friendInfo);
+      },
+      onFriendDeleted: (friendInfo: string) => {
+        this.sdkListener.onFriendListener?.onFriendDeleted?.(friendInfo);
+      },
+      onFriendInfoChanged: (friendInfo: string) => {
+        this.sdkListener.onFriendListener?.onFriendInfoChanged?.(friendInfo);
+      },
+      onBlackAdded: (blackInfo: string) => {
+        this.sdkListener.onFriendListener?.onBlackAdded?.(blackInfo);
+      },
+      onBlackDeleted: (blackInfo: string) => {
+        this.sdkListener.onFriendListener?.onBlackDeleted?.(blackInfo);
+      }
+    });
+  }
+
+  /**
+   * 设置用户监听器
+   * @param listener 用户监听器
+   */
+  setUserListener(listener: OnUserListener): void {
+    this.sdkListener.onUserListener = listener;
+
+    im.setUserListener({
+      onSelfInfoUpdated: (userInfo: string) => {
+        this.sdkListener.onUserListener?.onSelfInfoUpdated?.(userInfo);
+      },
+      onUserStatusChanged: (userOnlineStatus: string) => {
+        this.sdkListener.onUserListener?.onUserStatusChanged?.(userOnlineStatus);
+      }
+    });
+  }
+
+  /**
+   * 初始化SDK
+   * @param config 初始化配置
+   * @returns 初始化结果，0表示成功
+   */
+  initSdk(listener: OnConnListener,config: InitConfig): number {
+    this.setConnListener(listener)
+    const operationID = buildOperationID();
+    debug('OpenIM', `initSdk with operationID: ${operationID}`);
+
+    const result = im.initSdk(
+      {
+        onConnecting: () => {
+          this.sdkListener.onConnListener?.onConnecting?.();
+        },
+        onConnectSuccess: () => {
+          this.sdkListener.onConnListener?.onConnectSuccess?.();
+        },
+        onConnectFailed: (errCode: number, errMsg: string) => {
+          this.sdkListener.onConnListener?.onConnectFailed?.(errCode, errMsg);
+          error('OpenIM', `initSdk failed: ${errCode} - ${errMsg}`);
+        },
+        onKickedOffline: () => {
+          this.sdkListener.onConnListener?.onKickedOffline?.();
+        },
+        onUserTokenExpired: () => {
+          this.sdkListener.onConnListener?.onUserTokenExpired?.();
+        },
+        onUserTokenInvalid: (errMsg: string) => {
+          this.sdkListener.onConnListener?.onUserTokenInvalid?.(errMsg);
+        }
+      },
+      operationID,
+      toString(config)
+    );
+
+    this.initialized = true;
+    info('OpenIM', `SDK initialized successfully with result: ${result}`);
     return result;
   }
 
-  async logs(data: LogsParams, operationID: string = uuidV4()): Promise<string> {
-    const result = await imapi.logs(operationID, data.logLevel, data.file, data.line, data.msgs, data.err, JSON.stringify(data.keyAndValue));
-    return result;
+  /**
+   * 登录
+   * @param userID 用户ID
+   * @param token 登录令牌
+   */
+  login(userID: string, token: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const operationID = buildOperationID();
+      debug('OpenIM', `login with userID: ${userID}, operationID: ${operationID}`);
+
+      im.login(
+        {
+          onError: (errCode: number, errMsg: string) => {
+            error('OpenIM', `login failed: ${errCode} - ${errMsg}`);
+            reject({ errCode, errMsg });
+          },
+          onSuccess: (data: string) => {
+            info('OpenIM', `login success`);
+            resolve();
+          }
+        },
+        operationID,
+        userID,
+        token
+      );
+    });
   }
 
+  /**
+   * 登出
+   */
+  logout(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const operationID = buildOperationID();
+      debug('OpenIM', `logout with operationID: ${operationID}`);
+
+      im.logout(
+        {
+          onError: (errCode: number, errMsg: string) => {
+            error('OpenIM', `logout failed: ${errCode} - ${errMsg}`);
+            reject({ errCode, errMsg });
+          },
+          onSuccess: (data: string) => {
+            info('OpenIM', `logout success`);
+            resolve();
+          }
+        },
+        operationID
+      );
+    });
+  }
+
+  /**
+   * 获取登录状态
+   */
+  getLoginStatus(): LoginStatus {
+    const operationID = buildOperationID();
+    return im.getLoginStatus(operationID) as LoginStatus;
+  }
+
+  /**
+   * 获取当前登录用户ID
+   */
+  getLoginUserID(): string {
+    return im.getLoginUserID();
+  }
+
+  /**
+   * 反初始化SDK
+   */
+  unInitSDK(): void {
+    const operationID = buildOperationID();
+    debug('OpenIM', `unInitSDK with operationID: ${operationID}`);
+    im.unInitSDK(operationID);
+    this.initialized = false;
+    info('OpenIM', 'SDK uninitialized');
+  }
+
+  /**
+   * 获取SDK版本
+   */
+  getSdkVersion(): string {
+    return im.getSdkVersion();
+  }
+}
+
+/**
+ * 导出OpenIM单例实例
+ */
+export const OpenIMClient = OpenIM.getInstance();
+
+/**
+ * 获取SDK实例（兼容旧API）
+ */
+export function getSDK(): OpenIM {
+  return OpenIMClient;
 }

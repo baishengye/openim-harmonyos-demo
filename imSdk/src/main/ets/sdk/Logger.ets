@@ -1,27 +1,74 @@
-// Logger.ets
-
-import hilog from '@ohos.hilog';
+/**
+ * OpenIM SDK for HarmonyOS
+ * 日志工具类 - 提供日志记录功能
+ */
 
 /**
- * 日志工具类，用于输出带标签的完整日志
+ * 日志级别枚举
  */
-export class Logger {
-  private static readonly DOMAIN: number = 0xFF00; // 日志域（建议 0x0000~0xFFFF）
-  private static readonly TAG: string = 'imsdk';
+export enum LogLevel {
+  DEBUG = 0,
+  INFO = 1,
+  WARN = 2,
+  ERROR = 3,
+  FATAL = 4
+}
 
-  static print(text: string): void {
-    hilog.info(Logger.DOMAIN, Logger.TAG, '** %{public}s', text);
-  }
+const TAG = "OpenIM";
 
-  static debug(text: string): void {
-    hilog.debug(Logger.DOMAIN, Logger.TAG, '** %{public}s', text);
-  }
+/**
+ * 打印调试日志
+ * @param tag 标签
+ * @param message 消息
+ */
+export function debug(tag: string, message: string): void {
+  logMessage(LogLevel.DEBUG, tag, message);
+}
 
-  static error(text: string): void {
-    hilog.error(Logger.DOMAIN, Logger.TAG, '** %{public}s', text);
-  }
+/**
+ * 打印信息日志
+ * @param tag 标签
+ * @param message 消息
+ */
+export function info(tag: string, message: string): void {
+  logMessage(LogLevel.INFO, tag, message);
+}
 
-  static warn(text: string): void {
-    hilog.warn(Logger.DOMAIN, Logger.TAG, '** %{public}s', text);
-  }
+/**
+ * 打印警告日志
+ * @param tag 标签
+ * @param message 消息
+ */
+export function warn(tag: string, message: string): void {
+  logMessage(LogLevel.WARN, tag, message);
+}
+
+/**
+ * 打印错误日志
+ * @param tag 标签
+ * @param message 消息
+ */
+export function error(tag: string, message: string): void {
+  logMessage(LogLevel.ERROR, tag, message);
+}
+
+/**
+ * 打印致命错误日志
+ * @param tag 标签
+ * @param message 消息
+ */
+export function fatal(tag: string, message: string): void {
+  logMessage(LogLevel.FATAL, tag, message);
+}
+
+/**
+ * 内部日志方法
+ * @param level 日志级别
+ * @param tag 标签
+ * @param message 消息
+ */
+function logMessage(level: LogLevel, tag: string, message: string): void {
+  const levelStr = LogLevel[level];
+  const fullTag = `${TAG}/${tag}`;
+  console.info(`[${levelStr}] ${fullTag}: ${message}`);
 }
