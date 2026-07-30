@@ -293,6 +293,8 @@ extern char* GetLoginUserID(void);
 extern void UploadFile(int baseCallbackID, int uploadCallbackID, char* operationID, char* reqData);
 extern char* CreateTextMessage(char* text, char* operationID);
 extern char* CreateImageMessage(char* imagePath, char* operationID);
+extern char* CreateAdvancedQuoteMessage(char* operationID, char* text, char* message, char* messageEntityList);
+extern char* CreateAdvancedTextMessage(char* operationID, char* text, char* messageEntityList);
 extern char* CreateSoundMessage(char* soundPath, long long duration, char* operationID);
 extern char* CreateFileMessage(char* filePath, char* fileName, char* operationID);
 extern char* CreateVideoMessage(char* videoPath, char* videoType, long long duration, char* snapshotPath, char* operationID);

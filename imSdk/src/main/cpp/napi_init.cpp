@@ -211,6 +211,8 @@ extern napi_value NAPI_createMergerMessage(napi_env env, napi_callback_info info
 extern napi_value NAPI_createForwardMessage(napi_env env, napi_callback_info info);
 extern napi_value NAPI_createCardMessage(napi_env env, napi_callback_info info);
 extern napi_value NAPI_createTextAtMessage(napi_env env, napi_callback_info info);
+extern napi_value NAPI_createAdvancedQuoteMessage(napi_env env, napi_callback_info info);
+extern napi_value NAPI_createAdvancedTextMessage(napi_env env, napi_callback_info info);
 extern napi_value NAPI_sendMessage(napi_env env, napi_callback_info info);
 extern napi_value NAPI_sendMessageNotOss(napi_env env, napi_callback_info info);
 extern napi_value NAPI_typingStatusUpdate(napi_env env, napi_callback_info info);
@@ -344,6 +346,8 @@ static napi_value Init(napi_env env, napi_value exports) {
         {"createForwardMessage", nullptr, NAPI_createForwardMessage, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"createCardMessage", nullptr, NAPI_createCardMessage, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"createTextAtMessage", nullptr, NAPI_createTextAtMessage, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"createAdvancedQuoteMessage", nullptr, NAPI_createAdvancedQuoteMessage, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"createAdvancedTextMessage", nullptr, NAPI_createAdvancedTextMessage, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"createSoundMessageByURL", nullptr, NAPI_createSoundMessageByURL, nullptr, nullptr, nullptr, napi_default,
          nullptr},
         {"createVideoMessageByURL", nullptr, NAPI_createVideoMessageByURL, nullptr, nullptr, nullptr, napi_default,

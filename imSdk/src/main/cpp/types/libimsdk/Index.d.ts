@@ -530,6 +530,25 @@ export function createVideoMessage(operationID: string, videoPath: string, video
 export function createTextAtMessage(operationID: string, text: string, atUserIDList: string, atUsersInfo: string | null, quoteMessage: string | null): string;
 
 /**
+ * 创建高级引用消息（支持消息实体）
+ * @param operationID 唯一操作标识
+ * @param text 文本内容
+ * @param message 引用消息 (JSON 字符串)
+ * @param messageEntityList 消息实体列表 (JSON 字符串数组)
+ * @returns 消息对象 (JSON 字符串)
+ */
+export function createAdvancedQuoteMessage(operationID: string, text: string, message: string, messageEntityList: string): string;
+
+/**
+ * 创建高级文本消息（支持消息实体）
+ * @param operationID 唯一操作标识
+ * @param text 文本内容
+ * @param messageEntityList 消息实体列表 (JSON 字符串数组)
+ * @returns 消息对象 (JSON 字符串)
+ */
+export function createAdvancedTextMessage(operationID: string, text: string, messageEntityList: string): string;
+
+/**
  * 创建引用消息
  * @param operationID 唯一操作标识
  * @param text 文本内容

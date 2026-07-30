@@ -660,3 +660,36 @@ napi_value NAPI_markMessagesAsReadByMsgID(napi_env env, napi_callback_info info)
     MarkMessagesAsReadByMsgID(cbId, (char*)operationID.c_str(), (char*)conversationID.c_str(), (char*)clientMsgIDs.c_str());
     return CreateJSUndefined(env);
 }
+
+napi_value NAPI_createAdvancedQuoteMessage(napi_env env, napi_callback_info info) {
+    size_t argc = 4;
+    napi_value args[4];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    std::string operationID = GetStringFromJS(env, args[1]);
+    std::string text = GetStringFromJS(env, args[2]);
+    std::string message = GetStringFromJS(env, args[3]);
+    std::string messageEntityList = GetStringFromJS(env, args[4]);
+    if (operationID.empty()) {
+        operationID = "napi_createAdvancedQuote_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+    }
+    char* result = CreateAdvancedQuoteMessage((char*)operationID.c_str(), (char*)text.c_str(), (char*)message.c_str(), (char*)messageEntityList.c_str());
+    std::string msg = result ? result : "";
+    if (result) FreeString(result);
+    return CreateJSString(env, msg);
+}
+
+napi_value NAPI_createAdvancedTextMessage(napi_env env, napi_callback_info info) {
+    size_t argc = 3;
+    napi_value args[3];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    std::string operationID = GetStringFromJS(env, args[1]);
+    std::string text = GetStringFromJS(env, args[2]);
+    std::string messageEntityList = GetStringFromJS(env, args[3]);
+    if (operationID.empty()) {
+        operationID = "napi_createAdvancedText_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+    }
+    char* result = CreateAdvancedTextMessage((char*)operationID.c_str(), (char*)text.c_str(), (char*)messageEntityList.c_str());
+    std::string msg = result ? result : "";
+    if (result) FreeString(result);
+    return CreateJSString(env, msg);
+}
