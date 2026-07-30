@@ -448,3 +448,170 @@ export class GetAdvancedHistoryMessageParams {
   /** 视图类型 */
   viewType: number = 0;
 }
+
+/**
+ * 会话信息
+ */
+export class ConversationInfo {
+  conversationID: string = "";
+  conversationType: number = 0;
+  userID: string = "";
+  groupID: string = "";
+  showName: string = "";
+  faceUrl: string = "";
+  latestMsg: string = "";
+  latestMsgSendTime: number = 0;
+  unreadCount: number = 0;
+  isPinned: boolean = false;
+  isPrivate: boolean = false;
+  burnDuration: number = 0;
+  isNotInGroup: boolean = false;
+  updateUnreadCountTime: number = 0;
+  draftText: string = "";
+  groupAtInfoList: GroupAtInfo[] = [];
+  msgSeq: number = 0;
+  isMsgFilter: boolean = false;
+  isSupportTyping: boolean = false;
+  recvMsgOpt: number = 0;
+}
+
+/**
+ * 群组@信息
+ */
+export class GroupAtInfo {
+  groupID: string = "";
+  atType: number = 0;
+  seq: number = 0;
+}
+
+
+/**
+ * 好友信息
+ */
+export class FriendInfo {
+  ownerUserID: string = "";
+  friendUserID: string = "";
+  remark: string = "";
+  createTime: number = 0;
+  addSource: number = 0;
+  operatorUserID: string = "";
+  nickname: string = "";
+  faceUrl: string = "";
+  gender: number = 0;
+  phoneNumber: string = "";
+  birth: string = "";
+  email: string = "";
+  ex: string = "";
+}
+
+/**
+ * 好友申请信息
+ */
+export class FriendApplication {
+  fromUserID: string = "";
+  fromNickname: string = "";
+  fromFaceUrl: string = "";
+  toUserID: string = "";
+  toNickname: string = "";
+  toFaceUrl: string = "";
+  handleTime: number = 0;
+  handleMsg: string = "";
+  reqMsg: string = "";
+  flag: number = 0;
+  createTime: number = 0;
+  type: number = 0;
+}
+
+/**
+ * 黑名单信息
+ */
+export class BlackInfo {
+  ownerUserID: string = "";
+  blockUserID: string = "";
+  nickname: string = "";
+  faceUrl: string = "";
+  gender: number = 0;
+  createTime: number = 0;
+}
+
+
+/**
+ * 群组信息
+ */
+export class GroupInfo {
+  groupID: string = "";
+  groupName: string = "";
+  notification: string = "";
+  introduction: string = "";
+  faceUrl: string = "";
+  ownerUserID: string = "";
+  memberCount: number = 0;
+  createTime: number = 0;
+  ex: string = "";
+  status: number = 0;
+  creatorUserID: string = "";
+  groupType: number = 0;
+}
+
+/**
+ * 群组成员信息
+ */
+export class GroupMemberInfo {
+  groupID: string = "";
+  userID: string = "";
+  nickname: string = "";
+  faceUrl: string = "";
+  roleLevel: number = 0;
+  joinTime: number = 0;
+  muteEndTime: number = 0;
+  ex: string = "";
+}
+
+/**
+ * 群组申请信息
+ */
+export class GroupApplication {
+  groupID: string = "";
+  groupName: string = "";
+  userID: string = "";
+  nickname: string = "";
+  faceUrl: string = "";
+  reqMsg: string = "";
+  handleMsg: string = "";
+  flag: number = 0;
+  handleStatus: number = 0;
+  handleTime: number = 0;
+  createTime: number = 0;
+}
+
+/**
+ * 用户信息
+ */
+export class UserInfo {
+  userID: string = "";
+  nickname: string = "";
+  faceUrl: string = "";
+  gender: number = 0;
+  phoneNumber: string = "";
+  birth: string = "";
+  email: string = "";
+  ex: string = "";
+}
+
+/**
+ * 订阅用户状态
+ */
+export class SubscribeUsersStatus {
+  userID: string = "";
+  status: number = 0;
+  ext: string = "";
+}
+
+/**
+ * 用户状态信息
+ */
+export class UserStatus {
+  userID: string = "";
+  status: number = 0;
+  ext: string = "";
+}

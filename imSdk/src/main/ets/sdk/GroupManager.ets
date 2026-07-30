@@ -8,54 +8,6 @@ import { buildOperationID } from './Utils';
 import { debug, info, error } from './Logger';
 import { toString, toObject, toArray } from './JsonUtil';
 
-/**
- * 群组信息
- */
-export class GroupInfo {
-  groupID: string = "";
-  groupName: string = "";
-  notification: string = "";
-  introduction: string = "";
-  faceUrl: string = "";
-  ownerUserID: string = "";
-  memberCount: number = 0;
-  createTime: number = 0;
-  ex: string = "";
-  status: number = 0;
-  creatorUserID: string = "";
-  groupType: number = 0;
-}
-
-/**
- * 群组成员信息
- */
-export class GroupMemberInfo {
-  groupID: string = "";
-  userID: string = "";
-  nickname: string = "";
-  faceUrl: string = "";
-  roleLevel: number = 0;
-  joinTime: number = 0;
-  muteEndTime: number = 0;
-  ex: string = "";
-}
-
-/**
- * 群组申请信息
- */
-export class GroupApplication {
-  groupID: string = "";
-  groupName: string = "";
-  userID: string = "";
-  nickname: string = "";
-  faceUrl: string = "";
-  reqMsg: string = "";
-  handleMsg: string = "";
-  flag: number = 0;
-  handleStatus: number = 0;
-  handleTime: number = 0;
-  createTime: number = 0;
-}
 
 /**
  * 群组管理器

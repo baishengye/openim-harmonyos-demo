@@ -8,37 +8,6 @@ import { buildOperationID } from './Utils';
 import { debug, info, error } from './Logger';
 import { toString, toObject, toArray } from './JsonUtil';
 
-/**
- * 用户信息
- */
-export class UserInfo {
-  userID: string = "";
-  nickname: string = "";
-  faceUrl: string = "";
-  gender: number = 0;
-  phoneNumber: string = "";
-  birth: string = "";
-  email: string = "";
-  ex: string = "";
-}
-
-/**
- * 订阅用户状态
- */
-export class SubscribeUsersStatus {
-  userID: string = "";
-  status: number = 0;
-  ext: string = "";
-}
-
-/**
- * 用户状态信息
- */
-export class UserStatus {
-  userID: string = "";
-  status: number = 0;
-  ext: string = "";
-}
 
 /**
  * 用户信息管理器

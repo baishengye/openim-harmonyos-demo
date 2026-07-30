@@ -8,40 +8,6 @@ import { buildOperationID } from './Utils';
 import { debug, info, error } from './Logger';
 import { toString, toObject, toArray } from './JsonUtil';
 
-/**
- * 会话信息
- */
-export class ConversationInfo {
-  conversationID: string = "";
-  conversationType: number = 0;
-  userID: string = "";
-  groupID: string = "";
-  showName: string = "";
-  faceUrl: string = "";
-  latestMsg: string = "";
-  latestMsgSendTime: number = 0;
-  unreadCount: number = 0;
-  isPinned: boolean = false;
-  isPrivate: boolean = false;
-  burnDuration: number = 0;
-  isNotInGroup: boolean = false;
-  updateUnreadCountTime: number = 0;
-  draftText: string = "";
-  groupAtInfoList: GroupAtInfo[] = [];
-  msgSeq: number = 0;
-  isMsgFilter: boolean = false;
-  isSupportTyping: boolean = false;
-  recvMsgOpt: number = 0;
-}
-
-/**
- * 群组@信息
- */
-export class GroupAtInfo {
-  groupID: string = "";
-  atType: number = 0;
-  seq: number = 0;
-}
 
 /**
  * 会话管理器

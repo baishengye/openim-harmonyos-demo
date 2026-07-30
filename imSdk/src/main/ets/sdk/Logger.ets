@@ -3,16 +3,7 @@
  * 日志工具类 - 提供日志记录功能
  */
 
-/**
- * 日志级别枚举
- */
-export enum LogLevel {
-  DEBUG = 0,
-  INFO = 1,
-  WARN = 2,
-  ERROR = 3,
-  FATAL = 4
-}
+
 
 const TAG = "OpenIM";
 

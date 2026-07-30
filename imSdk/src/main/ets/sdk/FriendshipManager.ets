@@ -7,55 +7,8 @@ import im from 'libimsdk.so';
 import { buildOperationID } from './Utils';
 import { debug, info, error } from './Logger';
 import { toString, toObject, toArray } from './JsonUtil';
+import { BlackInfo, FriendApplication, FriendInfo } from './entity';
 
-/**
- * 好友信息
- */
-export class FriendInfo {
-  ownerUserID: string = "";
-  friendUserID: string = "";
-  remark: string = "";
-  createTime: number = 0;
-  addSource: number = 0;
-  operatorUserID: string = "";
-  nickname: string = "";
-  faceUrl: string = "";
-  gender: number = 0;
-  phoneNumber: string = "";
-  birth: string = "";
-  email: string = "";
-  ex: string = "";
-}
-
-/**
- * 好友申请信息
- */
-export class FriendApplication {
-  fromUserID: string = "";
-  fromNickname: string = "";
-  fromFaceUrl: string = "";
-  toUserID: string = "";
-  toNickname: string = "";
-  toFaceUrl: string = "";
-  handleTime: number = 0;
-  handleMsg: string = "";
-  reqMsg: string = "";
-  flag: number = 0;
-  createTime: number = 0;
-  type: number = 0;
-}
-
-/**
- * 黑名单信息
- */
-export class BlackInfo {
-  ownerUserID: string = "";
-  blockUserID: string = "";
-  nickname: string = "";
-  faceUrl: string = "";
-  gender: number = 0;
-  createTime: number = 0;
-}
 
 /**
  * 好友管理器
