@@ -329,6 +329,7 @@ extern void GetAdvancedHistoryMessageList(int baseCallbackID, char* operationID,
 extern void GetHistoryMessageList(char* operationID, char* conversationID, int count, int startSeq);
 extern void FindMessageList(int baseCallbackID, char* operationID, char* findOptions);
 extern void MarkConversationMessageAsRead(int baseCallbackID, char* operationID, char* conversationID);
+extern void MarkMessagesAsReadByMsgID(int baseCallbackID, char* operationID, char* conversationID, char* clientMsgIDs);
 extern void MarkAllConversationMessageAsRead(int baseCallbackID, char* operationID);
 extern void DeleteMessageFromLocalStorage(int baseCallbackID, char* operationID, char* conversationID, char* seqList);
 extern void DeleteMessage(int baseCallbackID, char* operationID, char* conversationID, char* seqList);

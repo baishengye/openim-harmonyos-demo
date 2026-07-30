@@ -234,6 +234,7 @@ extern napi_value NAPI_deleteAllMsgFromLocal(napi_env env, napi_callback_info in
 extern napi_value NAPI_insertSingleMessageToLocalStorage(napi_env env, napi_callback_info info);
 extern napi_value NAPI_insertGroupMessageToLocalStorage(napi_env env, napi_callback_info info);
 extern napi_value NAPI_getSpecifiedGroupMembersInfo(napi_env env, napi_callback_info info);
+extern napi_value NAPI_markMessagesAsReadByMsgID(napi_env env, napi_callback_info info);
 
 
 // Misc NAPI functions
@@ -380,6 +381,8 @@ static napi_value Init(napi_env env, napi_value exports) {
          nullptr, napi_default, nullptr},
         {"insertGroupMessageToLocalStorage", nullptr, NAPI_insertGroupMessageToLocalStorage, nullptr, nullptr,
          nullptr, napi_default, nullptr},
+        {"markMessagesAsReadByMsgID", nullptr, NAPI_markMessagesAsReadByMsgID, nullptr, nullptr, nullptr,
+         napi_default, nullptr},
         // Friend
         {"getSpecifyFriendsInfo", nullptr, NAPI_getSpecifyFriendsInfo, nullptr, nullptr, nullptr, napi_default,
          nullptr},
@@ -475,7 +478,7 @@ static napi_value Init(napi_env env, napi_value exports) {
         {"setSignalingListener", nullptr, NAPI_setSignalingListener, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"setCustomBusinessListener", nullptr, NAPI_setCustomBusinessListener, nullptr, nullptr, nullptr, napi_default,
          nullptr},
-        {"setMsgKvInfoListener", nullptr, NAPI_setMsgKvInfoListener, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"setMessageKvInfoListener", nullptr, NAPI_setMsgKvInfoListener, nullptr, nullptr, nullptr, napi_default, nullptr},
     };
 
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);

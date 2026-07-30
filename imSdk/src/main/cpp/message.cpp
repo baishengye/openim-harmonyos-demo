@@ -644,3 +644,19 @@ napi_value NAPI_insertGroupMessageToLocalStorage(napi_env env, napi_callback_inf
     InsertGroupMessageToLocalStorage(cbId, (char*)operationID.c_str(), (char*)message.c_str(), (char*)groupID.c_str(), (char*)sendID.c_str());
     return CreateJSUndefined(env);
 }
+
+napi_value NAPI_markMessagesAsReadByMsgID(napi_env env, napi_callback_info info) {
+    size_t argc = 4;
+    napi_value args[4];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    std::string conversationID = GetStringFromJS(env, args[1]);
+    std::string clientMsgIDs = GetStringFromJS(env, args[2]);
+    std::string operationID = GetStringFromJS(env, args[3]);
+    if (operationID.empty()) {
+        operationID = "napi_markMsgsReadById_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+    }
+    int cbId = StoreBaseCallback(env, args[0]);
+    // New signature: MarkMessagesAsReadByMsgID(int baseCallbackID, char* operationID, char* conversationID, char* clientMsgIDs)
+    MarkMessagesAsReadByMsgID(cbId, (char*)operationID.c_str(), (char*)conversationID.c_str(), (char*)clientMsgIDs.c_str());
+    return CreateJSUndefined(env);
+}

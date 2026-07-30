@@ -217,6 +217,12 @@ export function setUserListener(userListener: UserListener): void;
 export function setCustomBusinessListener(customBusinessListener: CustomBusinessListener): void;
 
 /**
+ * 设置消息kv信息监听器
+ * @param msgKvInfoListener 消息kv信息监听器
+ */
+export function setMessageKvInfoListener(msgKvInfoListener: MsgKvInfoListener): void;
+
+/**
  * 获取用户信息
  * @param baseCallback 基础回调
  * @param operationID 唯一操作标识
@@ -476,6 +482,43 @@ export function setSignalingListener(signalingListener: SignalingListener): void
 export function createTextMessage(operationID: string, text: string): string;
 
 /**
+ * 从本地路径创建图片消息
+ * @param operationID 唯一操作标识
+ * @param imagePath 图片路径
+ * @returns 消息对象 (JSON 字符串)
+ */
+export function createImageMessage(operationID: string, imagePath: string): string;
+
+/**
+ * 从本地路径创建语音消息
+ * @param operationID 唯一操作标识
+ * @param soundPath 语音路径
+ * @param duration 时长（秒）
+ * @returns 消息对象 (JSON 字符串)
+ */
+export function createSoundMessage(operationID: string, soundPath: string, duration: number): string;
+
+/**
+ * 从本地路径创建文件消息
+ * @param operationID 唯一操作标识
+ * @param filePath 文件路径
+ * @param fileName 文件名
+ * @returns 消息对象 (JSON 字符串)
+ */
+export function createFileMessage(operationID: string, filePath: string, fileName: string): string;
+
+/**
+ * 从本地路径创建视频消息
+ * @param operationID 唯一操作标识
+ * @param videoPath 视频路径
+ * @param videoType 视频类型
+ * @param duration 时长（秒）
+ * @param snapshotPath 缩略图路径
+ * @returns 消息对象 (JSON 字符串)
+ */
+export function createVideoMessage(operationID: string, videoPath: string, videoType: string, duration: number, snapshotPath: string): string;
+
+/**
  * 创建@消息
  * @param operationID 唯一操作标识
  * @param text 文本内容
@@ -699,6 +742,15 @@ export function deleteMessage(baseCallback: BaseCallback, operationID: string, c
  * @param clientMsgID 客户端消息 ID
  */
 export function deleteMessageFromLocalStorage(baseCallback: BaseCallback, operationID: string, conversationID: string, clientMsgID: string): void;
+
+/**
+ * 根据消息ID标记消息已读
+ * @param baseCallback 基础回调
+ * @param operationID 唯一操作标识
+ * @param conversationID 会话 ID
+ * @param clientMsgIDs 客户端消息 ID 列表（逗号分隔）
+ */
+export function markMessagesAsReadByMsgID(baseCallback: BaseCallback, operationID: string, conversationID: string, clientMsgIDs: string): void;
 
 /**
  * 删除本地所有消息
