@@ -12,51 +12,51 @@
 #define INVALID_CALLBACK_ID (-1)
 
 // ============================================================
-// 回调类型定义
+// 回调类型定义（与 libopenimsdk.h 保持一致）
 // ============================================================
 
-// Base 回调
-typedef void (*BaseSuccessCb)(int callbackID, const char* data);
-typedef void (*BaseErrorCb)(int callbackID, int code, const char* message);
+// 连接回调（与 libopenimsdk.h 一致：无 callbackID 参数）
+typedef void (*ConnNoMsgCb)(int);
+typedef void (*ConnWithMsgCb)(int, char*);
 
-// 上传文件回调（SDK UploadFileCallback 接口，8个方法，第一个参数为 cbId）
-typedef void (*UploadOpenCb)(int cbId, long long fileSize);
-typedef void (*UploadPartSizeCb)(int cbId, long long partSize, int partNumber);
-typedef void (*UploadHashProgressCb)(int cbId, int index, long long size, const char* partHash);
-typedef void (*UploadHashCompleteCb)(int cbId, const char* partsHash, const char* fileHash);
-typedef void (*UploadIDCb)(int cbId, const char* uploadID);
-typedef void (*UploadPartCompleteCb)(int cbId, int index, long long partSize, const char* partHash);
-typedef void (*UploadCompleteCb)(int cbId, long long fileSize, long long streamSize, long long storageSize);
-typedef void (*UploadFinishCb)(int cbId, long long size, const char* url, int fileType);
+// 消息回调（与 libopenimsdk.h 一致）
+typedef void (*InfoCb)(char*);
+typedef void (*ReceiptCb)(char*);
+typedef void (*DeletedCb)(char*);
 
-// 日志上传回调（第一个参数为 cbId）
-typedef void (*UploadLogProgressCb)(int cbId, long long current, long long total);
+// 会话回调（与 libopenimsdk.h 一致）
+typedef void (*SyncBoolCb)(int);
+typedef void (*SyncProgressCb)(int);
+typedef void (*UnreadCb)(int);
 
-// 发送进度回调（第一个参数为 cbId）
-typedef void (*SendMsgWithIDCb)(int cbId, int progress);
-
-// 连接回调
-typedef void (*ConnNoMsgCb)();
-typedef void (*ConnWithMsgCb)(int callbackID, const char* message);
-
-// 消息回调
-typedef void (*InfoCb)(int callbackID, const char* data);
-typedef void (*ReceiptCb)(int callbackID, const char* data);
-typedef void (*DeletedCb)(int callbackID, const char* msg);
-typedef void (*UnreadCb)(int totalUnreadCount);
-
-// 会话回调
-typedef void (*SyncBoolCb)();
-typedef void (*SyncProgressCb)(int progress);
-
-// 群组回调
-typedef void (*SignalingCb)(int callbackID, const char* data);
+// 群组/好友/用户回调（与 libopenimsdk.h 一致）
+typedef void (*SignalingCb)(char*);
 
 // 自定义业务回调
-typedef void (*CustomBusinessCb)(int callbackID, const char* message);
+typedef void (*CustomBusinessCb)(char*);
 
 // 消息 KV 信息回调
-typedef void (*MsgKvInfoCb)(int callbackID, const char* kvInfo);
+typedef void (*MsgKvInfoCb)(char*);
+
+// Base 回调（与 libopenimsdk.h 一致）
+typedef void (*BaseSuccessCb)(int, char*);
+typedef void (*BaseErrorCb)(int, int, char*);
+
+// 上传文件回调（与 libopenimsdk.h 一致）
+typedef void (*UploadOpenCb)(int, long long);
+typedef void (*UploadPartSizeCb)(int, long long, int);
+typedef void (*UploadHashProgressCb)(int, int, long long, char*);
+typedef void (*UploadHashCompleteCb)(int, char*, char*);
+typedef void (*UploadIDCb)(int, char*);
+typedef void (*UploadPartCompleteCb)(int, int, long long, char*);
+typedef void (*UploadCompleteCb)(int, long long, long long, long long);
+typedef void (*UploadFinishCb)(int, long long, char*, int);
+
+// 日志上传回调
+typedef void (*UploadLogProgressCb)(int, long long, long long);
+
+// 发送进度回调
+typedef void (*SendMsgCb)(int, int);
 
 // ============================================================
 // Base 回调上下文
@@ -305,23 +305,23 @@ void CallIntCallback(napi_env env, napi_ref callbackRef, int value);
 void CallLongLongCallback(napi_env env, napi_ref callbackRef, long long value);
 
 // 调用字符串参数回调
-void CallStringCallback(napi_env env, napi_ref callbackRef, const char* value);
+void CallStringCallback(napi_env env, napi_ref callbackRef, char* value);
 
 // 调用 Base 成功回调
-void CallBaseSuccessCallback(int cbId, const char* data);
+void CallBaseSuccessCallback(int cbId, char* data);
 
 // 调用 Base 错误回调
-void CallBaseErrorCallback(int cbId, int code, const char* message);
+void CallBaseErrorCallback(int cbId, int code, char* message);
 
 // 调用上传文件回调
 void CallUploadOpenCallback(int cbId, long long fileSize);
 void CallUploadPartSizeCallback(int cbId, long long partSize, int partNumber);
-void CallUploadHashProgressCallback(int cbId, int index, long long size, const char* partHash);
-void CallUploadHashCompleteCallback(int cbId, const char* partsHash, const char* fileHash);
-void CallUploadIDCallback(int cbId, const char* uploadID);
-void CallUploadPartCompleteCallback(int cbId, int index, long long partSize, const char* partHash);
+void CallUploadHashProgressCallback(int cbId, int index, long long size, char* partHash);
+void CallUploadHashCompleteCallback(int cbId, char* partsHash, char* fileHash);
+void CallUploadIDCallback(int cbId, char* uploadID);
+void CallUploadPartCompleteCallback(int cbId, int index, long long partSize, char* partHash);
 void CallUploadCompleteCallback(int cbId, long long fileSize, long long streamSize, long long storageSize);
-void CallUploadFinishCallback(int cbId, long long size, const char* url, int fileType);
+void CallUploadFinishCallback(int cbId, long long size, char* url, int fileType);
 
 // 调用日志上传回调
 void CallUploadLogProgressCallback(int cbId, long long current, long long total);

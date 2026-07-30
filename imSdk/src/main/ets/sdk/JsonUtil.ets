@@ -20,7 +20,7 @@ export function toString(object: Object): string {
  * @param jsonString JSON字符串
  * @returns 解析后的对象
  */
-export function toObject(jsonString: string): Object | null {
+export function toObject<T>(jsonString: string): T | null {
   if (jsonString == null || jsonString == "") {
     return null;
   }
@@ -36,16 +36,13 @@ export function toObject(jsonString: string): Object | null {
  * @param jsonString JSON字符串
  * @returns 解析后的数组
  */
-export function toArray(jsonString: string): Object[] {
+export function toArray<T>(jsonString: string): T[] {
   if (jsonString == null || jsonString == "") {
     return [];
   }
   try {
-    const parsed: Object = JSON.parse(jsonString);
-    if (Array.isArray(parsed)) {
-      return parsed as Object[];
-    }
-    return [];
+    const parsed: T[] = JSON.parse(jsonString);
+    return parsed ;
   } catch (e) {
     return [];
   }

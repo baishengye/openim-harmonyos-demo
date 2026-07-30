@@ -1,2 +1,2 @@
 // export {MainPage} from './src/main/ets/components/MainPage';
-export { IMSdk, getSDK } from './src/main/ets/sdk/IMSdk';
+export { OpenIM, OpenIMClient, getSDK } from './src/main/ets/sdk/IMSdk';

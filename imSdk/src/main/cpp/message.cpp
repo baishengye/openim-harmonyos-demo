@@ -151,6 +151,21 @@ napi_value NAPI_createFileMessageFromFullPath(napi_env env, napi_callback_info i
     return CreateJSString(env, msg);
 }
 
+napi_value NAPI_createFileMessageByURL(napi_env env, napi_callback_info info) {
+    size_t argc = 2;
+    napi_value args[2];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    std::string operationID = GetStringFromJS(env, args[1]);
+    std::string params = GetStringFromJS(env, args[0]);
+    if (operationID.empty()) {
+        operationID = "napi_createFileByURL_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+    }
+    char* result = CreateFileMessageByURL((char*)operationID.c_str(), (char*)params.c_str());
+    std::string msg = result ? result : "";
+    if (result) FreeString(result);
+    return CreateJSString(env, msg);
+}
+
 napi_value NAPI_createVideoMessage(napi_env env, napi_callback_info info) {
     size_t argc = 6;
     napi_value args[6];
@@ -490,8 +505,20 @@ napi_value NAPI_deleteAllMsgFromLocalAndSvr(napi_env env, napi_callback_info inf
         operationID = "napi_deleteAll_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
-    // New signature: DeleteAllMsgFromLocalAndSvr(int baseCallbackID, char* operationID)
     DeleteAllMsgFromLocalAndSvr(cbId, (char*)operationID.c_str());
+    return CreateJSUndefined(env);
+}
+
+napi_value NAPI_deleteAllMsgFromLocal(napi_env env, napi_callback_info info) {
+    size_t argc = 2;
+    napi_value args[2];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    std::string operationID = GetStringFromJS(env, args[1]);
+    if (operationID.empty()) {
+        operationID = "napi_deleteAllLocal_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+    }
+    int cbId = StoreBaseCallback(env, args[0]);
+    DeleteAllMsgFromLocal(cbId, (char*)operationID.c_str());
     return CreateJSUndefined(env);
 }
 
@@ -507,7 +534,22 @@ napi_value NAPI_insertSingleMessageToLocal(napi_env env, napi_callback_info info
         operationID = "napi_insertSingle_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
-    // New signature: InsertSingleMessageToLocal(int baseCallbackID, char* operationID, char* message, char* recvID, char* sendID)
+    InsertSingleMessageToLocal(cbId, (char*)operationID.c_str(), (char*)message.c_str(), (char*)recvID.c_str(), (char*)sendID.c_str());
+    return CreateJSUndefined(env);
+}
+
+napi_value NAPI_insertSingleMessageToLocalStorage(napi_env env, napi_callback_info info) {
+    size_t argc = 5;
+    napi_value args[5];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    std::string message = GetStringFromJS(env, args[1]);
+    std::string recvID = GetStringFromJS(env, args[2]);
+    std::string sendID = GetStringFromJS(env, args[3]);
+    std::string operationID = GetStringFromJS(env, args[4]);
+    if (operationID.empty()) {
+        operationID = "napi_insertSingleStorage_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+    }
+    int cbId = StoreBaseCallback(env, args[0]);
     InsertSingleMessageToLocal(cbId, (char*)operationID.c_str(), (char*)message.c_str(), (char*)recvID.c_str(), (char*)sendID.c_str());
     return CreateJSUndefined(env);
 }

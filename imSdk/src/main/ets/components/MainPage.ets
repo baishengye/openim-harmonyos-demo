@@ -1,7 +1,3 @@
-import { hilog } from '@kit.PerformanceAnalysisKit';
-import testNapi from 'libimsdk.so';
-import { CbEventData, WSEvent } from '../sdk/entity';
-import { CbEvents } from '../sdk/enum';
 
 const DOMAIN = 0x0000;
 
