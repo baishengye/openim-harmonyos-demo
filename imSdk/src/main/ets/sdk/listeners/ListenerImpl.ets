@@ -4,7 +4,7 @@
  */
 
 import { ConnListener, MsgListener, ConvListener, GroupListener, FriendListener, UserListener, SignalingListener } from './listener';
-import { info, debug } from './Logger';
+import { info, debug } from '../internal/log/Logger';
 
 /**
  * 连接状态监听器包装类

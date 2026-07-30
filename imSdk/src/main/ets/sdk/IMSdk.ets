@@ -4,16 +4,16 @@
  */
 
 import im from 'libimsdk.so';
-import { buildOperationID } from './Utils';
-import { info, debug, error } from './Logger';
-import { toString } from './JsonUtil';
-import { InitConfig } from './entity';
-import { LoginStatus } from './constant';
+import { buildOperationID } from './utils/Utils';
+import { info, debug, error } from './internal/log/Logger';
+import { toString } from './utils/JsonUtil';
+import { InitConfig } from './models/entity';
 import { MessageManager } from './MessageManager';
 import { ConversationManager } from './ConversationManager';
 import { FriendshipManager } from './FriendshipManager';
 import { GroupManager } from './GroupManager';
 import { UserInfoManager } from './UserInfoManager';
+import { LoginStatus } from './enums/enum';
 
 /**
  * 连接状态监听器

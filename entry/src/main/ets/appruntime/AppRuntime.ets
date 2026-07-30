@@ -1,7 +1,20 @@
-import { getSDK, IMSdk } from "imsdk";
-import { SDKError } from "imsdk/src/main/ets/sdk/entity";
-import { CbEvents, LogLevel, Platform } from "imsdk/src/main/ets/sdk/enum";
+import { getSDK, OpenIM, OpenIMClient, OnConnListener, LogLevel, Platform, InitConfig } from "imsdk";
 import Logger from "../common/utils/Logger";
+
+/**
+ * SDK错误信息
+ */
+class SDKError extends Error {
+  errCode: number;
+  errMsg: string;
+
+  constructor(errCode: number, errMsg: string) {
+    super(errMsg);
+    this.errCode = errCode;
+    this.errMsg = errMsg;
+    this.name = 'SDKError';
+  }
+}
 
 export class AppRuntime {
   private static instance: AppRuntime | undefined;
@@ -26,7 +39,30 @@ export class AppRuntime {
     }
     this.chatToken = "test123";
     this.isRunning = true;
-    IMSdk.getInstance().initSDK({
+
+    // 连接状态监听器
+    const connListener: OnConnListener = {
+      onConnecting: () => {
+        Logger.info("OnConnecting")
+      },
+      onConnectSuccess: () => {
+        Logger.info("OnConnectSuccess")
+      },
+      onConnectFailed: (errCode: number, errMsg: string) => {
+        Logger.info(`OnConnectFailed, errCode: ${errCode}, errMsg: ${errMsg}`)
+      },
+      onKickedOffline: () => {
+        Logger.info("OnKickedOffline")
+      },
+      onUserTokenExpired: () => {
+        Logger.info("OnUserTokenExpired")
+      },
+      onUserTokenInvalid: (errMsg: string) => {
+        Logger.info(`OnUserTokenInvalid, errMsg: ${errMsg}`)
+      }
+    }
+
+    const config: InitConfig = {
       platformID: Platform.iOS,
       apiAddr: 'http://192.168.2.136:10002',
       wsAddr: 'ws://192.168.2.136:10001',
@@ -34,20 +70,9 @@ export class AppRuntime {
       logLevel: LogLevel.Verbose,
       isLogStandardOutput: false,
       logFilePath: dataDir,
-      isExternalExtensions: false
-    })
-    getSDK().on(CbEvents.OnConnecting, () => {
-      Logger.info("OnConnecting")
-    })
-    getSDK().on(CbEvents.OnConnectSuccess, () => {
-      Logger.info("OnConnectSuccess")
-    })
-    getSDK().on(CbEvents.OnConnectFailed, (data: SDKError) => {
-      Logger.info(`OnConnectFailed, errCode: ${data.errCode}, errMsg: ${data.errMsg}`)
-    })
-    getSDK().on(CbEvents.OnUserTokenInvalid, (data: SDKError) => {
-      Logger.info(`OnUserTokenInvalid, errCode: ${data.errCode}, errMsg: ${data.errMsg}`)
-    })
+    }
+
+    getSDK().initSdk(connListener, config)
     Logger.info('AppRuntime started')
   }
 

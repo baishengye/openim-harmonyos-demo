@@ -1,4 +1,4 @@
-import { MessageItem } from "imsdk/src/main/ets/sdk/entity";
+import { MessageItem } from "imsdk";
 import { BackButton } from "../../component/BackButton";
 import { ChatViewModel } from "./ChatViewModel";
 

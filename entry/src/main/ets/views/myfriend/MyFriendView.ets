@@ -1,5 +1,4 @@
-import { ConversationItem, FriendUserItem } from "imsdk/src/main/ets/sdk/entity";
-import { GroupAtType, MessageReceiveOptType, SessionType } from "imsdk/src/main/ets/sdk/enum";
+import { ConversationItem, FriendUserItem, GroupAtType, MessageReceiveOptType, SessionType } from "imsdk";
 import { TitleBar } from "../../component/TitleBar";
 import { RouterName } from "../router/RouterMap";
 import MyFriendViewModel from "./MyFriendViewModel";

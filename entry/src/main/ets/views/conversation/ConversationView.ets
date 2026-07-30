@@ -1,4 +1,4 @@
-import { ConversationItem, MessageItem } from "imsdk/src/main/ets/sdk/entity";
+import { ConversationItem, MessageItem } from "imsdk";
 import Logger from "../../common/utils/Logger";
 import { RouterName } from "../router/RouterMap";
 import { ConversationViewModel } from "./ConversationViewModel";

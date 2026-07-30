@@ -1,5 +1,4 @@
-import { getSDK } from "imsdk";
-import { Platform } from "imsdk/src/main/ets/sdk/enum";
+import { getSDK, Platform } from "imsdk";
 import { ChatClient, LoginRequest } from "../../api/ChatClient";
 import { AppRuntime } from "../../appruntime/AppRuntime";
 import Logger from "../../common/utils/Logger";
@@ -47,13 +46,7 @@ export default class LoginViewModel {
       this.imToken = resp.imToken;
       Logger.info(`userID: ${resp.userID}, imToken: ${this.imToken}`);
       AppRuntime.getInstance().setToken(resp.chatToken, resp.imToken)
-      await getSDK().login({
-        userID: resp.userID,
-        token: resp.imToken,
-        platformID: Platform.iOS,
-        apiAddr: 'http://192.168.2.136:10002',
-        wsAddr: 'ws://192.168.2.136:10001',
-      })
+      await getSDK().login(resp.userID, resp.imToken)
       Logger.info(`login sucessful!`);
     }catch (e) {
       Logger.error(`login failed ${e}`);

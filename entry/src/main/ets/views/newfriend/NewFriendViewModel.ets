@@ -1,5 +1,4 @@
-import { IMSdk } from "imsdk";
-import { FriendApplicationItem, SDKError } from "imsdk/src/main/ets/sdk/entity";
+import { getSDK, FriendApplicationItem } from "imsdk";
 import Logger from "../../common/utils/Logger";
 
 @ObservedV2
@@ -9,19 +8,18 @@ export default class NewFriendViewModel {
     this.list = [];
     try {
       Logger.error(`load friend application`);
-      const recipients = await IMSdk.getInstance().getFriendApplicationListAsRecipient({
+      const recipients = await getSDK().friendshipManager.getFriendApplicationListAsRecipient({
         handleResults: [],
         offset: 1,
         count: 10
       });
-      const applicants = await IMSdk.getInstance().getFriendApplicationListAsApplicant({
+      const applicants = await getSDK().friendshipManager.getFriendApplicationListAsApplicant({
         offset: 1,
         count: 10
       });
       this.list.push(...recipients, ...applicants);
     }catch (e) {
-      const err = e as SDKError;
-      Logger.error(`load friend application, ${err.errCode}, ${err.errMsg}`);
+      Logger.error(`load friend application, err: ${e}`);
     }
   }
 }
