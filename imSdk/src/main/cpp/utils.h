@@ -1,9 +1,15 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include "hilog/log.h"
 #include "libs/include/libopenimsdk.h"
 #include "napi/native_api.h"
 #include <string>
+
+#define LOGI(tag,format, args) OH_LOG_Print(LOG_APP, LOG_INFO, 0, tag, format, args);
+#define LOGE(tag,format, args) OH_LOG_Print(LOG_APP, LOG_ERROR, 0, tag, format, args);
+#define LOGD(tag,format, args) OH_LOG_Print(LOG_APP, LOG_DEBUG, 0, tag, format, args);
+
 
 // Get values from JavaScript
 std::string GetStringFromJS(napi_env env, napi_value value);
@@ -25,7 +31,9 @@ napi_value CreateJSError(napi_env env, int errCode, const char* errMsg);
 // Utility functions
 void SafeStringCopy(char* dest, const char* src, size_t destSize);
 std::string GenerateOperationID();
+
 void LogInfo(const char* tag, const char* fmt, ...);
 void LogError(const char* tag, const char* fmt, ...);
+void LogDebug(const char* tag, const char* fmt, ...);
 
 #endif // UTILS_H

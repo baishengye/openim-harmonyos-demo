@@ -495,7 +495,7 @@ static napi_module imsdkModule = {
     .nm_filename = nullptr,
     .nm_register_func = Init,
     .nm_modname = "imsdk",
-    .nm_priv = nullptr,
+    .nm_priv = ((void*)0),
     .reserved = {0},
 };
 

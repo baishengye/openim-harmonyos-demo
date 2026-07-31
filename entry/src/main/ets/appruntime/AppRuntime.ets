@@ -74,6 +74,7 @@ export class AppRuntime {
 
     // 初始化SDK
     IM.init(config, new ConnListenerImpl());
+    IM.getLoginUserID()
     Logger.info('AppRuntime started')
   }
 

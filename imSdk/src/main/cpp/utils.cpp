@@ -1,10 +1,11 @@
+#include "utils.h"
 #include "libs/include/libopenimsdk.h"
 #include "napi/native_api.h"
-#include "hilog/log.h"
 #include <string>
 #include <cstring>
 #include <cstdarg>
 #include <chrono>
+
 
 // Get string from napi_value
 std::string GetStringFromJS(napi_env env, napi_value value) {
@@ -130,19 +131,31 @@ std::string GenerateOperationID() {
 
 // Log helper
 void LogInfo(const char* tag, const char* fmt, ...) {
+    LOGI("OpenIM","调用宏======%s==================","11111");
     char buf[512];
     va_list args;
     va_start(args, fmt);
     vsnprintf(buf, sizeof(buf), fmt, args);
     va_end(args);
-    OH_LOG_INFO(LOG_APP, "[%s] %{public}s", tag, buf);
+    LOGI(tag, "%{public}s", buf)
 }
 
 void LogError(const char* tag, const char* fmt, ...) {
+    LOGE("OpenIM","调用宏======%s==================","11111");
     char buf[512];
     va_list args;
     va_start(args, fmt);
     vsnprintf(buf, sizeof(buf), fmt, args);
     va_end(args);
-    OH_LOG_ERROR(LOG_APP, "[%s] %{public}s", tag, buf);
+    LOGE(tag, "%{public}s", buf)
+}
+
+void LogDebug(const char *tag, const char *fmt, ...){
+    LOGD("OpenIM","调用宏======%s==================","11111");
+    char buf[512];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, args);
+    va_end(args);
+    LOGD(tag, "%{public}s", buf)
 }
