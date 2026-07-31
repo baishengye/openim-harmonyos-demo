@@ -63,7 +63,7 @@ struct LoginPage {
           })
 
         Column() {
-          TextInput({ placeholder: $r('app.string.account'), text: ""})
+          TextInput({ placeholder: $r('app.string.account'),  text: "13682215018"})
             .maxLength(11)
             .type(InputType.USER_NAME)
             .inputStyle()
@@ -73,7 +73,7 @@ struct LoginPage {
 
           Line().lineStyle()
 
-          TextInput({ placeholder: $r('app.string.password'), text: "" })
+          TextInput({ placeholder: $r('app.string.password'),  text: "Aa111111" })
             .maxLength(Constants.INPUT_PASSWORD_LENGTH)
             .type(InputType.Password)
             .inputStyle()

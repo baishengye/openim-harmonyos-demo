@@ -108,3 +108,10 @@ export {
 export {
   UserInfoManager
 } from './src/main/ets/sdk/manager/UserInfoManager';
+export {
+  PromiseBaseCallback,
+  PromiseSendMsgCallback
+} from './src/main/ets/sdk/listeners/CallbackUtil'
+export {
+  buildOperationID
+} from './src/main/ets/sdk/utils/Utils'

@@ -1,5 +1,5 @@
 
-export const API_BASE_URL = 'http://192.168.2.136:10008';
+export const API_BASE_URL = 'http://172.16.25.203:10008';
 export const REQUEST_TIMEOUT = 10000; // 10 秒
 
 export default class Constants {

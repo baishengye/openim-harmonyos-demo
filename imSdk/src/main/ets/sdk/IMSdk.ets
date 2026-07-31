@@ -22,6 +22,7 @@ import { UserInfoManager } from './manager/UserInfoManager';
 import { ConnListener, ConvListener, FriendListener, GroupListener, MsgListener,
   UserListener } from './listeners/listener';
 import { MiscManager } from './manager/MiscManager';
+import { LoginManager } from './manager/LoginManager';
 
 /**
  * OpenIM客户端SDK
@@ -40,6 +41,8 @@ export class OpenIM {
   public groupManager: GroupManager = new GroupManager();
   /** 用户信息管理器 */
   public userInfoManager: UserInfoManager = new UserInfoManager();
+  /** 登陆管理器*/
+  public loginManager:LoginManager = new LoginManager();
   /**
    * 工具管理
    */

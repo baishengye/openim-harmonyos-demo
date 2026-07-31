@@ -78,6 +78,8 @@ export class MessageItem {
   mediaSize: number = 0;
   /** 是否显示时间戳 */
   showTimestamp: boolean = false;
+
+  isRead:boolean = false;
 }
 
 /**

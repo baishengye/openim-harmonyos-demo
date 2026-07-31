@@ -2,7 +2,7 @@
  * OpenIM SDK for HarmonyOS
  * 日志工具类 - 提供日志记录功能
  */
-
+import { LogLevel } from "../../enums/enum";
 
 
 const TAG = "OpenIM";
@@ -13,7 +13,7 @@ const TAG = "OpenIM";
  * @param message 消息
  */
 export function debug(tag: string, message: string): void {
-  logMessage(LogLevel.DEBUG, tag, message);
+  logMessage(LogLevel.Debug, tag, message);
 }
 
 /**
@@ -22,7 +22,7 @@ export function debug(tag: string, message: string): void {
  * @param message 消息
  */
 export function info(tag: string, message: string): void {
-  logMessage(LogLevel.INFO, tag, message);
+  logMessage(LogLevel.Info, tag, message);
 }
 
 /**
@@ -31,7 +31,7 @@ export function info(tag: string, message: string): void {
  * @param message 消息
  */
 export function warn(tag: string, message: string): void {
-  logMessage(LogLevel.WARN, tag, message);
+  logMessage(LogLevel.Warn, tag, message);
 }
 
 /**
@@ -40,7 +40,7 @@ export function warn(tag: string, message: string): void {
  * @param message 消息
  */
 export function error(tag: string, message: string): void {
-  logMessage(LogLevel.ERROR, tag, message);
+  logMessage(LogLevel.Error, tag, message);
 }
 
 /**
@@ -49,7 +49,7 @@ export function error(tag: string, message: string): void {
  * @param message 消息
  */
 export function fatal(tag: string, message: string): void {
-  logMessage(LogLevel.FATAL, tag, message);
+  logMessage(LogLevel.Fatal, tag, message);
 }
 
 /**

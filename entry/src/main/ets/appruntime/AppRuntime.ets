@@ -1,19 +1,37 @@
-import { getSDK, OpenIM, OpenIMClient, OnConnListener, LogLevel, Platform, InitConfig } from "imsdk";
+import { IM, OpenIMAppWrapper } from "../sdkwrapper/IMAppWrapper";
+import {
+  InitConfig,
+  Platform,
+  LogLevel,
+  ConnListener
+} from "imsdk";
 import Logger from "../common/utils/Logger";
 
-/**
- * SDK错误信息
- */
-class SDKError extends Error {
-  errCode: number;
-  errMsg: string;
-
-  constructor(errCode: number, errMsg: string) {
-    super(errMsg);
-    this.errCode = errCode;
-    this.errMsg = errMsg;
-    this.name = 'SDKError';
+class ConnListenerImpl implements ConnListener{
+  onConnecting(): void {
+    Logger.info("OnConnecting")
   }
+
+  onConnectSuccess(): void {
+    Logger.info("OnConnectSuccess")
+  }
+
+  onConnectFailed(errCode: number, errMsg: string): void {
+    Logger.info(`OnConnectFailed, errCode: ${errCode}, errMsg: ${errMsg}`)
+  }
+
+  onKickedOffline(): void {
+    Logger.info("OnKickedOffline")
+  }
+
+  onUserTokenExpired(): void {
+    Logger.info("OnUserTokenExpired");
+  }
+
+  onUserTokenInvalid(errMsg: string): void {
+    Logger.info(`OnUserTokenInvalid, errMsg: ${errMsg}`)
+  }
+
 }
 
 export class AppRuntime {
@@ -21,6 +39,7 @@ export class AppRuntime {
   chatToken: string = "";
   imToken: string = "";
   isRunning: boolean;
+  currentUserID: string = "";
 
   private constructor() {
     this.isRunning = false;
@@ -33,46 +52,28 @@ export class AppRuntime {
     return AppRuntime.instance;
   }
 
+  /**
+   * 启动SDK
+   */
   start(dataDir: string): void {
     if (this.isRunning) {
       return;
     }
-    this.chatToken = "test123";
+
     this.isRunning = true;
 
-    // 连接状态监听器
-    const connListener: OnConnListener = {
-      onConnecting: () => {
-        Logger.info("OnConnecting")
-      },
-      onConnectSuccess: () => {
-        Logger.info("OnConnectSuccess")
-      },
-      onConnectFailed: (errCode: number, errMsg: string) => {
-        Logger.info(`OnConnectFailed, errCode: ${errCode}, errMsg: ${errMsg}`)
-      },
-      onKickedOffline: () => {
-        Logger.info("OnKickedOffline")
-      },
-      onUserTokenExpired: () => {
-        Logger.info("OnUserTokenExpired")
-      },
-      onUserTokenInvalid: (errMsg: string) => {
-        Logger.info(`OnUserTokenInvalid, errMsg: ${errMsg}`)
-      }
-    }
-
     const config: InitConfig = {
-      platformID: Platform.iOS,
-      apiAddr: 'http://192.168.2.136:10002',
-      wsAddr: 'ws://192.168.2.136:10001',
+      platformID: Platform.IOS,
+      apiAddr: 'http://172.16.25.203:10002',
+      wsAddr: 'ws://172.16.25.203:10001',
       dataDir: dataDir,
-      logLevel: LogLevel.Verbose,
+      logLevel: LogLevel.Error,
       isLogStandardOutput: false,
       logFilePath: dataDir,
     }
 
-    getSDK().initSdk(connListener, config)
+    // 初始化SDK
+    IM.init(config, new ConnListenerImpl());
     Logger.info('AppRuntime started')
   }
 
@@ -100,10 +101,20 @@ export class AppRuntime {
     this.chatToken = chatToken;
     this.imToken = imToken;
   }
+
   getChatToken(): string {
     return this.chatToken;
   }
+
   getImToken(): string {
     return this.imToken;
+  }
+
+  setUserID(userID: string): void {
+    this.currentUserID = userID;
+  }
+
+  getUserID(): string {
+    return this.currentUserID || IM.getLoginUserID();
   }
 }

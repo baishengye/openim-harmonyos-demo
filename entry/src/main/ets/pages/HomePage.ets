@@ -1,9 +1,9 @@
 import Constants from '../api/Constants';
 import Logger from '../common/utils/Logger';
-import ContactsView from '../views/contacts/ContactsView';
-import ConversationView from '../views/conversation/ConversationView';
-import MineView from '../views/mine/MineView';
-import { RouterMap } from '../views/router/RouterMap';
+// import ContactsView from '../views/contacts/ContactsView';
+// import ConversationView from '../views/conversation/ConversationView';
+// import MineView from '../views/mine/MineView';
+// import { RouterMap } from '../views/router/RouterMap';
 
 @Entry
 @ComponentV2
@@ -46,44 +46,47 @@ struct HomePage {
   }
 
   build() {
-    Navigation(this.navPathStack) {
-      Tabs({
-        barPosition: BarPosition.End,
-        controller: this.tabsController
-      }) {
-        TabContent() {
-          ConversationView()
-        }
-        .backgroundColor($r('app.color.main_background'))
-        .tabBar(this.baseTab($r('app.string.message'), Constants.CONVERSATION_TAB_INDEX,
-          $r('app.media.ic_home_tab1_sel'), $r('app.media.ic_home_tab1_nor')))
 
-        TabContent() {
-          ContactsView()
-        }
-        .backgroundColor($r('app.color.main_background'))
-        .tabBar(this.baseTab($r('app.string.contacts_title'), Constants.CONTACTS_TAB_INDEX,
-          $r('app.media.ic_home_tab2_sel'), $r('app.media.ic_home_tab2_nor')))
 
-        TabContent() {
-          MineView()
-        }
-        .backgroundColor($r('app.color.main_background'))
-        .tabBar(this.baseTab($r('app.string.mine_title'), Constants.MINE_TAB_INDEX,
-          $r('app.media.ic_home_tab4_sel'), $r('app.media.ic_home_tab4_nor')))
-      }
-      .width(Constants.FULL_PARENT)
-      .backgroundColor(Color.White)
-      .barHeight($r('app.float.main_bar_height'))
-      .barMode(BarMode.Fixed)
-      .onChange((index: number) => {
-        this.index = index
-      })
-    }
-    .navDestination(RouterMap)
-    .hideTitleBar(true)
-    .hideToolBar(false)
-    .mode(NavigationMode.Stack)
-    .backgroundColor($r('app.color.background'))
+
+    // Navigation(this.navPathStack) {
+    //   Tabs({
+    //     barPosition: BarPosition.End,
+    //     controller: this.tabsController
+    //   }) {
+    //     TabContent() {
+    //       ConversationView()
+    //     }
+    //     .backgroundColor($r('app.color.main_background'))
+    //     .tabBar(this.baseTab($r('app.string.message'), Constants.CONVERSATION_TAB_INDEX,
+    //       $r('app.media.ic_home_tab1_sel'), $r('app.media.ic_home_tab1_nor')))
+    //
+    //     TabContent() {
+    //       ContactsView()
+    //     }
+    //     .backgroundColor($r('app.color.main_background'))
+    //     .tabBar(this.baseTab($r('app.string.contacts_title'), Constants.CONTACTS_TAB_INDEX,
+    //       $r('app.media.ic_home_tab2_sel'), $r('app.media.ic_home_tab2_nor')))
+    //
+    //     TabContent() {
+    //       MineView()
+    //     }
+    //     .backgroundColor($r('app.color.main_background'))
+    //     .tabBar(this.baseTab($r('app.string.mine_title'), Constants.MINE_TAB_INDEX,
+    //       $r('app.media.ic_home_tab4_sel'), $r('app.media.ic_home_tab4_nor')))
+    //   }
+    //   .width(Constants.FULL_PARENT)
+    //   .backgroundColor(Color.White)
+    //   .barHeight($r('app.float.main_bar_height'))
+    //   .barMode(BarMode.Fixed)
+    //   .onChange((index: number) => {
+    //     this.index = index
+    //   })
+    // }
+    // .navDestination(RouterMap)
+    // .hideTitleBar(true)
+    // .hideToolBar(false)
+    // .mode(NavigationMode.Stack)
+    // .backgroundColor($r('app.color.background'))
   }
 }
