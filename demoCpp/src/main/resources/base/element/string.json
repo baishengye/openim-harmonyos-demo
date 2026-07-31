@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "module description"
+    },
+    {
+      "name": "DemoCppAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "DemoCppAbility_label",
+      "value": "label"
+    }
+  ]
+}

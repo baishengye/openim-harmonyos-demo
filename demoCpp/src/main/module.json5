@@ -1,0 +1,26 @@
+{
+  "module": {
+    "name": "demoCpp",
+    "type": "feature",
+    "description": "$string:module_desc",
+    "mainElement": "DemoCppAbility",
+    "deviceTypes": [
+      "phone"
+    ],
+    "deliveryWithInstall": true,
+    "installationFree": false,
+    "pages": "$profile:main_pages",
+    "abilities": [
+      {
+        "name": "DemoCppAbility",
+        "srcEntry": "./ets/democppability/DemoCppAbility.ets",
+        "description": "$string:DemoCppAbility_desc",
+        "icon": "$media:layered_image",
+        "label": "$string:DemoCppAbility_label",
+        "startWindowIcon": "$media:startIcon",
+        "startWindowBackground": "$color:start_window_background",
+        "exported": true
+      }
+    ]
+  }
+}

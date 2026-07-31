@@ -1,0 +1,11 @@
+{
+  "module": {
+    "name": "demoCpp_test",
+    "type": "feature",
+    "deviceTypes": [
+      "phone"
+    ],
+    "deliveryWithInstall": true,
+    "installationFree": false
+  }
+}
