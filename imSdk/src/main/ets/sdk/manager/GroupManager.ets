@@ -5,6 +5,8 @@
 
 import im from 'libimsdk.so';
 import { debug, error, info } from '../internal/log/Logger';
+import { BaseCallback, GroupListener } from '../listeners/listener';
+import { BaseCallbackWrapper, GroupListenerWrapper } from '../listeners/ListenerImpl';
 import { GroupApplication, GroupInfo, GroupMemberInfo } from '../models/entity';
 import { toArray, toObject, toString } from '../utils/JsonUtil';
 import { buildOperationID } from '../utils/Utils';
@@ -16,787 +18,500 @@ import { buildOperationID } from '../utils/Utils';
  */
 export class GroupManager {
   /**
-   * 创建群组
-   * @param params 创建参数JSON
-   * @returns 群组信息
+   * 设置群组监听器
+   * @param listener 群组监听器
    */
-  createGroup(params: string): Promise<GroupInfo> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `createGroup, operationID: ${operationID}`);
+  setGroupListener(listener: GroupListener): void {
+    im.setGroupListener(new GroupListenerWrapper(listener));
+  }
 
-      im.createGroup(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `createGroup failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `createGroup success`);
-            resolve(toObject<GroupInfo>(data) as GroupInfo);
-          }
-        },
-        operationID,
-        params
-      );
-    });
+  /**
+   * 创建群组
+   * @param callback 回调
+   * @param operationID 操作ID
+   * @param params 创建参数JSON
+   */
+  createGroup(callback: BaseCallback<GroupInfo>, operationID: string, params: string): void {
+    debug('GroupManager', `createGroup, operationID: ${operationID}`);
+
+    im.createGroup(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      params
+    );
   }
 
   /**
    * 加入群组
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param groupID 群组ID
    * @param reqMsg 申请消息
    * @param joinSource 加入来源
    * @param ex 扩展信息
-   * @returns 加入结果
    */
-  joinGroup(groupID: string, reqMsg: string = "", joinSource: number = 2, ex: string = ""): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `joinGroup: ${groupID}, operationID: ${operationID}`);
+  joinGroup(callback: BaseCallback<string>, operationID: string, groupID: string, reqMsg: string = "", joinSource: number = 2, ex: string = ""): void {
+    debug('GroupManager', `joinGroup: ${groupID}, operationID: ${operationID}`);
 
-      im.joinGroup(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `joinGroup failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `joinGroup success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        groupID,
-        reqMsg,
-        joinSource,
-        ex
-      );
-    });
+    im.joinGroup(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      groupID,
+      reqMsg,
+      joinSource,
+      ex
+    );
   }
 
   /**
    * 退出群组
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param groupID 群组ID
-   * @returns 退出结果
    */
-  quitGroup(groupID: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `quitGroup: ${groupID}, operationID: ${operationID}`);
+  quitGroup(callback: BaseCallback<string>, operationID: string, groupID: string): void {
+    debug('GroupManager', `quitGroup: ${groupID}, operationID: ${operationID}`);
 
-      im.quitGroup(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `quitGroup failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `quitGroup success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        groupID
-      );
-    });
+    im.quitGroup(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      groupID
+    );
   }
 
   /**
    * 解散群组
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param groupID 群组ID
-   * @returns 解散结果
    */
-  dismissGroup(groupID: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `dismissGroup: ${groupID}, operationID: ${operationID}`);
+  dismissGroup(callback: BaseCallback<string>, operationID: string, groupID: string): void {
+    debug('GroupManager', `dismissGroup: ${groupID}, operationID: ${operationID}`);
 
-      im.dismissGroup(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `dismissGroup failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `dismissGroup success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        groupID
-      );
-    });
+    im.dismissGroup(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      groupID
+    );
   }
 
   /**
    * 获取已加入的群组列表
-   * @returns 群组列表
+   * @param callback 回调
+   * @param operationID 操作ID
    */
-  getJoinedGroupList(): Promise<GroupInfo[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `getJoinedGroupList, operationID: ${operationID}`);
+  getJoinedGroupList(callback: BaseCallback<GroupInfo[]>, operationID: string): void {
+    debug('GroupManager', `getJoinedGroupList, operationID: ${operationID}`);
 
-      im.getJoinedGroupList(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `getJoinedGroupList failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `getJoinedGroupList success`);
-            resolve(toArray<GroupInfo>(data));
-          }
-        },
-        operationID
-      );
-    });
+    im.getJoinedGroupList(
+      new BaseCallbackWrapper(callback),
+      operationID
+    );
   }
 
   /**
    * 分页获取已加入的群组列表
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param offset 偏移量
    * @param count 数量
-   * @returns 群组列表
    */
-  getJoinedGroupListPage(offset: number, count: number): Promise<GroupInfo[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `getJoinedGroupListPage, offset: ${offset}, count: ${count}, operationID: ${operationID}`);
+  getJoinedGroupListPage(callback: BaseCallback<GroupInfo[]>, operationID: string, offset: number, count: number): void {
+    debug('GroupManager', `getJoinedGroupListPage, offset: ${offset}, count: ${count}, operationID: ${operationID}`);
 
-      im.getJoinedGroupListPage(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `getJoinedGroupListPage failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `getJoinedGroupListPage success`);
-            resolve(toArray<GroupInfo>(data));
-          }
-        },
-        operationID,
-        offset,
-        count
-      );
-    });
+    im.getJoinedGroupListPage(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      offset,
+      count
+    );
   }
 
   /**
    * 获取指定群组信息
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param groupIDList 群组ID列表
-   * @returns 群组信息列表
    */
-  getSpecifiedGroupsInfo(groupIDList: string[]): Promise<GroupInfo[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `getSpecifiedGroupsInfo, count: ${groupIDList.length}, operationID: ${operationID}`);
+  getSpecifiedGroupsInfo(callback: BaseCallback<GroupInfo[]>, operationID: string, groupIDList: string[]): void {
+    debug('GroupManager', `getSpecifiedGroupsInfo, count: ${groupIDList.length}, operationID: ${operationID}`);
 
-      im.getSpecifiedGroupsInfo(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `getSpecifiedGroupsInfo failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `getSpecifiedGroupsInfo success`);
-            resolve(toArray<GroupInfo>(data));
-          }
-        },
-        operationID,
-        toString(groupIDList)
-      );
-    });
+    im.getSpecifiedGroupsInfo(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      toString(groupIDList)
+    );
   }
 
   /**
    * 获取群成员列表
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param groupID 群组ID
    * @param filter 过滤类型
    * @param offset 偏移量
    * @param count 数量
-   * @returns 群成员列表
    */
-  getGroupMemberList(groupID: string, filter: number, offset: number, count: number): Promise<GroupMemberInfo[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `getGroupMemberList: ${groupID}, operationID: ${operationID}`);
+  getGroupMemberList(callback: BaseCallback<GroupMemberInfo[]>, operationID: string, groupID: string, filter: number, offset: number, count: number): void {
+    debug('GroupManager', `getGroupMemberList: ${groupID}, operationID: ${operationID}`);
 
-      im.getGroupMemberList(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `getGroupMemberList failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `getGroupMemberList success`);
-            resolve(toArray<GroupMemberInfo>(data));
-          }
-        },
-        operationID,
-        groupID,
-        filter,
-        offset,
-        count
-      );
-    });
+    im.getGroupMemberList(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      groupID,
+      filter,
+      offset,
+      count
+    );
   }
 
   /**
    * 获取群主和管理员
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param groupID 群组ID
-   * @returns 群成员列表
    */
-  getGroupMemberOwnerAndAdmin(groupID: string): Promise<GroupMemberInfo[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `getGroupMemberOwnerAndAdmin: ${groupID}, operationID: ${operationID}`);
+  getGroupMemberOwnerAndAdmin(callback: BaseCallback<GroupMemberInfo[]>, operationID: string, groupID: string): void {
+    debug('GroupManager', `getGroupMemberOwnerAndAdmin: ${groupID}, operationID: ${operationID}`);
 
-      im.getGroupMemberOwnerAndAdmin(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `getGroupMemberOwnerAndAdmin failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `getGroupMemberOwnerAndAdmin success`);
-            resolve(toArray<GroupMemberInfo>(data));
-          }
-        },
-        operationID,
-        groupID
-      );
-    });
+    im.getGroupMemberOwnerAndAdmin(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      groupID
+    );
   }
 
   /**
    * 获取指定群成员信息
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param groupID 群组ID
    * @param userIDList 用户ID列表
-   * @returns 群成员列表
    */
-  getSpecifiedGroupMembersInfo(groupID: string, userIDList: string[]): Promise<GroupMemberInfo[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `getSpecifiedGroupMembersInfo: ${groupID}, count: ${userIDList.length}, operationID: ${operationID}`);
+  getSpecifiedGroupMembersInfo(callback: BaseCallback<GroupMemberInfo[]>, operationID: string, groupID: string, userIDList: string[]): void {
+    debug('GroupManager', `getSpecifiedGroupMembersInfo: ${groupID}, count: ${userIDList.length}, operationID: ${operationID}`);
 
-      im.getSpecifiedGroupMembersInfo(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `getSpecifiedGroupMembersInfo failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `getSpecifiedGroupMembersInfo success`);
-            resolve(toArray<GroupMemberInfo>(data));
-          }
-        },
-        operationID,
-        groupID,
-        toString(userIDList)
-      );
-    });
+    im.getSpecifiedGroupMembersInfo(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      groupID,
+      toString(userIDList)
+    );
   }
 
   /**
    * 获取群内指定用户
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param groupID 群组ID
    * @param userIDList 用户ID列表
-   * @returns 群成员列表
    */
-  getUsersInGroup(groupID: string, userIDList: string[]): Promise<GroupMemberInfo[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `getUsersInGroup: ${groupID}, count: ${userIDList.length}, operationID: ${operationID}`);
+  getUsersInGroup(callback: BaseCallback<GroupMemberInfo[]>, operationID: string, groupID: string, userIDList: string[]): void {
+    debug('GroupManager', `getUsersInGroup: ${groupID}, count: ${userIDList.length}, operationID: ${operationID}`);
 
-      im.getUsersInGroup(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `getUsersInGroup failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `getUsersInGroup success`);
-            resolve(toArray<GroupMemberInfo>(data));
-          }
-        },
-        operationID,
-        groupID,
-        toString(userIDList)
-      );
-    });
+    im.getUsersInGroup(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      groupID,
+      toString(userIDList)
+    );
   }
 
   /**
    * 搜索群成员
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param params 搜索参数JSON
-   * @returns 群成员列表
    */
-  searchGroupMembers(params: string): Promise<GroupMemberInfo[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `searchGroupMembers, operationID: ${operationID}`);
+  searchGroupMembers(callback: BaseCallback<GroupMemberInfo[]>, operationID: string, params: string): void {
+    debug('GroupManager', `searchGroupMembers, operationID: ${operationID}`);
 
-      im.searchGroupMembers(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `searchGroupMembers failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `searchGroupMembers success`);
-            resolve(toArray<GroupMemberInfo>(data));
-          }
-        },
-        operationID,
-        params
-      );
-    });
+    im.searchGroupMembers(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      params
+    );
   }
 
   /**
    * 设置群组信息
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param params 群组信息JSON
-   * @returns 设置结果
    */
-  setGroupInfo(params: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `setGroupInfo, operationID: ${operationID}`);
+  setGroupInfo(callback: BaseCallback<string>, operationID: string, params: string): void {
+    debug('GroupManager', `setGroupInfo, operationID: ${operationID}`);
 
-      im.setGroupInfo(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `setGroupInfo failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `setGroupInfo success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        params
-      );
-    });
+    im.setGroupInfo(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      params
+    );
   }
 
   /**
    * 更改群组禁言状态
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param groupID 群组ID
    * @param isMute 是否禁言
-   * @returns 设置结果
    */
-  changeGroupMute(groupID: string, isMute: boolean): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `changeGroupMute: ${groupID}, isMute: ${isMute}, operationID: ${operationID}`);
+  changeGroupMute(callback: BaseCallback<string>, operationID: string, groupID: string, isMute: boolean): void {
+    debug('GroupManager', `changeGroupMute: ${groupID}, isMute: ${isMute}, operationID: ${operationID}`);
 
-      im.changeGroupMute(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `changeGroupMute failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `changeGroupMute success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        groupID,
-        isMute
-      );
-    });
+    im.changeGroupMute(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      groupID,
+      isMute
+    );
   }
 
   /**
    * 更改群成员禁言状态
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param groupID 群组ID
    * @param userID 用户ID
    * @param mutedSeconds 禁言时长（秒）
-   * @returns 设置结果
    */
-  changeGroupMemberMute(groupID: string, userID: string, mutedSeconds: number): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `changeGroupMemberMute: ${groupID}, userID: ${userID}, mutedSeconds: ${mutedSeconds}, operationID: ${operationID}`);
+  changeGroupMemberMute(callback: BaseCallback<string>, operationID: string, groupID: string, userID: string, mutedSeconds: number): void {
+    debug('GroupManager', `changeGroupMemberMute: ${groupID}, userID: ${userID}, mutedSeconds: ${mutedSeconds}, operationID: ${operationID}`);
 
-      im.changeGroupMemberMute(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `changeGroupMemberMute failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `changeGroupMemberMute success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        groupID,
-        userID,
-        mutedSeconds
-      );
-    });
+    im.changeGroupMemberMute(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      groupID,
+      userID,
+      mutedSeconds
+    );
   }
 
   /**
    * 设置群成员信息
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param params 群成员信息JSON
-   * @returns 设置结果
    */
-  setGroupMemberInfo(params: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `setGroupMemberInfo, operationID: ${operationID}`);
+  setGroupMemberInfo(callback: BaseCallback<string>, operationID: string, params: string): void {
+    debug('GroupManager', `setGroupMemberInfo, operationID: ${operationID}`);
 
-      im.setGroupMemberInfo(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `setGroupMemberInfo failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `setGroupMemberInfo success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        params
-      );
-    });
+    im.setGroupMemberInfo(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      params
+    );
   }
 
   /**
    * 邀请用户入群
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param groupID 群组ID
    * @param userIDList 用户ID列表
    * @param reason 原因
-   * @returns 邀请结果
    */
-  inviteUserToGroup(groupID: string, userIDList: string[], reason: string = ""): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `inviteUserToGroup: ${groupID}, operationID: ${operationID}`);
+  inviteUserToGroup(callback: BaseCallback<string>, operationID: string, groupID: string, userIDList: string[], reason: string = ""): void {
+    debug('GroupManager', `inviteUserToGroup: ${groupID}, operationID: ${operationID}`);
 
-      im.inviteUserToGroup(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `inviteUserToGroup failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `inviteUserToGroup success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        groupID,
-        toString(userIDList),
-        reason
-      );
-    });
+    im.inviteUserToGroup(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      groupID,
+      toString(userIDList),
+      reason
+    );
   }
 
   /**
    * 踢出群成员
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param groupID 群组ID
    * @param userIDList 用户ID列表
    * @param reason 原因
-   * @returns 踢出结果
    */
-  kickGroupMember(groupID: string, userIDList: string[], reason: string = ""): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `kickGroupMember: ${groupID}, operationID: ${operationID}`);
+  kickGroupMember(callback: BaseCallback<string>, operationID: string, groupID: string, userIDList: string[], reason: string = ""): void {
+    debug('GroupManager', `kickGroupMember: ${groupID}, operationID: ${operationID}`);
 
-      im.kickGroupMember(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `kickGroupMember failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `kickGroupMember success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        groupID,
-        toString(userIDList),
-        reason
-      );
-    });
+    im.kickGroupMember(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      groupID,
+      toString(userIDList),
+      reason
+    );
   }
 
   /**
    * 转让群主
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param groupID 群组ID
    * @param newOwnerUserID 新群主用户ID
-   * @returns 转让结果
    */
-  transferGroupOwner(groupID: string, newOwnerUserID: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `transferGroupOwner: ${groupID}, newOwner: ${newOwnerUserID}, operationID: ${operationID}`);
+  transferGroupOwner(callback: BaseCallback<string>, operationID: string, groupID: string, newOwnerUserID: string): void {
+    debug('GroupManager', `transferGroupOwner: ${groupID}, newOwner: ${newOwnerUserID}, operationID: ${operationID}`);
 
-      im.transferGroupOwner(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `transferGroupOwner failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `transferGroupOwner success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        groupID,
-        newOwnerUserID
-      );
-    });
+    im.transferGroupOwner(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      groupID,
+      newOwnerUserID
+    );
   }
 
   /**
    * 获取作为申请人的群申请列表
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param params 查询参数JSON
-   * @returns 群申请列表
    */
-  getGroupApplicationListAsApplicant(params: string): Promise<GroupApplication[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `getGroupApplicationListAsApplicant, operationID: ${operationID}`);
+  getGroupApplicationListAsApplicant(callback: BaseCallback<GroupApplication[]>, operationID: string, params: string): void {
+    debug('GroupManager', `getGroupApplicationListAsApplicant, operationID: ${operationID}`);
 
-      im.getGroupApplicationListAsApplicant(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `getGroupApplicationListAsApplicant failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `getGroupApplicationListAsApplicant success`);
-            resolve(toArray<GroupApplication>(data));
-          }
-        },
-        operationID,
-        params
-      );
-    });
+    im.getGroupApplicationListAsApplicant(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      params
+    );
   }
 
   /**
    * 获取作为接收人的群申请列表
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param params 查询参数JSON
-   * @returns 群申请列表
    */
-  getGroupApplicationListAsRecipient(params: string): Promise<GroupApplication[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `getGroupApplicationListAsRecipient, operationID: ${operationID}`);
+  getGroupApplicationListAsRecipient(callback: BaseCallback<GroupApplication[]>, operationID: string, params: string): void {
+    debug('GroupManager', `getGroupApplicationListAsRecipient, operationID: ${operationID}`);
 
-      im.getGroupApplicationListAsRecipient(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `getGroupApplicationListAsRecipient failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `getGroupApplicationListAsRecipient success`);
-            resolve(toArray<GroupApplication>(data));
-          }
-        },
-        operationID,
-        params
-      );
-    });
+    im.getGroupApplicationListAsRecipient(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      params
+    );
   }
 
   /**
    * 获取未处理群申请数量
-   * @returns 未处理数量
+   * @param callback 回调
+   * @param operationID 操作ID
    */
-  getGroupApplicationUnhandledCount(): Promise<number> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `getGroupApplicationUnhandledCount, operationID: ${operationID}`);
+  getGroupApplicationUnhandledCount(callback: BaseCallback<number>, operationID: string): void {
+    debug('GroupManager', `getGroupApplicationUnhandledCount, operationID: ${operationID}`);
 
-      im.getGroupApplicationUnhandledCount(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `getGroupApplicationUnhandledCount failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `getGroupApplicationUnhandledCount success: ${data}`);
-            resolve(parseInt(data) || 0);
-          }
-        },
-        operationID,
-        "{}"
-      );
-    });
+    im.getGroupApplicationUnhandledCount(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      "{}"
+    );
   }
 
   /**
    * 接受群申请
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param groupID 群组ID
    * @param userID 用户ID
    * @param handleMsg 处理消息
-   * @returns 接受结果
    */
-  acceptGroupApplication(groupID: string, userID: string, handleMsg: string = ""): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `acceptGroupApplication: ${groupID}, userID: ${userID}, operationID: ${operationID}`);
+  acceptGroupApplication(callback: BaseCallback<string>, operationID: string, groupID: string, userID: string, handleMsg: string = ""): void {
+    debug('GroupManager', `acceptGroupApplication: ${groupID}, userID: ${userID}, operationID: ${operationID}`);
 
-      im.acceptGroupApplication(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `acceptGroupApplication failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `acceptGroupApplication success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        groupID,
-        userID,
-        handleMsg
-      );
-    });
+    im.acceptGroupApplication(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      groupID,
+      userID,
+      handleMsg
+    );
   }
 
   /**
    * 拒绝群申请
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param groupID 群组ID
    * @param userID 用户ID
    * @param handleMsg 处理消息
-   * @returns 拒绝结果
    */
-  refuseGroupApplication(groupID: string, userID: string, handleMsg: string = ""): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `refuseGroupApplication: ${groupID}, userID: ${userID}, operationID: ${operationID}`);
+  refuseGroupApplication(callback: BaseCallback<string>, operationID: string, groupID: string, userID: string, handleMsg: string = ""): void {
+    debug('GroupManager', `refuseGroupApplication: ${groupID}, userID: ${userID}, operationID: ${operationID}`);
 
-      im.refuseGroupApplication(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `refuseGroupApplication failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `refuseGroupApplication success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        groupID,
-        userID,
-        handleMsg
-      );
-    });
+    im.refuseGroupApplication(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      groupID,
+      userID,
+      handleMsg
+    );
   }
 
   /**
    * 搜索群组
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param params 搜索参数JSON
-   * @returns 群组列表
    */
-  searchGroups(params: string): Promise<GroupInfo[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `searchGroups, operationID: ${operationID}`);
+  searchGroups(callback: BaseCallback<GroupInfo[]>, operationID: string, params: string): void {
+    debug('GroupManager', `searchGroups, operationID: ${operationID}`);
 
-      im.searchGroups(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `searchGroups failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `searchGroups success`);
-            resolve(toArray<GroupInfo>(data));
-          }
-        },
-        operationID,
-        params
-      );
-    });
+    im.searchGroups(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      params
+    );
   }
 
   /**
    * 按加入时间过滤获取群成员列表
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param groupID 群组ID
    * @param offset 偏移量
    * @param count 数量
    * @param joinTimeBegin 开始时间
    * @param joinTimeEnd 结束时间
    * @param filterUserIDList 过滤用户ID列表
-   * @returns 群成员列表
    */
   getGroupMemberListByJoinTimeFilter(
+    callback: BaseCallback<GroupMemberInfo[]>,
+    operationID: string,
     groupID: string,
     offset: number,
     count: number,
     joinTimeBegin: number,
     joinTimeEnd: number,
     filterUserIDList: string[]
-  ): Promise<GroupMemberInfo[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `getGroupMemberListByJoinTimeFilter: ${groupID}, operationID: ${operationID}`);
+  ): void {
+    debug('GroupManager', `getGroupMemberListByJoinTimeFilter: ${groupID}, operationID: ${operationID}`);
 
-      im.getGroupMemberListByJoinTimeFilter(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `getGroupMemberListByJoinTimeFilter failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `getGroupMemberListByJoinTimeFilter success`);
-            resolve(toArray<GroupMemberInfo>(data));
-          }
-        },
-        operationID,
-        groupID,
-        offset,
-        count,
-        joinTimeBegin,
-        joinTimeEnd,
-        toString(filterUserIDList)
-      );
-    });
+    im.getGroupMemberListByJoinTimeFilter(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      groupID,
+      offset,
+      count,
+      joinTimeBegin,
+      joinTimeEnd,
+      toString(filterUserIDList)
+    );
   }
 
   /**
    * 检查是否已加入群组
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param groupID 群组ID
-   * @returns 是否已加入
    */
-  isJoinGroup(groupID: string): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('GroupManager', `isJoinGroup: ${groupID}, operationID: ${operationID}`);
+  isJoinGroup(callback: BaseCallback<boolean>, operationID: string, groupID: string): void {
+    debug('GroupManager', `isJoinGroup: ${groupID}, operationID: ${operationID}`);
 
-      im.isJoinGroup(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('GroupManager', `isJoinGroup failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('GroupManager', `isJoinGroup success: ${data}`);
-            resolve(data === "true" || data === "1");
-          }
-        },
-        operationID,
-        groupID
-      );
-    });
+    im.isJoinGroup(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      groupID
+    );
   }
 }
