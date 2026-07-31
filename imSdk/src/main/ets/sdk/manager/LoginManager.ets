@@ -26,15 +26,18 @@ export class LoginManager {
    * @returns 初始化结果，0表示成功
    */
   initSdk(listener: ConnListener, operationID: string, config: InitConfig): number {
-    debug(this.TAG, `initSdk with operationID: ${operationID}`);
+    debug(this.TAG, `initSdk with operationID: ${operationID}, config: ${toString(config)}`);
+
+    const wrappedListener = new ConnListenerWrapper(listener);
+    debug(this.TAG, `Created ConnListenerWrapper, calling im.initSdk...`);
 
     const result = im.initSdk(
-      new ConnListenerWrapper(listener),
+      wrappedListener,
       operationID,
       toString(config)
     );
 
-    info(this.TAG, `SDK initialized successfully with result: ${result}`);
+    info(this.TAG, `SDK initialized with result: ${result}`);
     return result;
   }
 

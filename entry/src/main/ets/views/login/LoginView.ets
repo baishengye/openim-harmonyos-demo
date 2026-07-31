@@ -18,7 +18,7 @@ struct LoginView {
       // 账号输入框
       TextInput({
           placeholder: '请输入账号',
-          text: "13682215018"
+          text: "1368225018"
         })
         .width('80%')
         .height(50)
@@ -30,7 +30,7 @@ struct LoginView {
       // 密码输入框
       TextInput({
           placeholder: '请输入密码',
-          text: "Aa11111"
+          text: "Aa111111"
         })
         .width('80%')
         .height(50)

@@ -13,15 +13,37 @@
 // ==================== Login Functions ====================
 
 napi_value NAPI_initSdk(napi_env env, napi_callback_info info) {
+    LogError("OpenIM", "NAPI_initSdk called");
     size_t argc = 3;
     napi_value args[3];
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    napi_status status = napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    LogError("OpenIM", "NAPI_initSdk napi_get_cb_info status: %{public}d, argc: %{public}zu", status, argc);
+
+    // Extract and register connection listener from args[0]
+    if (argc > 0 && args[0]) {
+        LogError("OpenIM", "NAPI_initSdk extracting connection listener");
+        napi_value onConnecting, onConnectSuccess, onConnectFailed, onKickedOffline, onUserTokenExpired, onUserTokenInvalid;
+        napi_get_named_property(env, args[0], "onConnecting", &onConnecting);
+        napi_get_named_property(env, args[0], "onConnectSuccess", &onConnectSuccess);
+        napi_get_named_property(env, args[0], "onConnectFailed", &onConnectFailed);
+        napi_get_named_property(env, args[0], "onKickedOffline", &onKickedOffline);
+        napi_get_named_property(env, args[0], "onUserTokenExpired", &onUserTokenExpired);
+        napi_get_named_property(env, args[0], "onUserTokenInvalid", &onUserTokenInvalid);
+
+        // Delete existing listener and register new one
+        DeleteConnListener();
+        StoreConnListener(env, onConnecting, onConnectSuccess, onConnectFailed, onKickedOffline, onUserTokenExpired, onUserTokenInvalid);
+        LogError("OpenIM", "NAPI_initSdk connection listener registered");
+    }
+
     std::string config = GetStringFromJS(env, args[2]);
     std::string operationID = GetStringFromJS(env, args[1]);
+    LogError("OpenIM", "NAPI_initSdk config: %{public}s, operationID: %{public}s", config.c_str(), operationID.c_str());
     if (operationID.empty()) {
         operationID = "napi_init_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int result = InitSDK((char*)config.c_str(), (char*)operationID.c_str());
+    LogError("OpenIM", "NAPI_initSdk InitSDK result: %{public}d", result);
     napi_value ret;
     napi_create_int32(env, result, &ret);
     return ret;
