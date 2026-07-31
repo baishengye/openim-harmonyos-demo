@@ -1,5 +1,5 @@
 // export {MainPage} from './src/main/ets/components/MainPage';
-export { OpenIM, OpenIMClient, getSDK, OnConnListener, OnMsgListener, OnConvListener, OnGroupListener, OnFriendListener, OnUserListener, SDKListener } from './src/main/ets/sdk/IMSdk';
+export { OpenIM, OpenIMClient, getSDK} from './src/main/ets/sdk/IMSdk';
 export {
   InitConfig,
   Message,
@@ -42,7 +42,11 @@ export {
   GetAdvancedHistoryMessageParams,
   C2CReadReceiptInfo,
   GroupMessageReceipt,
-  GroupMessageReadInfo
+  GroupMessageReadInfo,
+  UserExInfo,
+  SingleTypeKeyInfoSum,
+  MessageKv,
+  UsersOnlineStatus
 } from './src/main/ets/sdk/models/entity';
 export {
   AllowType,
@@ -65,3 +69,42 @@ export {
   ViewType,
   SortOrder
 } from './src/main/ets/sdk/enums/enum';
+
+export {
+  BaseCallback,
+  SendMsgCallBack,
+  UploadFileCallback,
+  UploadLogProgress,
+  ConnListener,
+  MsgListener,
+  ConvListener,
+  GroupListener,
+  FriendListener,
+  UserListener,
+  SignalingListener,
+  CustomBusinessListener,
+  MsgKvInfoListener
+} from './src/main/ets/sdk/listeners/listener';
+
+export {
+  MessageManager,
+  SendMsgProgressCallback
+} from './src/main/ets/sdk/manager/MessageManager';
+export {
+  ConversationManager
+} from './src/main/ets/sdk/manager/ConversationManager';
+export {
+  FriendshipManager
+} from './src/main/ets/sdk/manager/FriendshipManager';
+export {
+  GroupManager
+} from './src/main/ets/sdk/manager/GroupManager';
+export {
+  LoginManager
+} from './src/main/ets/sdk/manager/LoginManager';
+export {
+  MiscManager
+} from './src/main/ets/sdk/manager/MiscManager';
+export {
+  UserInfoManager
+} from './src/main/ets/sdk/manager/UserInfoManager';
