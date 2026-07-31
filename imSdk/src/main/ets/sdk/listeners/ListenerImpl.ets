@@ -32,6 +32,8 @@ import { ConnListener as NativeConnListener,
 } from 'libimsdk.so';
 import { info, debug } from '../internal/log/Logger';
 import { JSON } from '@kit.ArkTS';
+import { Message, MessageEntity } from '../models/entity';
+import { toObject } from '../utils/JsonUtil';
 
 /**
  * 连接状态监听器包装类
@@ -99,42 +101,42 @@ export class MsgListenerWrapper implements NativeMsgListener {
   onRecvNewMessage(message: string): void {
     debug('MsgListener', `onRecvNewMessage: ${message}`);
     if (this.listener != null) {
-      this.listener.onRecvNewMessage(message);
+      this.listener.onRecvNewMessage(toObject<Message>(message)!!);
     }
   }
 
   onRecvC2CReadReceipt(msgReceiptList: string): void {
     debug('MsgListener', `onRecvC2CReadReceipt: ${msgReceiptList}`);
     if (this.listener != null) {
-      this.listener.onRecvC2CReadReceipt(msgReceiptList);
+      this.listener.onRecvC2CReadReceipt(toObject(msgReceiptList)!!);
     }
   }
 
   onNewRecvMessageRevoked(messageRevoked: string): void {
     debug('MsgListener', `onNewRecvMessageRevoked: ${messageRevoked}`);
     if (this.listener != null) {
-      this.listener.onNewRecvMessageRevoked(messageRevoked);
+      this.listener.onNewRecvMessageRevoked(toObject(messageRevoked)!!);
     }
   }
 
   onRecvOfflineNewMessage(message: string): void {
     debug('MsgListener', `onRecvOfflineNewMessage: ${message}`);
     if (this.listener != null) {
-      this.listener.onRecvOfflineNewMessage(message);
+      this.listener.onRecvOfflineNewMessage(toObject(message)!!);
     }
   }
 
   onMsgDeleted(message: string): void {
     debug('MsgListener', `onMsgDeleted: ${message}`);
     if (this.listener != null) {
-      this.listener.onMsgDeleted(message);
+      this.listener.onMsgDeleted(toObject(message)!!);
     }
   }
 
   onRecvOnlineOnlyMessage(message: string): void {
     debug('MsgListener', `onRecvOnlineOnlyMessage: ${message}`);
     if (this.listener != null) {
-      this.listener.onRecvOnlineOnlyMessage(message);
+      this.listener.onRecvOnlineOnlyMessage(toObject(message)!!);
     }
   }
 }
@@ -180,14 +182,14 @@ export class ConvListenerWrapper implements NativeConvListener {
   onNewConversation(conversationList: string): void {
     debug('ConvListener', `onNewConversation: ${conversationList}`);
     if (this.listener != null) {
-      this.listener.onNewConversation(conversationList);
+      this.listener.onNewConversation(toObject(conversationList)!!);
     }
   }
 
   onConversationChanged(conversationList: string): void {
     debug('ConvListener', `onConversationChanged: ${conversationList}`);
     if (this.listener != null) {
-      this.listener.onConversationChanged(conversationList);
+      this.listener.onConversationChanged(toObject(conversationList)!!);
     }
   }
 
@@ -219,77 +221,77 @@ export class GroupListenerWrapper implements NativeGroupListener {
   onJoinedGroupAdded(groupInfo: string): void {
     info('GroupListener', `onJoinedGroupAdded: ${groupInfo}`);
     if (this.listener != null) {
-      this.listener.onJoinedGroupAdded(groupInfo);
+      this.listener.onJoinedGroupAdded(toObject(groupInfo)!!);
     }
   }
 
   onJoinedGroupDeleted(groupInfo: string): void {
     info('GroupListener', `onJoinedGroupDeleted: ${groupInfo}`);
     if (this.listener != null) {
-      this.listener.onJoinedGroupDeleted(groupInfo);
+      this.listener.onJoinedGroupDeleted(toObject(groupInfo)!!);
     }
   }
 
   onGroupMemberAdded(groupMemberInfo: string): void {
     info('GroupListener', `onGroupMemberAdded: ${groupMemberInfo}`);
     if (this.listener != null) {
-      this.listener.onGroupMemberAdded(groupMemberInfo);
+      this.listener.onGroupMemberAdded(toObject(groupMemberInfo)!!);
     }
   }
 
   onGroupMemberDeleted(groupMemberInfo: string): void {
     info('GroupListener', `onGroupMemberDeleted: ${groupMemberInfo}`);
     if (this.listener != null) {
-      this.listener.onGroupMemberDeleted(groupMemberInfo);
+      this.listener.onGroupMemberDeleted(toObject(groupMemberInfo)!!);
     }
   }
 
   onGroupApplicationAdded(groupApplication: string): void {
     info('GroupListener', `onGroupApplicationAdded: ${groupApplication}`);
     if (this.listener != null) {
-      this.listener.onGroupApplicationAdded(groupApplication);
+      this.listener.onGroupApplicationAdded(toObject(groupApplication)!!);
     }
   }
 
   onGroupApplicationDeleted(groupApplication: string): void {
     info('GroupListener', `onGroupApplicationDeleted: ${groupApplication}`);
     if (this.listener != null) {
-      this.listener.onGroupApplicationDeleted(groupApplication);
+      this.listener.onGroupApplicationDeleted(toObject(groupApplication)!!);
     }
   }
 
   onGroupInfoChanged(groupInfo: string): void {
     info('GroupListener', `onGroupInfoChanged: ${groupInfo}`);
     if (this.listener != null) {
-      this.listener.onGroupInfoChanged(groupInfo);
+      this.listener.onGroupInfoChanged(toObject(groupInfo)!!);
     }
   }
 
   onGroupDismissed(groupInfo: string): void {
     info('GroupListener', `onGroupDismissed: ${groupInfo}`);
     if (this.listener != null) {
-      this.listener.onGroupDismissed(groupInfo);
+      this.listener.onGroupDismissed(toObject(groupInfo)!!);
     }
   }
 
   onGroupMemberInfoChanged(groupMemberInfo: string): void {
     info('GroupListener', `onGroupMemberInfoChanged: ${groupMemberInfo}`);
     if (this.listener != null) {
-      this.listener.onGroupMemberInfoChanged(groupMemberInfo);
+      this.listener.onGroupMemberInfoChanged(toObject(groupMemberInfo)!!);
     }
   }
 
   onGroupApplicationAccepted(groupApplication: string): void {
     info('GroupListener', `onGroupApplicationAccepted: ${groupApplication}`);
     if (this.listener != null) {
-      this.listener.onGroupApplicationAccepted(groupApplication);
+      this.listener.onGroupApplicationAccepted(toObject(groupApplication)!!);
     }
   }
 
   onGroupApplicationRejected(groupApplication: string): void {
     info('GroupListener', `onGroupApplicationRejected: ${groupApplication}`);
     if (this.listener != null) {
-      this.listener.onGroupApplicationRejected(groupApplication);
+      this.listener.onGroupApplicationRejected(toObject(groupApplication)!!);
     }
   }
 }
@@ -307,63 +309,63 @@ export class FriendListenerWrapper implements NativeFriendListener {
   onFriendApplicationAdded(friendApplication: string): void {
     info('FriendListener', `onFriendApplicationAdded: ${friendApplication}`);
     if (this.listener != null) {
-      this.listener.onFriendApplicationAdded(friendApplication);
+      this.listener.onFriendApplicationAdded(toObject(friendApplication)!!);
     }
   }
 
   onFriendApplicationDeleted(friendApplication: string): void {
     info('FriendListener', `onFriendApplicationDeleted: ${friendApplication}`);
     if (this.listener != null) {
-      this.listener.onFriendApplicationDeleted(friendApplication);
+      this.listener.onFriendApplicationDeleted(toObject(friendApplication)!!);
     }
   }
 
   onFriendApplicationAccepted(friendApplication: string): void {
     info('FriendListener', `onFriendApplicationAccepted: ${friendApplication}`);
     if (this.listener != null) {
-      this.listener.onFriendApplicationAccepted(friendApplication);
+      this.listener.onFriendApplicationAccepted(toObject(friendApplication)!!);
     }
   }
 
   onFriendApplicationRejected(friendApplication: string): void {
     info('FriendListener', `onFriendApplicationRejected: ${friendApplication}`);
     if (this.listener != null) {
-      this.listener.onFriendApplicationRejected(friendApplication);
+      this.listener.onFriendApplicationRejected(toObject(friendApplication)!!);
     }
   }
 
   onFriendAdded(friendInfo: string): void {
     info('FriendListener', `onFriendAdded: ${friendInfo}`);
     if (this.listener != null) {
-      this.listener.onFriendAdded(friendInfo);
+      this.listener.onFriendAdded(toObject(friendInfo)!!);
     }
   }
 
   onFriendDeleted(friendInfo: string): void {
     info('FriendListener', `onFriendDeleted: ${friendInfo}`);
     if (this.listener != null) {
-      this.listener.onFriendDeleted(friendInfo);
+      this.listener.onFriendDeleted(toObject(friendInfo)!!);
     }
   }
 
   onFriendInfoChanged(friendInfo: string): void {
     info('FriendListener', `onFriendInfoChanged: ${friendInfo}`);
     if (this.listener != null) {
-      this.listener.onFriendInfoChanged(friendInfo);
+      this.listener.onFriendInfoChanged(toObject(friendInfo)!!);
     }
   }
 
   onBlackAdded(blackInfo: string): void {
     info('FriendListener', `onBlackAdded: ${blackInfo}`);
     if (this.listener != null) {
-      this.listener.onBlackAdded(blackInfo);
+      this.listener.onBlackAdded(toObject(blackInfo)!!);
     }
   }
 
   onBlackDeleted(blackInfo: string): void {
     info('FriendListener', `onBlackDeleted: ${blackInfo}`);
     if (this.listener != null) {
-      this.listener.onBlackDeleted(blackInfo);
+      this.listener.onBlackDeleted(toObject(blackInfo)!!);
     }
   }
 }
@@ -381,14 +383,14 @@ export class UserListenerWrapper implements NativeUserListener {
   onSelfInfoUpdated(userInfo: string): void {
     info('UserListener', `onSelfInfoUpdated: ${userInfo}`);
     if (this.listener != null) {
-      this.listener.onSelfInfoUpdated(userInfo);
+      this.listener.onSelfInfoUpdated(toObject(userInfo)!!);
     }
   }
 
   onUserStatusChanged(userOnlineStatus: string): void {
     info('UserListener', `onUserStatusChanged: ${userOnlineStatus}`);
     if (this.listener != null) {
-      this.listener.onUserStatusChanged(userOnlineStatus);
+      this.listener.onUserStatusChanged(toObject(userOnlineStatus)!!);
     }
   }
 }
@@ -505,7 +507,7 @@ export class MsgKvInfoListenerWrapper implements NativeMsgKvInfoListener {
   onMessageKvInfoChanged(messageChangedList: string): void {
     info('MsgKvInfoListener', `onMessageKvInfoChanged: ${messageChangedList}`);
     if (this.listener != null) {
-      this.listener.onMessageKvInfoChanged(messageChangedList);
+      this.listener.onMessageKvInfoChanged(toObject(messageChangedList)!!);
     }
   }
 }

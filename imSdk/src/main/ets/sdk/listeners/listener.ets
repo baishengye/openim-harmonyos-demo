@@ -2,6 +2,20 @@
  * OpenIM SDK for HarmonyOS
  * 监听器接口 - 定义SDK事件回调接口
  */
+import {
+  BlackInfo,
+  C2CReadReceiptInfo, ConversationInfo,
+  FriendApplication,
+  FriendInfo,
+  GroupApplication,
+  GroupInfo,
+  GroupMemberInfo,
+  Message,
+  MessageKv,
+  RevokedInfo,
+  UserInfo,
+  UsersOnlineStatus} from "../models/entity";
+import List from "@ohos.util.List";
 
 /**
  * 基础回调接口
@@ -74,15 +88,15 @@ export interface ConnListener {
  */
 export interface MsgListener {
   /** 收到新消息 */
-  onRecvNewMessage(message: string): void;
+  onRecvNewMessage(message: Message): void;
   /** 收到C2C消息已读回执 */
-  onRecvC2CReadReceipt(msgReceiptList: string): void;
+  onRecvC2CReadReceipt(msgReceiptList: C2CReadReceiptInfo[]): void;
   /** 收到消息撤回通知 */
-  onNewRecvMessageRevoked(messageRevoked: string): void;
+  onNewRecvMessageRevoked(messageRevoked: RevokedInfo): void;
   /** 收到离线新消息 */
-  onRecvOfflineNewMessage(message: string): void;
+  onRecvOfflineNewMessage(message: Message[]): void;
   /** 消息被删除 */
-  onMsgDeleted(message: string): void;
+  onMsgDeleted(message: Message): void;
   /** 收到仅在线消息 */
   onRecvOnlineOnlyMessage(message: string): void;
 }
@@ -100,9 +114,9 @@ export interface ConvListener {
   /** 同步服务器会话失败 */
   onSyncServerFailed(reinstalled: boolean): void;
   /** 收到新会话 */
-  onNewConversation(conversationList: string): void;
+  onNewConversation(conversationList: ConversationInfo[]): void;
   /** 会话发生变化 */
-  onConversationChanged(conversationList: string): void;
+  onConversationChanged(conversationList: ConversationInfo[]): void;
   /** 总未读消息数变化 */
   onTotalUnreadMessageCountChanged(totalUnreadCount: number): void;
   /** 会话用户输入状态变化 */
@@ -114,27 +128,27 @@ export interface ConvListener {
  */
 export interface GroupListener {
   /** 加入群组增加 */
-  onJoinedGroupAdded(groupInfo: string): void;
+  onJoinedGroupAdded(groupInfo: GroupInfo): void;
   /** 加入群组删除 */
-  onJoinedGroupDeleted(groupInfo: string): void;
+  onJoinedGroupDeleted(groupInfo: GroupInfo): void;
   /** 群组成员增加 */
-  onGroupMemberAdded(groupMemberInfo: string): void;
+  onGroupMemberAdded(groupMemberInfo: GroupMemberInfo): void;
   /** 群组成员删除 */
-  onGroupMemberDeleted(groupMemberInfo: string): void;
+  onGroupMemberDeleted(groupMemberInfo: GroupMemberInfo): void;
   /** 收到群申请 */
-  onGroupApplicationAdded(groupApplication: string): void;
+  onGroupApplicationAdded(groupApplication: GroupApplication): void;
   /** 群申请被删除 */
-  onGroupApplicationDeleted(groupApplication: string): void;
+  onGroupApplicationDeleted(groupApplication: GroupApplication): void;
   /** 群组信息变化 */
-  onGroupInfoChanged(groupInfo: string): void;
+  onGroupInfoChanged(groupInfo: GroupInfo): void;
   /** 群组被解散 */
-  onGroupDismissed(groupInfo: string): void;
+  onGroupDismissed(groupInfo: GroupInfo): void;
   /** 群组成员信息变化 */
-  onGroupMemberInfoChanged(groupMemberInfo: string): void;
+  onGroupMemberInfoChanged(groupMemberInfo: GroupMemberInfo): void;
   /** 群申请被接受 */
-  onGroupApplicationAccepted(groupApplication: string): void;
+  onGroupApplicationAccepted(groupApplication: GroupApplication): void;
   /** 群申请被拒绝 */
-  onGroupApplicationRejected(groupApplication: string): void;
+  onGroupApplicationRejected(groupApplication: GroupApplication): void;
 }
 
 /**
@@ -142,23 +156,23 @@ export interface GroupListener {
  */
 export interface FriendListener {
   /** 收到好友申请 */
-  onFriendApplicationAdded(friendApplication: string): void;
+  onFriendApplicationAdded(friendApplication: FriendApplication): void;
   /** 好友申请被删除 */
-  onFriendApplicationDeleted(friendApplication: string): void;
+  onFriendApplicationDeleted(friendApplication: FriendApplication): void;
   /** 好友申请被接受 */
-  onFriendApplicationAccepted(friendApplication: string): void;
+  onFriendApplicationAccepted(friendApplication: FriendApplication): void;
   /** 好友申请被拒绝 */
-  onFriendApplicationRejected(friendApplication: string): void;
+  onFriendApplicationRejected(friendApplication: FriendApplication): void;
   /** 添加好友 */
-  onFriendAdded(friendInfo: string): void;
+  onFriendAdded(friendInfo: FriendInfo): void;
   /** 删除好友 */
-  onFriendDeleted(friendInfo: string): void;
+  onFriendDeleted(friendInfo: FriendInfo): void;
   /** 好友信息变化 */
-  onFriendInfoChanged(friendInfo: string): void;
+  onFriendInfoChanged(friendInfo: FriendInfo): void;
   /** 被加入黑名单 */
-  onBlackAdded(blackInfo: string): void;
+  onBlackAdded(blackInfo: BlackInfo): void;
   /** 从黑名单移除 */
-  onBlackDeleted(blackInfo: string): void;
+  onBlackDeleted(blackInfo: BlackInfo): void;
 }
 
 /**
@@ -166,9 +180,9 @@ export interface FriendListener {
  */
 export interface UserListener {
   /** 自身信息更新 */
-  onSelfInfoUpdated(userInfo: string): void;
+  onSelfInfoUpdated(userInfo: UserInfo): void;
   /** 用户在线状态变化 */
-  onUserStatusChanged(userOnlineStatus: string): void;
+  onUserStatusChanged(userOnlineStatus: UsersOnlineStatus): void;
 }
 
 /**
@@ -210,5 +224,5 @@ export interface CustomBusinessListener {
  */
 export interface MsgKvInfoListener {
   /** 消息KV信息变化 */
-  onMessageKvInfoChanged(messageChangedList: string): void;
+  onMessageKvInfoChanged(messageChangedList: MessageKv): void;
 }

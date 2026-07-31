@@ -863,3 +863,49 @@ export class GroupMessageReadInfo {
   /** 已读成员列表 */
   readMembers: GroupMemberInfo[] = [];
 }
+
+/**
+ * 用户扩展信息
+ */
+export class UserExInfo {
+  /** 用户ID */
+  userID: string = "";
+  /** 扩展信息 */
+  ex: string = "";
+}
+
+/**
+ * 单类型键信息汇总
+ */
+export class SingleTypeKeyInfoSum {
+  /** 类型键 */
+  typeKey: string = "";
+  /** 计数器 */
+  counter: number = 0;
+  /** 用户信息列表 */
+  infoList: UserExInfo[] = [];
+  /** 是否包含自己 */
+  isContainSelf: boolean = false;
+}
+
+/**
+ * 消息键值对变更
+ */
+export class MessageKv {
+  /** 客户端消息ID */
+  clientMsgID: string = "";
+  /** 变更的键值对列表 */
+  changedKvList: SingleTypeKeyInfoSum[] = [];
+}
+
+/**
+ * 用户在线状态
+ */
+export class UsersOnlineStatus {
+  /** 用户ID */
+  userID: string = "";
+  /** 状态 */
+  status: number = 0;
+  /** 平台ID列表 */
+  platformIDs: number[] = [];
+}
