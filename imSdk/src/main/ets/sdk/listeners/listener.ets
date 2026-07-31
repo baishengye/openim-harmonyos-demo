@@ -6,17 +6,17 @@
 /**
  * 基础回调接口
  */
-export interface BaseCallback {
+export interface BaseCallback<T> {
   /** 错误回调 */
   onError(errCode: number, errMsg: string): void;
   /** 成功回调 */
-  onSuccess(data: string): void;
+  onSuccess(data: T): void;
 }
 
 /**
  * 发送消息回调接口
  */
-export interface SendMsgCallBack extends BaseCallback {
+export interface SendMsgCallBack<T> extends BaseCallback<T> {
   /** 发送进度回调 */
   onProgress(progress: number): void;
 }

@@ -5,6 +5,8 @@
 
 import im from 'libimsdk.so';
 import { debug, error, info } from '../internal/log/Logger';
+import { BaseCallback, UserListener } from '../listeners/listener';
+import { BaseCallbackWrapper, UserListenerWrapper } from '../listeners/ListenerImpl';
 import { SubscribeUsersStatus, UserInfo, UserStatus } from '../models/entity';
 import { toArray, toString } from '../utils/JsonUtil';
 import { buildOperationID } from '../utils/Utils';
@@ -16,218 +18,136 @@ import { buildOperationID } from '../utils/Utils';
  */
 export class UserInfoManager {
   /**
-   * 获取指定用户信息
-   * @param userIDList 用户ID列表
-   * @param ex 是否获取扩展信息
-   * @returns 用户信息列表
+   * 设置用户监听器
+   * @param listener 用户监听器
    */
-  getUsersInfo(userIDList: string[], ex: boolean = false): Promise<UserInfo[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('UserInfoManager', `getUsersInfo, operationID: ${operationID}`);
+  setUserListener(listener: UserListener): void {
+    im.setUserListener(new UserListenerWrapper(listener));
+  }
 
-      im.getUsersInfo(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('UserInfoManager', `getUsersInfo failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('UserInfoManager', `getUsersInfo success`);
-            resolve(toArray<UserInfo>(data));
-          }
-        },
-        operationID,
-        toString(userIDList)
-      );
-    });
+  /**
+   * 获取指定用户信息
+   * @param callback 回调
+   * @param operationID 操作ID
+   * @param userIDList 用户ID列表
+   */
+  getUsersInfo(callback: BaseCallback<UserInfo[]>, operationID: string, userIDList: string[]): void {
+    debug('UserInfoManager', `getUsersInfo, operationID: ${operationID}`);
+
+    im.getUsersInfo(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      toString(userIDList)
+    );
   }
 
   /**
    * 获取当前用户信息
-   * @returns 当前用户信息
+   * @param callback 回调
+   * @param operationID 操作ID
    */
-  getSelfUserInfo(): Promise<UserInfo> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('UserInfoManager', `getSelfUserInfo, operationID: ${operationID}`);
+  getSelfUserInfo(callback: BaseCallback<UserInfo>, operationID: string): void {
+    debug('UserInfoManager', `getSelfUserInfo, operationID: ${operationID}`);
 
-      im.getSelfUserInfo(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('UserInfoManager', `getSelfUserInfo failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('UserInfoManager', `getSelfUserInfo success`);
-            const userInfo = toArray<UserInfo>(data);
-            resolve(userInfo.length > 0 ? userInfo[0] : new UserInfo());
-          }
-        },
-        operationID
-      );
-    });
+    im.getSelfUserInfo(
+      new BaseCallbackWrapper(callback),
+      operationID
+    );
   }
 
   /**
    * 设置当前用户信息
-   * @param params 用户信息JSON字符串
-   * @returns 设置结果
+   * @param callback 回调
+   * @param operationID 操作ID
+   * @param params 用户信息JSON
    */
-  setSelfInfo(params: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('UserInfoManager', `setSelfInfo, operationID: ${operationID}`);
+  setSelfInfo(callback: BaseCallback<string>, operationID: string, params: string): void {
+    debug('UserInfoManager', `setSelfInfo, operationID: ${operationID}`);
 
-      im.setSelfInfo(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('UserInfoManager', `setSelfInfo failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('UserInfoManager', `setSelfInfo success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        params
-      );
-    });
+    im.setSelfInfo(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      params
+    );
   }
 
   /**
    * 设置当前用户昵称
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param nickname 昵称
-   * @returns 设置结果
    */
-  setSelfNickname(nickname: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('UserInfoManager', `setSelfNickname: ${nickname}, operationID: ${operationID}`);
+  setSelfNickname(callback: BaseCallback<string>, operationID: string, nickname: string): void {
+    debug('UserInfoManager', `setSelfNickname: ${nickname}, operationID: ${operationID}`);
 
-      im.setSelfInfo(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('UserInfoManager', `setSelfNickname failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('UserInfoManager', `setSelfNickname success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        JSON.stringify({ nickname: nickname })
-      );
-    });
+    im.setSelfInfo(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      JSON.stringify({ nickname: nickname })
+    );
   }
 
   /**
    * 设置当前用户头像
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param faceUrl 头像URL
-   * @returns 设置结果
    */
-  setSelfFaceURL(faceUrl: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('UserInfoManager', `setSelfFaceURL: ${faceUrl}, operationID: ${operationID}`);
+  setSelfFaceURL(callback: BaseCallback<string>, operationID: string, faceUrl: string): void {
+    debug('UserInfoManager', `setSelfFaceURL: ${faceUrl}, operationID: ${operationID}`);
 
-      im.setSelfInfo(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('UserInfoManager', `setSelfFaceURL failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('UserInfoManager', `setSelfFaceURL success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        JSON.stringify({ faceUrl: faceUrl })
-      );
-    });
+    im.setSelfInfo(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      JSON.stringify({ faceUrl: faceUrl })
+    );
   }
 
   /**
    * 获取用户状态
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param userIDList 用户ID列表
-   * @returns 用户状态列表
    */
-  getUserStatus(userIDList: string[]): Promise<UserStatus[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('UserInfoManager', `getUserStatus, operationID: ${operationID}`);
+  getUserStatus(callback: BaseCallback<UserStatus[]>, operationID: string, userIDList: string[]): void {
+    debug('UserInfoManager', `getUserStatus, operationID: ${operationID}`);
 
-      im.getUserStatus(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('UserInfoManager', `getUserStatus failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('UserInfoManager', `getUserStatus success`);
-            resolve(toArray<UserStatus>(data));
-          }
-        },
-        operationID,
-        toString(userIDList)
-      );
-    });
+    im.getUserStatus(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      toString(userIDList)
+    );
   }
 
   /**
    * 订阅用户状态
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param userIDList 用户ID列表
-   * @returns 订阅状态列表
    */
-  subscribeUsersStatus(userIDList: string[]): Promise<SubscribeUsersStatus[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('UserInfoManager', `subscribeUsersStatus, operationID: ${operationID}`);
+  subscribeUsersStatus(callback: BaseCallback<SubscribeUsersStatus[]>, operationID: string, userIDList: string[]): void {
+    debug('UserInfoManager', `subscribeUsersStatus, operationID: ${operationID}`);
 
-      im.subscribeUsersStatus(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('UserInfoManager', `subscribeUsersStatus failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('UserInfoManager', `subscribeUsersStatus success`);
-            resolve(toArray<SubscribeUsersStatus>(data));
-          }
-        },
-        operationID,
-        toString(userIDList)
-      );
-    });
+    im.subscribeUsersStatus(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      toString(userIDList)
+    );
   }
 
   /**
    * 取消订阅用户状态
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param userIDList 用户ID列表
-   * @returns 取消结果
    */
-  unsubscribeUsersStatus(userIDList: string[]): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('UserInfoManager', `unsubscribeUsersStatus, operationID: ${operationID}`);
+  unsubscribeUsersStatus(callback: BaseCallback<string>, operationID: string, userIDList: string[]): void {
+    debug('UserInfoManager', `unsubscribeUsersStatus, operationID: ${operationID}`);
 
-      im.unsubscribeUsersStatus(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('UserInfoManager', `unsubscribeUsersStatus failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('UserInfoManager', `unsubscribeUsersStatus success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        toString(userIDList)
-      );
-    });
+    im.unsubscribeUsersStatus(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      toString(userIDList)
+    );
   }
 }

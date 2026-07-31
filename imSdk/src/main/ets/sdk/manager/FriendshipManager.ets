@@ -5,6 +5,8 @@
 
 import im from 'libimsdk.so';
 import { debug, error, info } from '../internal/log/Logger';
+import { BaseCallback, FriendListener } from '../listeners/listener';
+import { BaseCallbackWrapper, FriendListenerWrapper } from '../listeners/ListenerImpl';
 import { BlackInfo, FriendApplication, FriendInfo } from '../models/entity';
 import { toArray, toString } from '../utils/JsonUtil';
 import { buildOperationID } from '../utils/Utils';
@@ -16,468 +18,289 @@ import { buildOperationID } from '../utils/Utils';
  */
 export class FriendshipManager {
   /**
-   * 获取好友列表
-   * @param filterBlack 是否过滤黑名单
-   * @returns 好友列表
+   * 设置好友监听器
+   * @param listener 好友监听器
    */
-  getFriendList(filterBlack: boolean = false): Promise<FriendInfo[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('FriendshipManager', `getFriendList, filterBlack: ${filterBlack}, operationID: ${operationID}`);
+  setFriendListener(listener: FriendListener): void {
+    im.setFriendListener(new FriendListenerWrapper(listener));
+  }
 
-      im.getFriendList(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('FriendshipManager', `getFriendList failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('FriendshipManager', `getFriendList success`);
-            resolve(toArray<FriendInfo>(data));
-          }
-        },
-        operationID,
-        filterBlack
-      );
-    });
+  /**
+   * 获取好友列表
+   * @param callback 回调
+   * @param operationID 操作ID
+   * @param filterBlack 是否过滤黑名单
+   */
+  getFriendList(callback: BaseCallback<FriendInfo[]>, operationID: string, filterBlack: boolean = false): void {
+    debug('FriendshipManager', `getFriendList, filterBlack: ${filterBlack}, operationID: ${operationID}`);
+
+    im.getFriendList(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      filterBlack
+    );
   }
 
   /**
    * 分页获取好友列表
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param offset 偏移量
    * @param count 数量
    * @param filterBlack 是否过滤黑名单
-   * @returns 好友列表
    */
-  getFriendListPage(offset: number, count: number, filterBlack: boolean = false): Promise<FriendInfo[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('FriendshipManager', `getFriendListPage, offset: ${offset}, count: ${count}, operationID: ${operationID}`);
+  getFriendListPage(callback: BaseCallback<FriendInfo[]>, operationID: string, offset: number, count: number, filterBlack: boolean = false): void {
+    debug('FriendshipManager', `getFriendListPage, offset: ${offset}, count: ${count}, operationID: ${operationID}`);
 
-      im.getFriendListPage(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('FriendshipManager', `getFriendListPage failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('FriendshipManager', `getFriendListPage success`);
-            resolve(toArray<FriendInfo>(data));
-          }
-        },
-        operationID,
-        offset,
-        count,
-        filterBlack
-      );
-    });
+    im.getFriendListPage(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      offset,
+      count,
+      filterBlack
+    );
   }
 
   /**
    * 获取指定好友信息
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param userIDList 用户ID列表
    * @param ex 是否获取扩展信息
-   * @returns 好友信息列表
    */
-  getSpecifiedFriendsInfo(userIDList: string[], ex: boolean = false): Promise<FriendInfo[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('FriendshipManager', `getSpecifiedFriendsInfo, operationID: ${operationID}`);
+  getSpecifiedFriendsInfo(callback: BaseCallback<FriendInfo[]>, operationID: string, userIDList: string[], ex: boolean = false): void {
+    debug('FriendshipManager', `getSpecifiedFriendsInfo, operationID: ${operationID}`);
 
-      im.getSpecifiedFriendsInfo(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('FriendshipManager', `getSpecifiedFriendsInfo failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('FriendshipManager', `getSpecifiedFriendsInfo success`);
-            resolve(toArray<FriendInfo>(data));
-          }
-        },
-        operationID,
-        toString(userIDList),
-        ex
-      );
-    });
+    im.getSpecifiedFriendsInfo(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      toString(userIDList),
+      ex
+    );
   }
 
   /**
    * 搜索好友
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param params 搜索参数JSON
-   * @returns 好友列表
    */
-  searchFriends(params: string): Promise<FriendInfo[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('FriendshipManager', `searchFriends, operationID: ${operationID}`);
+  searchFriends(callback: BaseCallback<FriendInfo[]>, operationID: string, params: string): void {
+    debug('FriendshipManager', `searchFriends, operationID: ${operationID}`);
 
-      im.searchFriends(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('FriendshipManager', `searchFriends failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('FriendshipManager', `searchFriends success`);
-            resolve(toArray<FriendInfo>(data));
-          }
-        },
-        operationID,
-        params
-      );
-    });
+    im.searchFriends(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      params
+    );
   }
 
   /**
    * 添加好友
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param params 添加参数JSON
-   * @returns 添加结果
    */
-  addFriend(params: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('FriendshipManager', `addFriend, operationID: ${operationID}`);
+  addFriend(callback: BaseCallback<string>, operationID: string, params: string): void {
+    debug('FriendshipManager', `addFriend, operationID: ${operationID}`);
 
-      im.addFriend(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('FriendshipManager', `addFriend failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('FriendshipManager', `addFriend success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        params
-      );
-    });
+    im.addFriend(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      params
+    );
   }
 
   /**
    * 检查好友关系
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param userIDList 用户ID列表
-   * @returns 好友关系结果
    */
-  checkFriend(userIDList: string[]): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('FriendshipManager', `checkFriend, operationID: ${operationID}`);
+  checkFriend(callback: BaseCallback<string>, operationID: string, userIDList: string[]): void {
+    debug('FriendshipManager', `checkFriend, operationID: ${operationID}`);
 
-      im.checkFriend(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('FriendshipManager', `checkFriend failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('FriendshipManager', `checkFriend success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        toString(userIDList)
-      );
-    });
+    im.checkFriend(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      toString(userIDList)
+    );
   }
 
   /**
    * 更新好友信息
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param params 更新参数JSON
-   * @returns 更新结果
    */
-  updateFriends(params: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('FriendshipManager', `updateFriends, operationID: ${operationID}`);
+  updateFriends(callback: BaseCallback<string>, operationID: string, params: string): void {
+    debug('FriendshipManager', `updateFriends, operationID: ${operationID}`);
 
-      im.updateFriends(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('FriendshipManager', `updateFriends failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('FriendshipManager', `updateFriends success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        params
-      );
-    });
+    im.updateFriends(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      params
+    );
   }
 
   /**
    * 获取未处理好友申请数量
-   * @returns 未处理数量
+   * @param callback 回调
+   * @param operationID 操作ID
    */
-  getFriendApplicationUnhandledCount(): Promise<number> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('FriendshipManager', `getFriendApplicationUnhandledCount, operationID: ${operationID}`);
+  getFriendApplicationUnhandledCount(callback: BaseCallback<number>, operationID: string): void {
+    debug('FriendshipManager', `getFriendApplicationUnhandledCount, operationID: ${operationID}`);
 
-      im.getFriendApplicationUnhandledCount(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('FriendshipManager', `getFriendApplicationUnhandledCount failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('FriendshipManager', `getFriendApplicationUnhandledCount success: ${data}`);
-            resolve(parseInt(data) || 0);
-          }
-        },
-        operationID,
-        "{}"
-      );
-    });
+    im.getFriendApplicationUnhandledCount(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      "{}"
+    );
   }
 
   /**
    * 删除好友
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param friendUserID 好友用户ID
-   * @returns 删除结果
    */
-  deleteFriend(friendUserID: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('FriendshipManager', `deleteFriend: ${friendUserID}, operationID: ${operationID}`);
+  deleteFriend(callback: BaseCallback<string>, operationID: string, friendUserID: string): void {
+    debug('FriendshipManager', `deleteFriend: ${friendUserID}, operationID: ${operationID}`);
 
-      im.deleteFriend(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('FriendshipManager', `deleteFriend failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('FriendshipManager', `deleteFriend success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        friendUserID
-      );
-    });
+    im.deleteFriend(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      friendUserID
+    );
   }
 
   /**
    * 设置好友备注
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param toUserID 用户ID
    * @param remark 备注
-   * @returns 设置结果
    */
-  setFriendRemark(toUserID: string, remark: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('FriendshipManager', `setFriendRemark: ${toUserID}, remark: ${remark}, operationID: ${operationID}`);
+  setFriendRemark(callback: BaseCallback<string>, operationID: string, toUserID: string, remark: string): void {
+    debug('FriendshipManager', `setFriendRemark: ${toUserID}, remark: ${remark}, operationID: ${operationID}`);
 
-      im.setFriendRemark(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('FriendshipManager', `setFriendRemark failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('FriendshipManager', `setFriendRemark success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        toUserID,
-        remark
-      );
-    });
+    im.setFriendRemark(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      toUserID,
+      remark
+    );
   }
 
   /**
    * 获取作为申请人的好友申请列表
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param params 查询参数JSON
-   * @returns 好友申请列表
    */
-  getFriendApplicationListAsApplicant(params: string): Promise<FriendApplication[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('FriendshipManager', `getFriendApplicationListAsApplicant, operationID: ${operationID}`);
+  getFriendApplicationListAsApplicant(callback: BaseCallback<FriendApplication[]>, operationID: string, params: string): void {
+    debug('FriendshipManager', `getFriendApplicationListAsApplicant, operationID: ${operationID}`);
 
-      im.getFriendApplicationListAsApplicant(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('FriendshipManager', `getFriendApplicationListAsApplicant failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('FriendshipManager', `getFriendApplicationListAsApplicant success`);
-            resolve(toArray<FriendApplication>(data));
-          }
-        },
-        operationID,
-        params
-      );
-    });
+    im.getFriendApplicationListAsApplicant(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      params
+    );
   }
 
   /**
    * 获取作为接收人的好友申请列表
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param params 查询参数JSON
-   * @returns 好友申请列表
    */
-  getFriendApplicationListAsRecipient(params: string): Promise<FriendApplication[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('FriendshipManager', `getFriendApplicationListAsRecipient, operationID: ${operationID}`);
+  getFriendApplicationListAsRecipient(callback: BaseCallback<FriendApplication[]>, operationID: string, params: string): void {
+    debug('FriendshipManager', `getFriendApplicationListAsRecipient, operationID: ${operationID}`);
 
-      im.getFriendApplicationListAsRecipient(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('FriendshipManager', `getFriendApplicationListAsRecipient failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('FriendshipManager', `getFriendApplicationListAsRecipient success`);
-            resolve(toArray<FriendApplication>(data));
-          }
-        },
-        operationID,
-        params
-      );
-    });
+    im.getFriendApplicationListAsRecipient(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      params
+    );
   }
 
   /**
    * 接受好友申请
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param params 接受参数JSON
-   * @returns 接受结果
    */
-  acceptFriendApplication(params: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('FriendshipManager', `acceptFriendApplication, operationID: ${operationID}`);
+  acceptFriendApplication(callback: BaseCallback<string>, operationID: string, params: string): void {
+    debug('FriendshipManager', `acceptFriendApplication, operationID: ${operationID}`);
 
-      im.acceptFriendApplication(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('FriendshipManager', `acceptFriendApplication failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('FriendshipManager', `acceptFriendApplication success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        params
-      );
-    });
+    im.acceptFriendApplication(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      params
+    );
   }
 
   /**
    * 拒绝好友申请
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param params 拒绝参数JSON
-   * @returns 拒绝结果
    */
-  refuseFriendApplication(params: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('FriendshipManager', `refuseFriendApplication, operationID: ${operationID}`);
+  refuseFriendApplication(callback: BaseCallback<string>, operationID: string, params: string): void {
+    debug('FriendshipManager', `refuseFriendApplication, operationID: ${operationID}`);
 
-      im.refuseFriendApplication(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('FriendshipManager', `refuseFriendApplication failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('FriendshipManager', `refuseFriendApplication success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        params
-      );
-    });
+    im.refuseFriendApplication(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      params
+    );
   }
 
   /**
    * 添加黑名单
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param toUserID 用户ID
    * @param ex 扩展信息
-   * @returns 添加结果
    */
-  addBlack(toUserID: string, ex: string = ""): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('FriendshipManager', `addBlack: ${toUserID}, operationID: ${operationID}`);
+  addBlack(callback: BaseCallback<string>, operationID: string, toUserID: string, ex: string = ""): void {
+    debug('FriendshipManager', `addBlack: ${toUserID}, operationID: ${operationID}`);
 
-      im.addBlack(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('FriendshipManager', `addBlack failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('FriendshipManager', `addBlack success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        toUserID,
-        ex
-      );
-    });
+    im.addBlack(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      toUserID,
+      ex
+    );
   }
 
   /**
    * 获取黑名单
-   * @returns 黑名单列表
+   * @param callback 回调
+   * @param operationID 操作ID
    */
-  getBlackList(): Promise<BlackInfo[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('FriendshipManager', `getBlackList, operationID: ${operationID}`);
+  getBlackList(callback: BaseCallback<BlackInfo[]>, operationID: string): void {
+    debug('FriendshipManager', `getBlackList, operationID: ${operationID}`);
 
-      im.getBlackList(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('FriendshipManager', `getBlackList failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('FriendshipManager', `getBlackList success`);
-            resolve(toArray<BlackInfo>(data));
-          }
-        },
-        operationID
-      );
-    });
+    im.getBlackList(
+      new BaseCallbackWrapper(callback),
+      operationID
+    );
   }
 
   /**
    * 移除黑名单
+   * @param callback 回调
+   * @param operationID 操作ID
    * @param userID 用户ID
-   * @returns 移除结果
    */
-  removeBlack(userID: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('FriendshipManager', `removeBlack: ${userID}, operationID: ${operationID}`);
+  removeBlack(callback: BaseCallback<string>, operationID: string, userID: string): void {
+    debug('FriendshipManager', `removeBlack: ${userID}, operationID: ${operationID}`);
 
-      im.removeBlack(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('FriendshipManager', `removeBlack failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('FriendshipManager', `removeBlack success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        userID
-      );
-    });
+    im.removeBlack(
+      new BaseCallbackWrapper(callback),
+      operationID,
+      userID
+    );
   }
 }

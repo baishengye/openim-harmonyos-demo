@@ -5,6 +5,8 @@
 
 import im from 'libimsdk.so';
 import { debug, error, info } from '../internal/log/Logger';
+import { BaseCallback, ConvListener } from '../listeners/listener';
+import { BaseCallbackWrapper, ConvListenerWrapper } from '../listeners/ListenerImpl';
 import { ConversationInfo } from '../models/entity';
 import { toArray, toObject, toString } from '../utils/JsonUtil';
 import { buildOperationID } from '../utils/Utils';
@@ -16,483 +18,304 @@ import { buildOperationID } from '../utils/Utils';
  */
 export class ConversationManager {
   /**
-   * 获取所有会话列表
-   * @returns 会话列表
+   * 设置会话监听器
+   * @param listener 会话监听器
    */
-  getAllConversationList(): Promise<ConversationInfo[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('ConversationManager', `getAllConversationList, operationID: ${operationID}`);
+  setConversationListener(listener: ConvListener): void {
+    im.setConversationListener(new ConvListenerWrapper(listener));
+  }
 
-      im.getAllConversationList(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('ConversationManager', `getAllConversationList failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('ConversationManager', `getAllConversationList success`);
-            resolve(toArray<ConversationInfo>(data));
-          }
-        },
-        operationID
-      );
-    });
+  /**
+   * 获取所有会话列表
+   * @param baseCallback 回调
+   * @param operationID 操作ID
+   */
+  getAllConversationList(baseCallback: BaseCallback<ConversationInfo[]>, operationID: string): void {
+    debug('ConversationManager', `getAllConversationList, operationID: ${operationID}`);
+
+    im.getAllConversationList(
+      new BaseCallbackWrapper(baseCallback),
+      operationID
+    );
   }
 
   /**
    * 分页获取会话列表
+   * @param baseCallback 回调
+   * @param operationID 操作ID
    * @param offset 偏移量
    * @param count 数量
-   * @returns 会话列表
    */
-  getConversationListSplit(offset: number, count: number): Promise<ConversationInfo[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('ConversationManager', `getConversationListSplit, offset: ${offset}, count: ${count}, operationID: ${operationID}`);
+  getConversationListSplit(baseCallback: BaseCallback<ConversationInfo[]>, operationID: string, offset: number, count: number): void {
+    debug('ConversationManager', `getConversationListSplit, offset: ${offset}, count: ${count}, operationID: ${operationID}`);
 
-      im.getConversationListSplit(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('ConversationManager', `getConversationListSplit failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('ConversationManager', `getConversationListSplit success`);
-            resolve(toArray<ConversationInfo>(data));
-          }
-        },
-        operationID,
-        offset,
-        count
-      );
-    });
+    im.getConversationListSplit(
+      new BaseCallbackWrapper(baseCallback),
+      operationID,
+      offset,
+      count
+    );
   }
 
   /**
    * 获取单个会话
+   * @param baseCallback 回调
+   * @param operationID 操作ID
    * @param sessionType 会话类型
    * @param sourceID 来源ID
-   * @returns 会话信息
    */
-  getOneConversation(sessionType: number, sourceID: string): Promise<ConversationInfo> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('ConversationManager', `getOneConversation, sessionType: ${sessionType}, sourceID: ${sourceID}, operationID: ${operationID}`);
+  getOneConversation(baseCallback: BaseCallback<ConversationInfo>, operationID: string, sessionType: number, sourceID: string): void {
+    debug('ConversationManager', `getOneConversation, sessionType: ${sessionType}, sourceID: ${sourceID}, operationID: ${operationID}`);
 
-      im.getOneConversation(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('ConversationManager', `getOneConversation failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('ConversationManager', `getOneConversation success`);
-            resolve(toObject<ConversationInfo>(data) as ConversationInfo);
-          }
-        },
-        operationID,
-        sessionType,
-        sourceID
-      );
-    });
+    im.getOneConversation(
+      new BaseCallbackWrapper(baseCallback),
+      operationID,
+      sessionType,
+      sourceID
+    );
   }
 
   /**
    * 获取多个会话
+   * @param baseCallback 回调
+   * @param operationID 操作ID
    * @param conversationIDList 会话ID列表
-   * @returns 会话列表
    */
-  getMultipleConversation(conversationIDList: string[]): Promise<ConversationInfo[]> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('ConversationManager', `getMultipleConversation, count: ${conversationIDList.length}, operationID: ${operationID}`);
+  getMultipleConversation(baseCallback: BaseCallback<ConversationInfo[]>, operationID: string, conversationIDList: string[]): void {
+    debug('ConversationManager', `getMultipleConversation, count: ${conversationIDList.length}, operationID: ${operationID}`);
 
-      im.getMultipleConversation(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('ConversationManager', `getMultipleConversation failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('ConversationManager', `getMultipleConversation success`);
-            resolve(toArray<ConversationInfo>(data));
-          }
-        },
-        operationID,
-        toString(conversationIDList)
-      );
-    });
+    im.getMultipleConversation(
+      new BaseCallbackWrapper(baseCallback),
+      operationID,
+      toString(conversationIDList)
+    );
   }
 
   /**
    * 获取会话ID
+   * @param operationID 操作ID
    * @param sourceID 来源ID
    * @param sessionType 会话类型
    * @returns 会话ID
    */
-  getConversationIDBySessionType(sourceID: string, sessionType: number): string {
-    const operationID = buildOperationID();
+  getConversationIDBySessionType(operationID: string, sourceID: string, sessionType: number): string {
     debug('ConversationManager', `getConversationIDBySessionType, sourceID: ${sourceID}, sessionType: ${sessionType}, operationID: ${operationID}`);
     return im.getConversationIDBySessionType(operationID, sourceID, sessionType);
   }
 
   /**
    * 获取未读消息总数
-   * @returns 未读消息总数
+   * @param baseCallback 回调
+   * @param operationID 操作ID
    */
-  getTotalUnreadMsgCount(): Promise<number> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('ConversationManager', `getTotalUnreadMsgCount, operationID: ${operationID}`);
+  getTotalUnreadMsgCount(baseCallback: BaseCallback<number>, operationID: string): void {
+    debug('ConversationManager', `getTotalUnreadMsgCount, operationID: ${operationID}`);
 
-      im.getTotalUnreadMsgCount(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('ConversationManager', `getTotalUnreadMsgCount failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('ConversationManager', `getTotalUnreadMsgCount success: ${data}`);
-            resolve(parseInt(data) || 0);
-          }
-        },
-        operationID
-      );
-    });
+    im.getTotalUnreadMsgCount(
+      new BaseCallbackWrapper(baseCallback),
+      operationID
+    );
   }
 
   /**
    * 标记会话消息已读
+   * @param baseCallback 回调
+   * @param operationID 操作ID
    * @param conversationID 会话ID
-   * @returns 标记结果
    */
-  markConversationMessageAsRead(conversationID: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('ConversationManager', `markConversationMessageAsRead: ${conversationID}, operationID: ${operationID}`);
+  markConversationMessageAsRead(baseCallback: BaseCallback<string>, operationID: string, conversationID: string): void {
+    debug('ConversationManager', `markConversationMessageAsRead: ${conversationID}, operationID: ${operationID}`);
 
-      im.markConversationMessageAsRead(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('ConversationManager', `markConversationMessageAsRead failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('ConversationManager', `markConversationMessageAsRead success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        conversationID
-      );
-    });
+    im.markConversationMessageAsRead(
+      new BaseCallbackWrapper(baseCallback),
+      operationID,
+      conversationID
+    );
   }
 
   /**
    * 设置会话属性
+   * @param baseCallback 回调
+   * @param operationID 操作ID
    * @param conversationID 会话ID
    * @param params 属性参数JSON
-   * @returns 设置结果
    */
-  setConversation(conversationID: string, params: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('ConversationManager', `setConversation: ${conversationID}, operationID: ${operationID}`);
+  setConversation(baseCallback: BaseCallback<string>, operationID: string, conversationID: string, params: string): void {
+    debug('ConversationManager', `setConversation: ${conversationID}, operationID: ${operationID}`);
 
-      im.setConversation(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('ConversationManager', `setConversation failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('ConversationManager', `setConversation success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        conversationID,
-        params
-      );
-    });
+    im.setConversation(
+      new BaseCallbackWrapper(baseCallback),
+      operationID,
+      conversationID,
+      params
+    );
   }
 
   /**
    * 设置会话草稿
+   * @param baseCallback 回调
+   * @param operationID 操作ID
    * @param conversationID 会话ID
    * @param draftText 草稿文本
-   * @returns 设置结果
    */
-  setConversationDraft(conversationID: string, draftText: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('ConversationManager', `setConversationDraft: ${conversationID}, draftText: ${draftText}, operationID: ${operationID}`);
+  setConversationDraft(baseCallback: BaseCallback<string>, operationID: string, conversationID: string, draftText: string): void {
+    debug('ConversationManager', `setConversationDraft: ${conversationID}, draftText: ${draftText}, operationID: ${operationID}`);
 
-      im.setConversationDraft(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('ConversationManager', `setConversationDraft failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('ConversationManager', `setConversationDraft success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        conversationID,
-        draftText
-      );
-    });
+    im.setConversationDraft(
+      new BaseCallbackWrapper(baseCallback),
+      operationID,
+      conversationID,
+      draftText
+    );
   }
 
   /**
    * 置顶/取消置顶会话
+   * @param baseCallback 回调
+   * @param operationID 操作ID
    * @param conversationID 会话ID
    * @param isPinned 是否置顶
-   * @returns 设置结果
    */
-  pinConversation(conversationID: string, isPinned: boolean): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('ConversationManager', `pinConversation: ${conversationID}, isPinned: ${isPinned}, operationID: ${operationID}`);
+  pinConversation(baseCallback: BaseCallback<string>, operationID: string, conversationID: string, isPinned: boolean): void {
+    debug('ConversationManager', `pinConversation: ${conversationID}, isPinned: ${isPinned}, operationID: ${operationID}`);
 
-      im.pinConversation(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('ConversationManager', `pinConversation failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('ConversationManager', `pinConversation success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        conversationID,
-        isPinned
-      );
-    });
+    im.pinConversation(
+      new BaseCallbackWrapper(baseCallback),
+      operationID,
+      conversationID,
+      isPinned
+    );
   }
 
   /**
    * 设置会话消息接收选项
+   * @param baseCallback 回调
+   * @param operationID 操作ID
    * @param conversationID 会话ID
    * @param opt 接收选项 (0: 正常, 1: 不接受消息, 2: 不接受通知)
-   * @returns 设置结果
    */
-  setConversationRecvMessageOpt(conversationID: string, opt: number): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('ConversationManager', `setConversationRecvMessageOpt: ${conversationID}, opt: ${opt}, operationID: ${operationID}`);
+  setConversationRecvMessageOpt(baseCallback: BaseCallback<string>, operationID: string, conversationID: string, opt: number): void {
+    debug('ConversationManager', `setConversationRecvMessageOpt: ${conversationID}, opt: ${opt}, operationID: ${operationID}`);
 
-      im.setConversationRecvMessageOpt(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('ConversationManager', `setConversationRecvMessageOpt failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('ConversationManager', `setConversationRecvMessageOpt success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        conversationID,
-        opt
-      );
-    });
+    im.setConversationRecvMessageOpt(
+      new BaseCallbackWrapper(baseCallback),
+      operationID,
+      conversationID,
+      opt
+    );
   }
 
   /**
    * 设置会话私密聊天
+   * @param baseCallback 回调
+   * @param operationID 操作ID
    * @param conversationID 会话ID
    * @param isPrivate 是否私密
-   * @returns 设置结果
    */
-  setConversationPrivateChat(conversationID: string, isPrivate: boolean): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('ConversationManager', `setConversationPrivateChat: ${conversationID}, isPrivate: ${isPrivate}, operationID: ${operationID}`);
+  setConversationPrivateChat(baseCallback: BaseCallback<string>, operationID: string, conversationID: string, isPrivate: boolean): void {
+    debug('ConversationManager', `setConversationPrivateChat: ${conversationID}, isPrivate: ${isPrivate}, operationID: ${operationID}`);
 
-      im.setConversationPrivateChat(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('ConversationManager', `setConversationPrivateChat failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('ConversationManager', `setConversationPrivateChat success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        conversationID,
-        isPrivate
-      );
-    });
+    im.setConversationPrivateChat(
+      new BaseCallbackWrapper(baseCallback),
+      operationID,
+      conversationID,
+      isPrivate
+    );
   }
 
   /**
    * 设置会话阅后即焚时长
+   * @param baseCallback 回调
+   * @param operationID 操作ID
    * @param conversationID 会话ID
    * @param burnDuration 阅后即焚时长（秒）
-   * @returns 设置结果
    */
-  setConversationBurnDuration(conversationID: string, burnDuration: number): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('ConversationManager', `setConversationBurnDuration: ${conversationID}, burnDuration: ${burnDuration}, operationID: ${operationID}`);
+  setConversationBurnDuration(baseCallback: BaseCallback<string>, operationID: string, conversationID: string, burnDuration: number): void {
+    debug('ConversationManager', `setConversationBurnDuration: ${conversationID}, burnDuration: ${burnDuration}, operationID: ${operationID}`);
 
-      im.setConversationBurnDuration(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('ConversationManager', `setConversationBurnDuration failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('ConversationManager', `setConversationBurnDuration success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        conversationID,
-        burnDuration
-      );
-    });
+    im.setConversationBurnDuration(
+      new BaseCallbackWrapper(baseCallback),
+      operationID,
+      conversationID,
+      burnDuration
+    );
   }
 
   /**
    * 重置会话@提醒类型
+   * @param baseCallback 回调
+   * @param operationID 操作ID
    * @param conversationID 会话ID
-   * @returns 重置结果
    */
-  resetConversationGroupAtType(conversationID: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('ConversationManager', `resetConversationGroupAtType: ${conversationID}, operationID: ${operationID}`);
+  resetConversationGroupAtType(baseCallback: BaseCallback<string>, operationID: string, conversationID: string): void {
+    debug('ConversationManager', `resetConversationGroupAtType: ${conversationID}, operationID: ${operationID}`);
 
-      im.resetConversationGroupAtType(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('ConversationManager', `resetConversationGroupAtType failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('ConversationManager', `resetConversationGroupAtType success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        conversationID
-      );
-    });
+    im.resetConversationGroupAtType(
+      new BaseCallbackWrapper(baseCallback),
+      operationID,
+      conversationID
+    );
   }
 
   /**
    * 隐藏会话
+   * @param baseCallback 回调
+   * @param operationID 操作ID
    * @param conversationID 会话ID
-   * @returns 隐藏结果
    */
-  hideConversation(conversationID: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('ConversationManager', `hideConversation: ${conversationID}, operationID: ${operationID}`);
+  hideConversation(baseCallback: BaseCallback<string>, operationID: string, conversationID: string): void {
+    debug('ConversationManager', `hideConversation: ${conversationID}, operationID: ${operationID}`);
 
-      im.hideConversation(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('ConversationManager', `hideConversation failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('ConversationManager', `hideConversation success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        conversationID
-      );
-    });
+    im.hideConversation(
+      new BaseCallbackWrapper(baseCallback),
+      operationID,
+      conversationID
+    );
   }
 
   /**
    * 隐藏所有会话
-   * @returns 隐藏结果
+   * @param baseCallback 回调
+   * @param operationID 操作ID
    */
-  hideAllConversations(): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('ConversationManager', `hideAllConversations, operationID: ${operationID}`);
+  hideAllConversations(baseCallback: BaseCallback<string>, operationID: string): void {
+    debug('ConversationManager', `hideAllConversations, operationID: ${operationID}`);
 
-      im.hideAllConversations(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('ConversationManager', `hideAllConversations failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('ConversationManager', `hideAllConversations success`);
-            resolve(data);
-          }
-        },
-        operationID
-      );
-    });
+    im.hideAllConversations(
+      new BaseCallbackWrapper(baseCallback),
+      operationID
+    );
   }
 
   /**
    * 清除会话并删除所有消息
+   * @param baseCallback 回调
+   * @param operationID 操作ID
    * @param conversationID 会话ID
-   * @returns 清除结果
    */
-  clearConversationAndDeleteAllMsg(conversationID: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('ConversationManager', `clearConversationAndDeleteAllMsg: ${conversationID}, operationID: ${operationID}`);
+  clearConversationAndDeleteAllMsg(baseCallback: BaseCallback<string>, operationID: string, conversationID: string): void {
+    debug('ConversationManager', `clearConversationAndDeleteAllMsg: ${conversationID}, operationID: ${operationID}`);
 
-      im.clearConversationAndDeleteAllMsg(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('ConversationManager', `clearConversationAndDeleteAllMsg failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('ConversationManager', `clearConversationAndDeleteAllMsg success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        conversationID
-      );
-    });
+    im.clearConversationAndDeleteAllMsg(
+      new BaseCallbackWrapper(baseCallback),
+      operationID,
+      conversationID
+    );
   }
 
   /**
    * 删除会话并删除所有消息
+   * @param baseCallback 回调
+   * @param operationID 操作ID
    * @param conversationID 会话ID
-   * @returns 删除结果
    */
-  deleteConversationAndDeleteAllMsg(conversationID: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const operationID = buildOperationID();
-      debug('ConversationManager', `deleteConversationAndDeleteAllMsg: ${conversationID}, operationID: ${operationID}`);
+  deleteConversationAndDeleteAllMsg(baseCallback: BaseCallback<string>, operationID: string, conversationID: string): void {
+    debug('ConversationManager', `deleteConversationAndDeleteAllMsg: ${conversationID}, operationID: ${operationID}`);
 
-      im.deleteConversationAndDeleteAllMsg(
-        {
-          onError: (errCode: number, errMsg: string) => {
-            error('ConversationManager', `deleteConversationAndDeleteAllMsg failed: ${errCode} - ${errMsg}`);
-            reject({ errCode, errMsg });
-          },
-          onSuccess: (data: string) => {
-            info('ConversationManager', `deleteConversationAndDeleteAllMsg success`);
-            resolve(data);
-          }
-        },
-        operationID,
-        conversationID
-      );
-    });
+    im.deleteConversationAndDeleteAllMsg(
+      new BaseCallbackWrapper(baseCallback),
+      operationID,
+      conversationID
+    );
   }
 }

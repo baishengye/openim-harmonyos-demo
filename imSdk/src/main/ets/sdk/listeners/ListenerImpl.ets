@@ -3,20 +3,43 @@
  * 监听器实现类 - 封装用户监听器并代理到原生层
  */
 
-import { ConnListener, MsgListener, ConvListener, GroupListener, FriendListener, UserListener, SignalingListener } from './listener';
+import { ConnListener,
+  MsgListener,
+  ConvListener,
+  GroupListener,
+  FriendListener,
+  UserListener,
+  SignalingListener ,
+  MsgKvInfoListener ,
+  BaseCallback,
+  UploadFileCallback,
+  UploadLogProgress,
+  CustomBusinessListener,
+  SendMsgCallBack} from './listener';
+import { ConnListener as NativeConnListener,
+  MsgListener as NativeMsgListener,
+  ConvListener as NativeConvListener,
+  GroupListener as NativeGroupListener,
+  FriendListener as NativeFriendListener,
+  UserListener as NativeUserListener,
+  SignalingListener as NativeSignalingListener,
+  CustomBusinessListener as NativeCustomBusinessListener,
+  MsgKvInfoListener  as NativeMsgKvInfoListener,
+  BaseCallback as NativeBaseCallback,
+  UploadFileCallback as NativeUploadFileCallback,
+  UploadLogProgress as NativeUploadLogProgress,
+  SendMsgCallBack as NativeSendMsgCallBack
+} from 'libimsdk.so';
 import { info, debug } from '../internal/log/Logger';
+import { JSON } from '@kit.ArkTS';
 
 /**
  * 连接状态监听器包装类
  */
-export class ConnListenerWrapper implements ConnListener {
+export class ConnListenerWrapper implements NativeConnListener {
   private listener: ConnListener | null = null;
 
   constructor(listener: ConnListener | null) {
-    this.listener = listener;
-  }
-
-  setListener(listener: ConnListener | null): void {
     this.listener = listener;
   }
 
@@ -66,14 +89,10 @@ export class ConnListenerWrapper implements ConnListener {
 /**
  * 消息监听器包装类
  */
-export class MsgListenerWrapper implements MsgListener {
+export class MsgListenerWrapper implements NativeMsgListener {
   private listener: MsgListener | null = null;
 
   constructor(listener: MsgListener | null) {
-    this.listener = listener;
-  }
-
-  setListener(listener: MsgListener | null): void {
     this.listener = listener;
   }
 
@@ -123,14 +142,10 @@ export class MsgListenerWrapper implements MsgListener {
 /**
  * 会话监听器包装类
  */
-export class ConvListenerWrapper implements ConvListener {
+export class ConvListenerWrapper implements NativeConvListener {
   private listener: ConvListener | null = null;
 
   constructor(listener: ConvListener | null) {
-    this.listener = listener;
-  }
-
-  setListener(listener: ConvListener | null): void {
     this.listener = listener;
   }
 
@@ -194,14 +209,10 @@ export class ConvListenerWrapper implements ConvListener {
 /**
  * 群组监听器包装类
  */
-export class GroupListenerWrapper implements GroupListener {
+export class GroupListenerWrapper implements NativeGroupListener {
   private listener: GroupListener | null = null;
 
   constructor(listener: GroupListener | null) {
-    this.listener = listener;
-  }
-
-  setListener(listener: GroupListener | null): void {
     this.listener = listener;
   }
 
@@ -286,14 +297,10 @@ export class GroupListenerWrapper implements GroupListener {
 /**
  * 好友监听器包装类
  */
-export class FriendListenerWrapper implements FriendListener {
+export class FriendListenerWrapper implements NativeFriendListener {
   private listener: FriendListener | null = null;
 
   constructor(listener: FriendListener | null) {
-    this.listener = listener;
-  }
-
-  setListener(listener: FriendListener | null): void {
     this.listener = listener;
   }
 
@@ -364,14 +371,10 @@ export class FriendListenerWrapper implements FriendListener {
 /**
  * 用户监听器包装类
  */
-export class UserListenerWrapper implements UserListener {
+export class UserListenerWrapper implements NativeUserListener {
   private listener: UserListener | null = null;
 
   constructor(listener: UserListener | null) {
-    this.listener = listener;
-  }
-
-  setListener(listener: UserListener | null): void {
     this.listener = listener;
   }
 
@@ -393,14 +396,10 @@ export class UserListenerWrapper implements UserListener {
 /**
  * 信令监听器包装类
  */
-export class SignalingListenerWrapper implements SignalingListener {
+export class SignalingListenerWrapper implements NativeSignalingListener {
   private listener: SignalingListener | null = null;
 
   constructor(listener: SignalingListener | null) {
-    this.listener = listener;
-  }
-
-  setListener(listener: SignalingListener | null): void {
     this.listener = listener;
   }
 
@@ -471,6 +470,181 @@ export class SignalingListenerWrapper implements SignalingListener {
     info('SignalingListener', `onRoomParticipantDisconnected: ${onRoomParticipantDisconnectedCallback}`);
     if (this.listener != null) {
       this.listener.onRoomParticipantDisconnected(onRoomParticipantDisconnectedCallback);
+    }
+  }
+}
+
+/**
+ * 自定义业务监听器包装类
+ */
+export class CustomBusinessListenerWrapper implements NativeCustomBusinessListener {
+  private listener: CustomBusinessListener | null = null;
+
+  constructor(listener: CustomBusinessListener | null) {
+    this.listener = listener;
+  }
+
+  onRecvCustomBusinessMessage(businessMessage: string): void {
+    info('CustomBusinessListener', `onRecvCustomBusinessMessage: ${businessMessage}`);
+    if (this.listener != null) {
+      this.listener.onRecvCustomBusinessMessage(businessMessage);
+    }
+  }
+}
+
+/**
+ * 消息KV信息监听器包装类
+ */
+export class MsgKvInfoListenerWrapper implements NativeMsgKvInfoListener {
+  private listener: MsgKvInfoListener | null = null;
+
+  constructor(listener: MsgKvInfoListener | null) {
+    this.listener = listener;
+  }
+
+  onMessageKvInfoChanged(messageChangedList: string): void {
+    info('MsgKvInfoListener', `onMessageKvInfoChanged: ${messageChangedList}`);
+    if (this.listener != null) {
+      this.listener.onMessageKvInfoChanged(messageChangedList);
+    }
+  }
+}
+
+/**
+ * 基础回调包装类
+ * 支持callback模式和Promise模式
+ */
+export class BaseCallbackWrapper<T> implements NativeBaseCallback {
+  private callback: BaseCallback<T> | null = null;
+
+  constructor(callback?: BaseCallback<T> | null) {
+    if (callback) {
+      this.callback = callback;
+    }
+  }
+
+  onError(errCode: number, errMsg: string): void {
+    if (this.callback != null) {
+      this.callback.onError(errCode, errMsg);
+    }
+  }
+
+  onSuccess(data: string): void {
+    if (this.callback != null) {
+      this.callback.onSuccess(JSON.parse(data) as T);
+    }
+  }
+}
+
+/**
+ * 上传文件回调包装类
+ */
+export class UploadFileCallbackWrapper implements NativeUploadFileCallback {
+  private callback: UploadFileCallback | null = null;
+
+  constructor(callback: UploadFileCallback | null) {
+    this.callback = callback;
+  }
+
+  setCallback(callback: UploadFileCallback | null): void {
+    this.callback = callback;
+  }
+
+  open(size: number): void {
+    if (this.callback != null) {
+      this.callback.open(size);
+    }
+  }
+
+  partSize(partSize: number, num: number): void {
+    if (this.callback != null) {
+      this.callback.partSize(partSize, num);
+    }
+  }
+
+  hashPartProgress(index: number, size: number, partHash: string): void {
+    if (this.callback != null) {
+      this.callback.hashPartProgress(index, size, partHash);
+    }
+  }
+
+  hashPartComplete(partsHash: string, fileHash: string): void {
+    if (this.callback != null) {
+      this.callback.hashPartComplete(partsHash, fileHash);
+    }
+  }
+
+  uploadID(uploadID: string): void {
+    if (this.callback != null) {
+      this.callback.uploadID(uploadID);
+    }
+  }
+
+  uploadPartComplete(index: number, partSize: number, partHash: string): void {
+    if (this.callback != null) {
+      this.callback.uploadPartComplete(index, partSize, partHash);
+    }
+  }
+
+  uploadComplete(fileSize: number, streamSize: number, storageSize: number): void {
+    if (this.callback != null) {
+      this.callback.uploadComplete(fileSize, streamSize, storageSize);
+    }
+  }
+
+  complete(size: number, url: string, typ: number): void {
+    if (this.callback != null) {
+      this.callback.complete(size, url, typ);
+    }
+  }
+}
+
+/**
+ * 上传日志进度包装类
+ */
+export class UploadLogProgressWrapper implements NativeUploadLogProgress {
+  private callback: UploadLogProgress | null = null;
+
+  constructor(callback: UploadLogProgress | null) {
+    this.callback = callback;
+  }
+
+  setCallback(callback: UploadLogProgress | null): void {
+    this.callback = callback;
+  }
+
+  onProgress(current: number, size: number): void {
+    if (this.callback != null) {
+      this.callback.onProgress(current, size);
+    }
+  }
+}
+
+/**
+ * 发送消息回调包装类
+ */
+export class SendMsgCallBackWrapper<T> implements NativeSendMsgCallBack {
+  private callback: SendMsgCallBack<T> | null = null;
+
+  constructor(callback: SendMsgCallBack<T> | null) {
+    this.callback = callback;
+  }
+
+  onError(errCode: number, errMsg: string): void {
+    if (this.callback != null) {
+      this.callback.onError(errCode, errMsg);
+    }
+  }
+
+  onSuccess(data: string): void {
+    if (this.callback != null) {
+      this.callback.onSuccess(JSON.parse(data) as T);
+    }
+  }
+
+  onProgress(progress: number): void {
+    if (this.callback != null) {
+      this.callback.onProgress(progress);
     }
   }
 }
