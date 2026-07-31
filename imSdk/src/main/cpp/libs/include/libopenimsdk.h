@@ -361,7 +361,6 @@ extern void UnsubscribeUsersStatus(int baseCallbackID, char* operationID, char* 
 extern void GetSubscribeUsersStatus(int baseCallbackID, char* operationID);
 extern void SetAppBackgroundStatus(int baseCallbackID, char* operationID, int isBackground);
 extern void NetworkStatusChanged(int baseCallbackID, char* operationID);
-extern void SetGlobalRecvMessageOpt(int baseCallbackID, char* operationID, int recvOpt);
 extern void CreateGroup(int baseCallbackID, char* operationID, char* groupInfo);
 extern void GetJoinedGroupList(int baseCallbackID, char* operationID);
 extern void GetGroupsInfo(int baseCallbackID, char* operationID, char* groupIDList);

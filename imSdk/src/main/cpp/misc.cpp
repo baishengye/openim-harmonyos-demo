@@ -162,21 +162,6 @@ napi_value NAPI_getAtAllTag(napi_env env, napi_callback_info info) {
     return CreateJSString(env, tag);
 }
 
-napi_value NAPI_setGlobalRecvMessageOpt(napi_env env, napi_callback_info info) {
-    size_t argc = 3;
-    napi_value args[3];
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    int recvOpt = GetIntFromJS(env, args[2]);
-    std::string operationID = GetStringFromJS(env, args[1]);
-    if (operationID.empty()) {
-        operationID = "napi_setGlobalRecvMessageOpt_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
-    }
-    int cbId = StoreBaseCallback(env, args[0]);
-    // New signature: SetGlobalRecvMessageOpt(int baseCallbackID, char* operationID, int recvOpt)
-    SetGlobalRecvMessageOpt(cbId, (char*)operationID.c_str(), recvOpt);
-    return CreateJSUndefined(env);
-}
-
 napi_value NAPI_changeInputStates(napi_env env, napi_callback_info info) {
     size_t argc = 4;
     napi_value args[4];

@@ -248,7 +248,6 @@ extern napi_value NAPI_logs(napi_env env, napi_callback_info info);
 extern napi_value NAPI_getSdkVersion(napi_env env, napi_callback_info info);
 extern napi_value NAPI_unInitSDK(napi_env env, napi_callback_info info);
 extern napi_value NAPI_getAtAllTag(napi_env env, napi_callback_info info);
-extern napi_value NAPI_setGlobalRecvMessageOpt(napi_env env, napi_callback_info info);
 extern napi_value NAPI_changeInputStates(napi_env env, napi_callback_info info);
 extern napi_value NAPI_getInputStates(napi_env env, napi_callback_info info);
 
@@ -465,8 +464,6 @@ static napi_value Init(napi_env env, napi_value exports) {
         {"getSdkVersion", nullptr, NAPI_getSdkVersion, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"unInitSDK", nullptr, NAPI_unInitSDK, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"getAtAllTag", nullptr, NAPI_getAtAllTag, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"setGlobalRecvMessageOpt", nullptr, NAPI_setGlobalRecvMessageOpt, nullptr, nullptr, nullptr, napi_default,
-         nullptr},
         {"changeInputStates", nullptr, NAPI_changeInputStates, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"getInputStates", nullptr, NAPI_getInputStates, nullptr, nullptr, nullptr, napi_default, nullptr},
         // Listener
