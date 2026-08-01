@@ -1,5 +1,5 @@
 #include "utils.h"
-#include "libs/include/libopenimsdk.h"
+#include "include/libopenimsdk.h"
 #include "napi/native_api.h"
 #include <string>
 #include <cstring>

@@ -2,9 +2,8 @@
 // Created on 2026/7/27.
 //
 
-#include "libs/include/libopenimsdk.h"
+#include "include/libopenimsdk.h"
 #include "napi/native_api.h"
-#include "hilog/log.h"
 #include <string>
 #include <chrono>
 #include "callback.h"

@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Read(//Volumes/MacExtend/Code/ReactNative/openim-sdk-core/open_im_sdk_callback/**)"
+      "Read(//Volumes/MacExtend/**)",
+      "Write(//Volumes/MacExtend/**)"
     ]
   }
 }

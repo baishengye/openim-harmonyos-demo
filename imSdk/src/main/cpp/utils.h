@@ -2,7 +2,7 @@
 #define UTILS_H
 
 #include "hilog/log.h"
-#include "libs/include/libopenimsdk.h"
+#include "libopenimsdk.h"
 #include "napi/native_api.h"
 #include <string>
 

@@ -1,6 +1,4 @@
-#include "libs/include/libopenimsdk.h"
 #include "napi/native_api.h"
-#include "hilog/log.h"
 #include "callback.h"
 #include "utils.h"
 
