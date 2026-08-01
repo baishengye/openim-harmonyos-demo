@@ -15,6 +15,7 @@
 napi_value NAPI_initSdk(napi_env env, napi_callback_info info) {
     LogError("OpenIM", "NAPI_initSdk called");
     size_t argc = 3;
+    LOGI("OpenIM","11111111111111111111sum%d0000000000000",argc)
     napi_value args[3];
     napi_status status = napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     LogError("OpenIM", "NAPI_initSdk napi_get_cb_info status: %{public}d, argc: %{public}zu", status, argc);
