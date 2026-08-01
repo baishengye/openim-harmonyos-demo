@@ -87,7 +87,10 @@ export class LoginManager {
    * @returns 用户ID
    */
   getLoginUserID(): string {
-    return im.getLoginUserID();
+
+    im.add(1,2)
+    // return im.getLoginUserID();
+    return "";
   }
 
   /**

@@ -1,4 +1,12 @@
 #include "napi/native_api.h"
+#include "hilog/log.h"
+
+
+#define LOGI(format, args) OH_LOG_Print(LOG_APP, LOG_INFO, 0, "DemoApp", format, args);
+#define LOGE(format, args) OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "DemoApp", format, args);
+#define LOGD(format, args) OH_LOG_Print(LOG_APP, LOG_DEBUG, 0, "DemoApp", format, args);
+
+
 
 static napi_value Add(napi_env env, napi_callback_info info)
 {
@@ -21,6 +29,8 @@ static napi_value Add(napi_env env, napi_callback_info info)
 
     napi_value sum;
     napi_create_double(env, value0 + value1, &sum);
+    
+    LOGI("11111111111111111111sum:%s",sum)
 
     return sum;
 

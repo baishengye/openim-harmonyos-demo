@@ -93,6 +93,33 @@ extern "C" void OnCustomBusiness(char* msg);
 extern "C" void OnMsgKvInfoChanged(char* msg);
 
 
+static napi_value Add(napi_env env, napi_callback_info info)
+{
+    LogError("OpenIM", "Add");
+    size_t argc = 2;
+    napi_value args[2] = {nullptr};
+
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+
+    napi_valuetype valuetype0;
+    napi_typeof(env, args[0], &valuetype0);
+
+    napi_valuetype valuetype1;
+    napi_typeof(env, args[1], &valuetype1);
+
+    double value0;
+    napi_get_value_double(env, args[0], &value0);
+
+    double value1;
+    napi_get_value_double(env, args[1], &value1);
+
+    napi_value sum;
+    napi_create_double(env, value0 + value1, &sum);
+
+    LogError("OpenIM", "sum:%s",sum);
+    return sum;
+
+}
 
 // External NAPI listener functions from listener.cpp
 extern napi_value NAPI_setConnListener(napi_env env, napi_callback_info info);
@@ -268,6 +295,7 @@ extern napi_value NAPI_networkStatusChanged(napi_env env, napi_callback_info inf
 EXTERN_C_START
 static napi_value Init(napi_env env, napi_value exports) {
     napi_property_descriptor desc[] = {
+         { "add", nullptr, Add, nullptr, nullptr, nullptr, napi_default, nullptr },
         // Login
         {"initSdk", nullptr, NAPI_initSdk, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"login", nullptr, NAPI_login, nullptr, nullptr, nullptr, napi_default, nullptr},

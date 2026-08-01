@@ -149,6 +149,8 @@ export interface MsgKvInfoListener {
   onMessageKvInfoChanged(messageChangedList: string): void;
 }
 
+export const add: (a: number, b: number) => number;
+
 // ============================================================
 // 初始化与登录
 // ============================================================

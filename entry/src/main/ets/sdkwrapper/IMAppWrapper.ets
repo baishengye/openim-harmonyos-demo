@@ -31,6 +31,10 @@ import {
   buildOperationID,
 } from "imsdk";
 
+import {
+  add
+} from "democpp";
+
 /**
  * SDK包装类，提供Promise风格的API
  */
@@ -146,7 +150,8 @@ export class OpenIMAppWrapper {
    * 获取当前用户ID
    */
   getLoginUserID(): string {
-    return OpenIMClient.loginManager.getLoginUserID();
+    add(1,2)
+    return "";
   }
   //
   // /**
