@@ -1,5 +1,5 @@
 #include "callback.h"
-#include "libopenimsdk.h"
+//#include "include/libopenimsdk.h"
 #include <string.h>
 #include <mutex>
 #include <stdint.h>
@@ -215,7 +215,7 @@ int StoreBaseCallback(napi_env env, napi_value onSuccess, napi_value onError) {
     g_baseCallbacks[cbId].isValid = true;
 
     // Register with SDK
-    RegisterBaseCallback(cbId, (intptr_t)CAPI_OnBaseSuccess, (intptr_t)CAPI_OnBaseError);
+//    RegisterBaseCallback(cbId, (intptr_t)CAPI_OnBaseSuccess, (intptr_t)CAPI_OnBaseError);
 
     return cbId;
 }
@@ -237,7 +237,7 @@ void DeleteBaseCallback(int cbId) {
     if (cbId <= 0 || cbId >= CB_MAX) return;
     if (!g_baseCallbacks[cbId].isValid) return;
 
-    UnregisterBaseCallback(cbId);
+//    UnregisterBaseCallback(cbId);
 
     if (g_baseCallbacks[cbId].onSuccessRef) {
         napi_delete_reference(g_baseCallbacks[cbId].env, g_baseCallbacks[cbId].onSuccessRef);
@@ -281,17 +281,17 @@ int StoreUploadCallbacks(
     ctx.isValid = true;
 
     // Register with SDK
-    RegisterUploadFileCallback(
-        cbId,
-        (intptr_t)CAPI_OnUploadOpen,
-        (intptr_t)CAPI_OnUploadPartSize,
-        (intptr_t)CAPI_OnUploadHashProgress,
-        (intptr_t)CAPI_OnUploadHashComplete,
-        (intptr_t)CAPI_OnUploadID,
-        (intptr_t)CAPI_OnUploadPartComplete,
-        (intptr_t)CAPI_OnUploadComplete,
-        (intptr_t)CAPI_OnUploadFinish
-    );
+//    RegisterUploadFileCallback(
+//        cbId,
+//        (intptr_t)CAPI_OnUploadOpen,
+//        (intptr_t)CAPI_OnUploadPartSize,
+//        (intptr_t)CAPI_OnUploadHashProgress,
+//        (intptr_t)CAPI_OnUploadHashComplete,
+//        (intptr_t)CAPI_OnUploadID,
+//        (intptr_t)CAPI_OnUploadPartComplete,
+//        (intptr_t)CAPI_OnUploadComplete,
+//        (intptr_t)CAPI_OnUploadFinish
+//    );
 
     return cbId;
 }
@@ -307,7 +307,7 @@ void DeleteUploadCallbacks(int cbId) {
     auto& ctx = g_upload_callbacks[cbId];
     if (!ctx.isValid) return;
 
-    UnregisterUploadFileCallback(cbId);
+//    UnregisterUploadFileCallback(cbId);
 
     #define DELETE_REF(ref) if (ref) { napi_delete_reference(ctx.env, ref); ref = nullptr; }
     DELETE_REF(ctx.onOpenRef);
@@ -338,7 +338,7 @@ int StoreUploadLogCallback(napi_env env, napi_value onProgress) {
     ctx.isValid = true;
 
     // Register with SDK
-    RegisterUploadLogProgress(cbId, (intptr_t)CAPI_OnUploadLogProgress);
+//    RegisterUploadLogProgress(cbId, (intptr_t)CAPI_OnUploadLogProgress);
 
     return cbId;
 }
@@ -354,7 +354,7 @@ void DeleteUploadLogCallback(int cbId) {
     auto& ctx = g_uploadLog_callbacks[cbId];
     if (!ctx.isValid) return;
 
-    UnregisterUploadLogProgress(cbId);
+//    UnregisterUploadLogProgress(cbId);
 
     if (ctx.onProgressRef) {
         napi_delete_reference(ctx.env, ctx.onProgressRef);
@@ -381,8 +381,8 @@ int StoreSendMsgCallback(napi_env env, napi_value onSuccess, napi_value onError,
     ctx.isValid = true;
 
     // Register with SDK
-    RegisterBaseCallback(cbId, (intptr_t)CAPI_OnBaseSuccess, (intptr_t)CAPI_OnBaseError);
-    RegisterSendMsgCallback(cbId, (intptr_t)CAPI_OnSendMsg);
+//    RegisterBaseCallback(cbId, (intptr_t)CAPI_OnBaseSuccess, (intptr_t)CAPI_OnBaseError);
+//    RegisterSendMsgCallback(cbId, (intptr_t)CAPI_OnSendMsg);
 
     return cbId;
 }
@@ -407,7 +407,7 @@ void DeleteSendMsgCallback(int cbId) {
     auto& ctx = g_sendMsg_callbacks[cbId];
     if (!ctx.isValid) return;
 
-    UnregisterSendMsgCallback(cbId);
+//    UnregisterSendMsgCallback(cbId);
 
     #define DELETE_REF(ref) if (ref) { napi_delete_reference(ctx.env, ref); ref = nullptr; }
     DELETE_REF(ctx.onSuccessRef);
@@ -442,14 +442,14 @@ int StoreConnListener(
     g_listeners.isValid = true;
 
     // Register with SDK
-    RegisterConnListener(
-        (intptr_t)CAPI_OnConnConnecting,
-        (intptr_t)CAPI_OnConnConnectSuccess,
-        (intptr_t)CAPI_OnConnConnectFailed,
-        (intptr_t)CAPI_OnConnKickedOffline,
-        (intptr_t)CAPI_OnConnUserTokenExpired,
-        (intptr_t)CAPI_OnConnUserTokenInvalid
-    );
+//    RegisterConnListener(
+//        (intptr_t)CAPI_OnConnConnecting,
+//        (intptr_t)CAPI_OnConnConnectSuccess,
+//        (intptr_t)CAPI_OnConnConnectFailed,
+//        (intptr_t)CAPI_OnConnKickedOffline,
+//        (intptr_t)CAPI_OnConnUserTokenExpired,
+//        (intptr_t)CAPI_OnConnUserTokenInvalid
+//    );
 
     return 0;
 }
@@ -457,7 +457,7 @@ int StoreConnListener(
 void DeleteConnListener() {
     if (!g_listeners.isValid) return;
 
-    UnregisterConnListener();
+//    UnregisterConnListener();
 
     #define DELETE_REF(ref) if (ref) { napi_delete_reference(g_listeners.env, ref); ref = nullptr; }
     DELETE_REF(g_listeners.onConnecting);
@@ -493,14 +493,14 @@ int StoreMsgListener(
     g_listeners.env = env;
     g_listeners.isValid = true;
 
-    RegisterMsgListener(
-        (intptr_t)CAPI_OnRecvNewMsg,
-        (intptr_t)CAPI_OnRecvReceipt,
-        (intptr_t)CAPI_OnMsgRevoked,
-        (intptr_t)CAPI_OnRecvOffline,
-        (intptr_t)CAPI_OnMsgDeleted,
-        (intptr_t)CAPI_OnRecvOnline
-    );
+//    RegisterMsgListener(
+//        (intptr_t)CAPI_OnRecvNewMsg,
+//        (intptr_t)CAPI_OnRecvReceipt,
+//        (intptr_t)CAPI_OnMsgRevoked,
+//        (intptr_t)CAPI_OnRecvOffline,
+//        (intptr_t)CAPI_OnMsgDeleted,
+//        (intptr_t)CAPI_OnRecvOnline
+//    );
 
     return 0;
 }
@@ -508,7 +508,7 @@ int StoreMsgListener(
 void DeleteMsgListener() {
     if (!g_listeners.isValid) return;
 
-    UnregisterMsgListener();
+//    UnregisterMsgListener();
 
     #define DELETE_REF(ref) if (ref) { napi_delete_reference(g_listeners.env, ref); ref = nullptr; }
     DELETE_REF(g_listeners.onRecvNewMsg);
@@ -546,16 +546,16 @@ int StoreConvListener(
     g_listeners.env = env;
     g_listeners.isValid = true;
 
-    RegisterConvListener(
-        (intptr_t)CAPI_OnConvSyncStart,
-        (intptr_t)CAPI_OnConvSyncFinish,
-        (intptr_t)CAPI_OnConvSyncProgress,
-        (intptr_t)CAPI_OnConvSyncFailed,
-        (intptr_t)CAPI_OnConvChanged,
-        (intptr_t)CAPI_OnNewConv,
-        (intptr_t)CAPI_OnUnreadChanged,
-        (intptr_t)CAPI_OnInputStatus
-    );
+//    RegisterConvListener(
+//        (intptr_t)CAPI_OnConvSyncStart,
+//        (intptr_t)CAPI_OnConvSyncFinish,
+//        (intptr_t)CAPI_OnConvSyncProgress,
+//        (intptr_t)CAPI_OnConvSyncFailed,
+//        (intptr_t)CAPI_OnConvChanged,
+//        (intptr_t)CAPI_OnNewConv,
+//        (intptr_t)CAPI_OnUnreadChanged,
+//        (intptr_t)CAPI_OnInputStatus
+//    );
 
     return 0;
 }
@@ -563,7 +563,7 @@ int StoreConvListener(
 void DeleteConvListener() {
     if (!g_listeners.isValid) return;
 
-    UnregisterConvListener();
+//    UnregisterConvListener();
 
     #define DELETE_REF(ref) if (ref) { napi_delete_reference(g_listeners.env, ref); ref = nullptr; }
     DELETE_REF(g_listeners.onSyncStart);
@@ -609,19 +609,19 @@ int StoreGroupListener(
     g_listeners.env = env;
     g_listeners.isValid = true;
 
-    RegisterGroupListener(
-        (intptr_t)CAPI_OnGroupJoinedAdd,
-        (intptr_t)CAPI_OnGroupJoinedDel,
-        (intptr_t)CAPI_OnGroupMemberAdd,
-        (intptr_t)CAPI_OnGroupMemberDel,
-        (intptr_t)CAPI_OnGroupAppAdd,
-        (intptr_t)CAPI_OnGroupAppDel,
-        (intptr_t)CAPI_OnGroupInfoChanged,
-        (intptr_t)CAPI_OnGroupDismissed,
-        (intptr_t)CAPI_OnGroupMemberInfo,
-        (intptr_t)CAPI_OnGroupAppAccept,
-        (intptr_t)CAPI_OnGroupAppReject
-    );
+//    RegisterGroupListener(
+//        (intptr_t)CAPI_OnGroupJoinedAdd,
+//        (intptr_t)CAPI_OnGroupJoinedDel,
+//        (intptr_t)CAPI_OnGroupMemberAdd,
+//        (intptr_t)CAPI_OnGroupMemberDel,
+//        (intptr_t)CAPI_OnGroupAppAdd,
+//        (intptr_t)CAPI_OnGroupAppDel,
+//        (intptr_t)CAPI_OnGroupInfoChanged,
+//        (intptr_t)CAPI_OnGroupDismissed,
+//        (intptr_t)CAPI_OnGroupMemberInfo,
+//        (intptr_t)CAPI_OnGroupAppAccept,
+//        (intptr_t)CAPI_OnGroupAppReject
+//    );
 
     return 0;
 }
@@ -629,7 +629,7 @@ int StoreGroupListener(
 void DeleteGroupListener() {
     if (!g_listeners.isValid) return;
 
-    UnregisterGroupListener();
+//    UnregisterGroupListener();
 
     #define DELETE_REF(ref) if (ref) { napi_delete_reference(g_listeners.env, ref); ref = nullptr; }
     DELETE_REF(g_listeners.onJoinedAdd);
@@ -674,17 +674,17 @@ int StoreFriendListener(
     g_listeners.env = env;
     g_listeners.isValid = true;
 
-    RegisterFriendListener(
-        (intptr_t)CAPI_OnFriendAppAdd,
-        (intptr_t)CAPI_OnFriendAppDel,
-        (intptr_t)CAPI_OnFriendAppAccept,
-        (intptr_t)CAPI_OnFriendAppReject,
-        (intptr_t)CAPI_OnFriendAdd,
-        (intptr_t)CAPI_OnFriendDel,
-        (intptr_t)CAPI_OnFriendInfo,
-        (intptr_t)CAPI_OnBlackAdd,
-        (intptr_t)CAPI_OnBlackDel
-    );
+//    RegisterFriendListener(
+//        (intptr_t)CAPI_OnFriendAppAdd,
+//        (intptr_t)CAPI_OnFriendAppDel,
+//        (intptr_t)CAPI_OnFriendAppAccept,
+//        (intptr_t)CAPI_OnFriendAppReject,
+//        (intptr_t)CAPI_OnFriendAdd,
+//        (intptr_t)CAPI_OnFriendDel,
+//        (intptr_t)CAPI_OnFriendInfo,
+//        (intptr_t)CAPI_OnBlackAdd,
+//        (intptr_t)CAPI_OnBlackDel
+//    );
 
     return 0;
 }
@@ -692,7 +692,7 @@ int StoreFriendListener(
 void DeleteFriendListener() {
     if (!g_listeners.isValid) return;
 
-    UnregisterFriendListener();
+//    UnregisterFriendListener();
 
     #define DELETE_REF(ref) if (ref) { napi_delete_reference(g_listeners.env, ref); ref = nullptr; }
     DELETE_REF(g_listeners.onFriendAppAdd);
@@ -717,10 +717,10 @@ int StoreUserListener(napi_env env, napi_value onSelfInfo, napi_value onUserStat
     g_listeners.env = env;
     g_listeners.isValid = true;
 
-    RegisterUserListener(
-        (intptr_t)CAPI_OnUserSelfInfoUpdated,
-        (intptr_t)CAPI_OnUserStatusChanged
-    );
+//    RegisterUserListener(
+//        (intptr_t)CAPI_OnUserSelfInfoUpdated,
+//        (intptr_t)CAPI_OnUserStatusChanged
+//    );
 
     return 0;
 }
@@ -728,7 +728,7 @@ int StoreUserListener(napi_env env, napi_value onSelfInfo, napi_value onUserStat
 void DeleteUserListener() {
     if (!g_listeners.isValid) return;
 
-    UnregisterUserListener();
+//    UnregisterUserListener();
 
     #define DELETE_REF(ref) if (ref) { napi_delete_reference(g_listeners.env, ref); ref = nullptr; }
     DELETE_REF(g_listeners.onSelfInfo);
@@ -766,18 +766,18 @@ int StoreSignalingListener(
     g_listeners.env = env;
     g_listeners.isValid = true;
 
-    RegisterSignalingListener(
-        (intptr_t)CAPI_OnSignalingReceiveNewInvitation,
-        (intptr_t)CAPI_OnSignalingInviteeAccepted,
-        (intptr_t)CAPI_OnSignalingInviteeAcceptedByOtherDevice,
-        (intptr_t)CAPI_OnSignalingInviteeRejected,
-        (intptr_t)CAPI_OnSignalingInviteeRejectedByOtherDevice,
-        (intptr_t)CAPI_OnSignalingInvitationCancelled,
-        (intptr_t)CAPI_OnSignalingInvitationTimeout,
-        (intptr_t)CAPI_OnSignalingHangUp,
-        (intptr_t)CAPI_OnSignalingRoomParticipantConnected,
-        (intptr_t)CAPI_OnSignalingRoomParticipantDisconnected
-    );
+//    RegisterSignalingListener(
+//        (intptr_t)CAPI_OnSignalingReceiveNewInvitation,
+//        (intptr_t)CAPI_OnSignalingInviteeAccepted,
+//        (intptr_t)CAPI_OnSignalingInviteeAcceptedByOtherDevice,
+//        (intptr_t)CAPI_OnSignalingInviteeRejected,
+//        (intptr_t)CAPI_OnSignalingInviteeRejectedByOtherDevice,
+//        (intptr_t)CAPI_OnSignalingInvitationCancelled,
+//        (intptr_t)CAPI_OnSignalingInvitationTimeout,
+//        (intptr_t)CAPI_OnSignalingHangUp,
+//        (intptr_t)CAPI_OnSignalingRoomParticipantConnected,
+//        (intptr_t)CAPI_OnSignalingRoomParticipantDisconnected
+//    );
 
     return 0;
 }
@@ -785,7 +785,7 @@ int StoreSignalingListener(
 void DeleteSignalingListener() {
     if (!g_listeners.isValid) return;
 
-    UnregisterSignalingListener();
+//    UnregisterSignalingListener();
 
     #define DELETE_REF(ref) if (ref) { napi_delete_reference(g_listeners.env, ref); ref = nullptr; }
     DELETE_REF(g_listeners.onReceiveNewInvitation);
@@ -810,7 +810,7 @@ int StoreCustomBusinessListener(napi_env env, napi_value onRecvCustomBusinessMes
     g_listeners.env = env;
     g_listeners.isValid = true;
 
-    RegisterCustomBusinessListener((intptr_t)CAPI_OnRecvCustomBusinessMessage);
+//    RegisterCustomBusinessListener((intptr_t)CAPI_OnRecvCustomBusinessMessage);
 
     return 0;
 }
@@ -818,7 +818,7 @@ int StoreCustomBusinessListener(napi_env env, napi_value onRecvCustomBusinessMes
 void DeleteCustomBusinessListener() {
     if (!g_listeners.isValid) return;
 
-    UnregisterCustomBusinessListener();
+//    UnregisterCustomBusinessListener();
 
     if (g_listeners.onRecvCustomBusinessMessage) {
         napi_delete_reference(g_listeners.env, g_listeners.onRecvCustomBusinessMessage);
@@ -835,7 +835,7 @@ int StoreMsgKvInfoListener(napi_env env, napi_value onMessageKvInfoChanged) {
     g_listeners.env = env;
     g_listeners.isValid = true;
 
-    RegisterMsgKvInfoListener((intptr_t)CAPI_OnMessageKvInfoChanged);
+//    RegisterMsgKvInfoListener((intptr_t)CAPI_OnMessageKvInfoChanged);
 
     return 0;
 }
@@ -843,7 +843,7 @@ int StoreMsgKvInfoListener(napi_env env, napi_value onMessageKvInfoChanged) {
 void DeleteMsgKvInfoListener() {
     if (!g_listeners.isValid) return;
 
-    UnregisterMsgKvInfoListener();
+//    UnregisterMsgKvInfoListener();
 
     if (g_listeners.onMessageKvInfoChanged) {
         napi_delete_reference(g_listeners.env, g_listeners.onMessageKvInfoChanged);

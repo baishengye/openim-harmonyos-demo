@@ -2,7 +2,7 @@
 // Created on 2026/7/27.
 //
 
-#include "include/libopenimsdk.h"
+//#include "include/libopenimsdk.h"
 #include "napi/native_api.h"
 #include "hilog/log.h"
 #include "callback.h"
@@ -24,7 +24,7 @@ napi_value NAPI_updateFcmToken(napi_env env, napi_callback_info info) {
     }
     int cbId = StoreBaseCallback(env, args[0]);
     // New signature: UpdateFcmToken(int baseCallbackID, char* operationID, char* fcmToken, long long expireTime)
-    UpdateFcmToken(cbId, (char*)operationID.c_str(), (char*)fcmToken.c_str(), expireTime);
+//    UpdateFcmToken(cbId, (char*)operationID.c_str(), (char*)fcmToken.c_str(), expireTime);
     return CreateJSUndefined(env);
 }
 
@@ -39,7 +39,7 @@ napi_value NAPI_setAppBadge(napi_env env, napi_callback_info info) {
     }
     int cbId = StoreBaseCallback(env, args[0]);
     // New signature: SetAppBadge(int baseCallbackID, char* operationID, int appUnreadCount)
-    SetAppBadge(cbId, (char*)operationID.c_str(), appUnreadCount);
+//    SetAppBadge(cbId, (char*)operationID.c_str(), appUnreadCount);
     return CreateJSUndefined(env);
 }
 
@@ -62,7 +62,7 @@ napi_value NAPI_uploadLogs(napi_env env, napi_callback_info info) {
     int baseCbId = StoreBaseCallback(env, baseCallback);
     int uploadCbId = StoreUploadLogCallback(env, onProgress);
     // New signature: UploadLogs(int baseCallbackID, int uploadLogCallbackID, char* operationID, int line, char* ex)
-    UploadLogs(baseCbId, uploadCbId, (char*)operationID.c_str(), line, (char*)ex.c_str());
+//    UploadLogs(baseCbId, uploadCbId, (char*)operationID.c_str(), line, (char*)ex.c_str());
     return CreateJSUndefined(env);
 }
 
@@ -105,7 +105,7 @@ napi_value NAPI_uploadFile(napi_env env, napi_callback_info info) {
     );
 
     // 调用 SDK
-    UploadFile(baseCbId, uploadCbId, (char*)operationID.c_str(), (char*)reqData.c_str());
+//    UploadFile(baseCbId, uploadCbId, (char*)operationID.c_str(), (char*)reqData.c_str());
     return CreateJSUndefined(env);
 }
 
@@ -124,15 +124,15 @@ napi_value NAPI_logs(napi_env env, napi_callback_info info) {
         operationID = "napi_logs_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     // New signature: Logs(int baseCallbackID, char* operationID, int logLevel, char* file, long long line, char* msgs, char* err, char* ex)
-    Logs(cbId, (char*)operationID.c_str(), logLevel, (char*)file.c_str(), line, (char*)msgs.c_str(), (char*)err.c_str(), nullptr);
+//    Logs(cbId, (char*)operationID.c_str(), logLevel, (char*)file.c_str(), line, (char*)msgs.c_str(), (char*)err.c_str(), nullptr);
     return CreateJSUndefined(env);
 }
 
 napi_value NAPI_getSdkVersion(napi_env env, napi_callback_info info) {
-    char* version = GetSdkVersion();
-    std::string result = version ? version : "";
-    if (version) FreeString(version);
-    return CreateJSString(env, result);
+//    char* version = GetSdkVersion();
+//    std::string result = version ? version : "";
+//    if (version) FreeString(version);
+    return CreateJSString(env, "");
 }
 
 napi_value NAPI_unInitSDK(napi_env env, napi_callback_info info) {
@@ -144,7 +144,7 @@ napi_value NAPI_unInitSDK(napi_env env, napi_callback_info info) {
         operationID = "napi_unInitSDK_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     // New signature: UnInitSDK(char* operationID)
-    UnInitSDK((char*)operationID.c_str());
+//    UnInitSDK((char*)operationID.c_str());
     return CreateJSUndefined(env);
 }
 
@@ -156,10 +156,10 @@ napi_value NAPI_getAtAllTag(napi_env env, napi_callback_info info) {
     if (operationID.empty()) {
         operationID = "napi_getAtAllTag_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
-    char* result = GetAtAllTag((char*)operationID.c_str());
-    std::string tag = result ? result : "";
-    if (result) FreeString(result);
-    return CreateJSString(env, tag);
+//    char* result = GetAtAllTag((char*)operationID.c_str());
+//    std::string tag = result ? result : "";
+//    if (result) FreeString(result);
+    return CreateJSString(env, "");
 }
 
 napi_value NAPI_changeInputStates(napi_env env, napi_callback_info info) {
@@ -174,7 +174,7 @@ napi_value NAPI_changeInputStates(napi_env env, napi_callback_info info) {
     }
     int cbId = StoreBaseCallback(env, args[0]);
     // New signature: ChangeInputStates(int baseCallbackID, char* operationID, char* conversationID, int focus)
-    ChangeInputStates(cbId, (char*)operationID.c_str(), (char*)conversationID.c_str(), focus);
+//    ChangeInputStates(cbId, (char*)operationID.c_str(), (char*)conversationID.c_str(), focus);
     return CreateJSUndefined(env);
 }
 
@@ -190,6 +190,6 @@ napi_value NAPI_getInputStates(napi_env env, napi_callback_info info) {
     }
     int cbId = StoreBaseCallback(env, args[0]);
     // New signature: GetInputStates(int baseCallbackID, char* operationID, char* conversationID, char* userID)
-    GetInputStates(cbId, (char*)operationID.c_str(), (char*)conversationID.c_str(), (char*)userID.c_str());
+//    GetInputStates(cbId, (char*)operationID.c_str(), (char*)conversationID.c_str(), (char*)userID.c_str());
     return CreateJSUndefined(env);
 }
