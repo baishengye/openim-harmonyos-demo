@@ -12,8 +12,6 @@
 
 #ifndef GO_CGO_GOSTRING_TYPEDEF
 typedef struct { const char *p; ptrdiff_t n; } _GoString_;
-extern size_t _GoStringLen(_GoString_ s);
-extern const char *_GoStringPtr(_GoString_ s);
 #endif
 
 #endif
@@ -254,15 +252,9 @@ typedef size_t GoUintptr;
 typedef float GoFloat32;
 typedef double GoFloat64;
 #ifdef _MSC_VER
-#if !defined(__cplusplus) || _MSVC_LANG <= 201402L
 #include <complex.h>
 typedef _Fcomplex GoComplex64;
 typedef _Dcomplex GoComplex128;
-#else
-#include <complex>
-typedef std::complex<float> GoComplex64;
-typedef std::complex<double> GoComplex128;
-#endif
 #else
 typedef float _Complex GoComplex64;
 typedef double _Complex GoComplex128;
@@ -294,15 +286,15 @@ extern int InitSDK(char* config, char* operationID);
 extern void Login(int baseCallbackID, char* uid, char* token, char* operationID);
 extern void Logout(int baseCallbackID, char* operationID);
 extern int GetLoginStatus(char* operationID);
-extern char* GetLoginUserID(void);
+extern char* GetLoginUserID();
 extern void UploadFile(int baseCallbackID, int uploadCallbackID, char* operationID, char* reqData);
 extern char* CreateTextMessage(char* text, char* operationID);
 extern char* CreateImageMessage(char* imagePath, char* operationID);
 extern char* CreateAdvancedQuoteMessage(char* operationID, char* text, char* message, char* messageEntityList);
 extern char* CreateAdvancedTextMessage(char* operationID, char* text, char* messageEntityList);
-extern char* CreateSoundMessage(char* soundPath, long long duration, char* operationID);
+extern char* CreateSoundMessage(char* soundPath, long long int duration, char* operationID);
 extern char* CreateFileMessage(char* filePath, char* fileName, char* operationID);
-extern char* CreateVideoMessage(char* videoPath, char* videoType, long long duration, char* snapshotPath, char* operationID);
+extern char* CreateVideoMessage(char* videoPath, char* videoType, long long int duration, char* snapshotPath, char* operationID);
 extern char* CreateLocationMessage(char* operationID, char* description, double longitude, double latitude);
 extern char* CreateCustomMessage(char* data, char* extension, char* description, char* operationID);
 extern char* CreateQuoteMessage(char* text, char* message, char* operationID);
@@ -368,7 +360,7 @@ extern void SetGroupInfo(int baseCallbackID, char* operationID, char* groupInfo)
 extern void SetGroupInfoEx(char* operationID, char* groupInfo);
 extern void GetJoinedGroupListPage(int baseCallbackID, char* operationID, int offset, int count);
 extern void ChangeGroupMute(int baseCallbackID, char* operationID, char* groupID, int isMute);
-extern void ChangeGroupMemberMute(int baseCallbackID, char* operationID, char* groupID, char* userID, long long mutedSeconds);
+extern void ChangeGroupMemberMute(int baseCallbackID, char* operationID, char* groupID, char* userID, long long int mutedSeconds);
 extern void GetGroupMemberList(int baseCallbackID, char* operationID, char* groupID, int filter, int offset, int count);
 extern void GetGroupMemberOwnerAndAdmin(int baseCallbackID, char* operationID, char* groupID);
 extern void GetUsersInGroup(int baseCallbackID, char* operationID, char* groupID, char* userIDList);
@@ -405,19 +397,19 @@ extern void GetBlackList(int baseCallbackID, char* operationID);
 extern void RemoveBlack(int baseCallbackID, char* operationID, char* removeUserID);
 extern void GetFriendApplicationUnhandledCount(int baseCallbackID, char* operationID, char* req);
 extern void SetFriendRemark(int baseCallbackID, char* operationID, char* friendUserID, char* remark);
-extern void UpdateFcmToken(int baseCallbackID, char* operationID, char* fcmToken, long long expireTime);
-extern void Logs(int baseCallbackID, char* operationID, int logLevel, char* file, long long line, char* msgs, char* err, char* keyAndValue);
-extern char* GetSdkVersion(void);
+extern void UpdateFcmToken(int baseCallbackID, char* operationID, char* fcmToken, long long int expireTime);
+extern void Logs(int baseCallbackID, char* operationID, int logLevel, char* file, long long int line, char* msgs, char* err, char* keyAndValue);
+extern char* GetSdkVersion();
 extern void UnInitSDK(char* operationID);
 extern void FreeString(char* str);
 extern char* GetAtAllTag(char* operationID);
 extern char* CreateFileMessageFromFullPath(char* operationID, char* fileFullPath, char* fileName);
-extern char* CreateSoundMessageFromFullPath(char* operationID, char* soundPath, long long duration);
-extern char* CreateVideoMessageFromFullPath(char* operationID, char* videoFullPath, char* videoType, long long duration, char* snapshotFullPath);
+extern char* CreateSoundMessageFromFullPath(char* operationID, char* soundPath, long long int duration);
+extern char* CreateVideoMessageFromFullPath(char* operationID, char* videoFullPath, char* videoType, long long int duration, char* snapshotFullPath);
 extern void GetAdvancedHistoryMessageListReverse(int baseCallbackID, char* operationID, char* getMessageOptions);
 extern void GetSpecifiedGroupMembersInfo(int baseCallbackID, char* operationID, char* groupID, char* userIDList);
 extern void UploadLogs(int baseCallbackID, int uploadLogsCallbackID, char* operationID, int line, char* ex);
-extern void GetGroupMemberListByJoinTimeFilter(int baseCallbackID, char* operationID, char* groupID, long long offset, long long count, long long joinTimeBegin, long long joinTimeEnd, char* filterUserIDList);
+extern void GetGroupMemberListByJoinTimeFilter(int baseCallbackID, char* operationID, char* groupID, long long int offset, long long int count, long long int joinTimeBegin, long long int joinTimeEnd, char* filterUserIDList);
 extern void RegisterConnListener(int onConnecting, int onConnectSuccess, int onConnectFailed, int onKickedOffline, int onUserTokenExpired, int onUserTokenInvalid);
 extern void RegisterMsgListener(int onRecvNewMsg, int onRecvReceipt, int onMsgRevoked, int onRecvOffline, int onMsgDeleted, int onRecvOnline);
 extern void RegisterConvListener(int onSyncStart, int onSyncFinish, int onSyncProgress, int onSyncFailed, int onConvChanged, int onNewConv, int onUnreadChanged, int onInputStatus);
@@ -435,17 +427,17 @@ extern void UnregisterUploadFileCallback(int uploadCallbackID);
 extern void UnregisterUploadLogProgress(int uploadLogsCallbackID);
 extern void UnregisterSendMsgCallback(int sendReceiptCallbackID);
 extern void UnregisterBaseCallback(int baseCallbackID);
-extern void UnregisterAllUploadCallbacks(void);
-extern void UnregisterAllListeners(void);
-extern void UnregisterConnListener(void);
-extern void UnregisterMsgListener(void);
-extern void UnregisterConvListener(void);
-extern void UnregisterGroupListener(void);
-extern void UnregisterFriendListener(void);
-extern void UnregisterUserListener(void);
-extern void UnregisterSignalingListener(void);
-extern void UnregisterCustomBusinessListener(void);
-extern void UnregisterMsgKvInfoListener(void);
+extern void UnregisterAllUploadCallbacks();
+extern void UnregisterAllListeners();
+extern void UnregisterConnListener();
+extern void UnregisterMsgListener();
+extern void UnregisterConvListener();
+extern void UnregisterGroupListener();
+extern void UnregisterFriendListener();
+extern void UnregisterUserListener();
+extern void UnregisterSignalingListener();
+extern void UnregisterCustomBusinessListener();
+extern void UnregisterMsgKvInfoListener();
 
 #ifdef __cplusplus
 }

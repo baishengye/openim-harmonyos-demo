@@ -29,6 +29,6 @@ target_link_libraries(imsdk
     PUBLIC
         libhilog_ndk.z.so
         libace_napi.z.so
-        # ${NATIVERENDER_ROOT_PATH}/../../../libs/${OHOS_ARCH}/libopenimsdk.so
+        ${NATIVERENDER_ROOT_PATH}/../../../libs/${OHOS_ARCH}/libopenimsdk.so
         libc++_shared.so
 )
