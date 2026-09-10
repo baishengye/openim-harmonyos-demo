@@ -3,120 +3,6 @@
 #include "callback.h"
 #include "utils.h"
 
-// External callback invocation from callback.cpp
-extern void InvokeSuccessCallback(napi_env env, napi_ref callbackRef, const char* data);
-extern void InvokeErrorCallback(napi_env env, napi_ref callbackRef, int errCode, const char* errMsg);
-
-// External functions from listener.cpp (for listener registration)
-extern "C" void RegisterConnListener(int onConnecting, int onConnectSuccess, int onConnectFailed, int onKickedOffline, int onUserTokenExpired, int onUserTokenInvalid);
-extern "C" void RegisterMsgListener(int onRecvNewMsg, int onRecvReceipt, int onMsgRevoked, int onRecvOffline, int onMsgDeleted, int onRecvOnline);
-extern "C" void RegisterConvListener(int onSyncStart, int onSyncFinish, int onSyncProgress, int onSyncFailed, int onConvChanged, int onNewConv, int onUnreadChanged, int onInputStatus);
-extern "C" void RegisterGroupListener(int onJoinedGroupAdded, int onJoinedGroupDeleted, int onGroupMemberAdded, int onGroupMemberDeleted, int onGroupApplicationAdded, int onGroupApplicationDeleted, int onGroupInfoChanged, int onGroupDismissed, int onGroupMemberInfoChanged, int onGroupApplicationAccepted, int onGroupApplicationRejected);
-extern "C" void RegisterFriendListener(int onFriendApplicationAdded, int onFriendApplicationDeleted, int onFriendApplicationAccepted, int onFriendApplicationRejected, int onFriendAdded, int onFriendDeleted, int onFriendInfoChanged, int onBlackAdded, int onBlackDeleted);
-extern "C" void RegisterUserListener(int onSelfInfoUpdated, int onUserStatusChanged);
-extern "C" void RegisterSignalingListener(int onReceiveNewInvitation, int onInviteeAccepted, int onInviteeAcceptedByOtherDevice, int onInviteeRejected, int onInviteeRejectedByOtherDevice, int onInvitationCancelled, int onInvitationTimeout, int onHangUp, int onRoomParticipantConnected, int onRoomParticipantDisconnected);
-extern "C" void RegisterCustomBusinessListener(int onRecvCustomBusinessMessage);
-extern "C" void RegisterMsgKvInfoListener(int onMessageKvInfoChanged);
-
-// Connection listener callbacks
-extern "C" void OnConnConnecting(int v);
-extern "C" void OnConnSuccess(int v);
-extern "C" void OnConnFailed(int errCode, char* errMsg);
-extern "C" void OnConnKicked(int v);
-extern "C" void OnConnTokenExpired(int v);
-extern "C" void OnConnTokenInvalid(int v, char* errMsg);
-
-// Message listener callbacks
-extern "C" void OnRecvNewMsg(char* msg);
-extern "C" void OnRecvReceipt(char* msg);
-extern "C" void OnMsgRevoked(char* msg);
-extern "C" void OnRecvOffline(char* msg);
-extern "C" void OnMsgDeleted(char* msg);
-extern "C" void OnRecvOnline(char* msg);
-
-// Conversation listener callbacks
-extern "C" void OnSyncStart(int reinstalled);
-extern "C" void OnSyncFinish(int reinstalled);
-extern "C" void OnSyncProgress(int progress);
-extern "C" void OnSyncFailed(int reinstalled);
-extern "C" void OnConvChanged(char* convList);
-extern "C" void OnNewConv(char* convList);
-extern "C" void OnUnreadChanged(int count);
-extern "C" void OnInputStatus(char* change);
-
-// Group listener callbacks
-extern "C" void OnGroupJoinedAdd(char* groupInfo);
-extern "C" void OnGroupJoinedDel(char* groupInfo);
-extern "C" void OnGroupMemberAdd(char* memberInfo);
-extern "C" void OnGroupMemberDel(char* memberInfo);
-extern "C" void OnGroupAppAdd(char* application);
-extern "C" void OnGroupAppDel(char* application);
-extern "C" void OnGroupInfoChanged(char* groupInfo);
-extern "C" void OnGroupDismissed(char* groupInfo);
-extern "C" void OnGroupMemberInfo(char* memberInfo);
-extern "C" void OnGroupAppAccept(char* application);
-extern "C" void OnGroupAppReject(char* application);
-
-// Friend listener callbacks
-extern "C" void OnFriendAppAdd(char* application);
-extern "C" void OnFriendAppDel(char* application);
-extern "C" void OnFriendAppAccept(char* application);
-extern "C" void OnFriendAppReject(char* application);
-extern "C" void OnFriendAdd(char* friendInfo);
-extern "C" void OnFriendDel(char* friendInfo);
-extern "C" void OnFriendInfo(char* friendInfo);
-extern "C" void OnBlackAdd(char* blackInfo);
-extern "C" void OnBlackDel(char* blackInfo);
-
-// User listener callbacks
-extern "C" void OnSelfInfo(char* userInfo);
-extern "C" void OnUserStatus(char* status);
-
-// Signaling listener callbacks
-extern "C" void OnSignalingReceiveNewInvitation(char* data);
-extern "C" void OnSignalingInviteeAccepted(char* data);
-extern "C" void OnSignalingInviteeAcceptedByOtherDevice(char* data);
-extern "C" void OnSignalingInviteeRejected(char* data);
-extern "C" void OnSignalingInviteeRejectedByOtherDevice(char* data);
-extern "C" void OnSignalingInvitationCancelled(char* data);
-extern "C" void OnSignalingInvitationTimeout(char* data);
-extern "C" void OnSignalingHangUp(char* data);
-extern "C" void OnSignalingRoomParticipantConnected(char* data);
-extern "C" void OnSignalingRoomParticipantDisconnected(char* data);
-
-// Custom business and message KV listener callbacks
-extern "C" void OnCustomBusiness(char* msg);
-extern "C" void OnMsgKvInfoChanged(char* msg);
-
-
-static napi_value Add(napi_env env, napi_callback_info info)
-{
-    LogError("OpenIM", "Add");
-    size_t argc = 2;
-    napi_value args[2] = {nullptr};
-
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-
-    napi_valuetype valuetype0;
-    napi_typeof(env, args[0], &valuetype0);
-
-    napi_valuetype valuetype1;
-    napi_typeof(env, args[1], &valuetype1);
-
-    double value0;
-    napi_get_value_double(env, args[0], &value0);
-
-    double value1;
-    napi_get_value_double(env, args[1], &value1);
-
-    napi_value sum;
-    napi_create_double(env, value0 + value1, &sum);
-
-    LogError("OpenIM", "sum:%s",sum);
-    return sum;
-
-}
-
 // External NAPI listener functions from listener.cpp
 extern napi_value NAPI_setConnListener(napi_env env, napi_callback_info info);
 extern napi_value NAPI_setAdvancedMsgListener(napi_env env, napi_callback_info info);
@@ -290,8 +176,11 @@ extern napi_value NAPI_networkStatusChanged(napi_env env, napi_callback_info inf
 
 EXTERN_C_START
 static napi_value Init(napi_env env, napi_value exports) {
+    if (!InitializeCallbackDispatcher(env)) {
+        napi_throw_error(env, nullptr, "Failed to initialize OpenIM callback dispatcher");
+        return exports;
+    }
     napi_property_descriptor desc[] = {
-         { "add", nullptr, Add, nullptr, nullptr, nullptr, napi_default, nullptr },
         // Login
         {"initSdk", nullptr, NAPI_initSdk, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"login", nullptr, NAPI_login, nullptr, nullptr, nullptr, napi_default, nullptr},

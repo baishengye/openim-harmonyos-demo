@@ -2172,3 +2172,8 @@ void initializeSDKWithCallbacks() {
     // ... 其他 Listener
 }
 ```
+# Compatibility notice
+
+This document contains legacy examples that pass callback addresses as `int`.
+On arm64 those examples are unsafe. The generated `libopenimsdk.h` is the
+authoritative ABI; callback addresses must be passed as `uintptr_t`.

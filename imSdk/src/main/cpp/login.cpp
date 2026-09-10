@@ -15,8 +15,7 @@
 napi_value NAPI_initSdk(napi_env env, napi_callback_info info) {
     LogError("OpenIM", "NAPI_initSdk called");
     size_t argc = 3;
-    LOGI("OpenIM","11111111111111111111sum%d0000000000000",argc)
-    napi_value args[3];
+    napi_value args[3] = {nullptr};
     napi_status status = napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     LogError("OpenIM", "NAPI_initSdk napi_get_cb_info status: %{public}d, argc: %{public}zu", status, argc);
 
@@ -43,16 +42,14 @@ napi_value NAPI_initSdk(napi_env env, napi_callback_info info) {
     if (operationID.empty()) {
         operationID = "napi_init_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
-//    int result = InitSDK((char*)config.c_str(), (char*)operationID.c_str());
-    LogError("OpenIM", "NAPI_initSdk InitSDK result: %{public}d", 0);
-    napi_value ret;
-    napi_create_int32(env, 0, &ret);
-    return ret;
+    const int result = InitSDK(MutableCString(config), MutableCString(operationID));
+    LogInfo("OpenIM", "InitSDK result: %d", result);
+    return CreateJSInt(env, result);
 }
 
 napi_value NAPI_login(napi_env env, napi_callback_info info) {
     size_t argc = 4;
-    napi_value args[4];
+    napi_value args[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     std::string userID = GetStringFromJS(env, args[2]);
     std::string token = GetStringFromJS(env, args[3]);
@@ -63,13 +60,13 @@ napi_value NAPI_login(napi_env env, napi_callback_info info) {
     // Store callback and register with SDK - callback ID is passed to SDK
     int cbId = StoreBaseCallback(env, args[0]);
     // New signature: Login(int baseCallbackID, char* uid, char* token, char* operationID)
-//    Login(cbId, (char*)userID.c_str(), (char*)token.c_str(), (char*)operationID.c_str());
+    Login(cbId, (char*)userID.c_str(), (char*)token.c_str(), (char*)operationID.c_str());
     return CreateJSUndefined(env);
 }
 
 napi_value NAPI_logout(napi_env env, napi_callback_info info) {
     size_t argc = 2;
-    napi_value args[2];
+    napi_value args[2] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     std::string operationID = GetStringFromJS(env, args[1]);
     if (operationID.empty()) {
@@ -78,22 +75,19 @@ napi_value NAPI_logout(napi_env env, napi_callback_info info) {
     // Store callback and register with SDK
     int cbId = StoreBaseCallback(env, args[0]);
     // New signature: Logout(int baseCallbackID, char* operationID)
-//    Logout(cbId, (char*)operationID.c_str());
+    Logout(cbId, (char*)operationID.c_str());
     return CreateJSUndefined(env);
 }
 
 napi_value NAPI_getLoginStatus(napi_env env, napi_callback_info info) {
     size_t argc = 1;
-    napi_value args[1];
+    napi_value args[1] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     std::string operationID = GetStringFromJS(env, args[0]);
-//    int status = GetLoginStatus((char*)operationID.c_str());
-    return CreateJSInt(env, 0);
+    return CreateJSInt(env, GetLoginStatus(MutableCString(operationID)));
 }
 
 napi_value NAPI_getLoginUserID(napi_env env, napi_callback_info info) {
-//    char* userID = GetLoginUserID();
-//    std::string result = userID ? userID : "";
-//    if (userID) FreeString(userID);
-    return CreateJSString(env, "");
+    SdkString userID(GetLoginUserID());
+    return CreateJSString(env, userID.str());
 }

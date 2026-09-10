@@ -1,8 +1,10 @@
 #include "callback.h"
-//#include "include/libopenimsdk.h"
+#include "include/libopenimsdk.h"
 #include <string.h>
+#include <memory>
 #include <mutex>
 #include <stdint.h>
+#include <vector>
 
 // ============================================================
 // C API 回调前向声明
@@ -29,76 +31,76 @@ void CAPI_OnUploadLogProgress(int cbId, long long current, long long total);
 void CAPI_OnSendMsg(int cbId, int progress);
 
 // 连接回调
-void CAPI_OnConnConnecting();
-void CAPI_OnConnConnectSuccess();
-void CAPI_OnConnConnectFailed(int cbId, const char* message);
-void CAPI_OnConnKickedOffline();
-void CAPI_OnConnUserTokenExpired();
-void CAPI_OnConnUserTokenInvalid(int cbId, const char* message);
+void CAPI_OnConnConnecting(int value);
+void CAPI_OnConnConnectSuccess(int value);
+void CAPI_OnConnConnectFailed(int errCode, char* message);
+void CAPI_OnConnKickedOffline(int value);
+void CAPI_OnConnUserTokenExpired(int value);
+void CAPI_OnConnUserTokenInvalid(int value, char* message);
 
 // 消息回调
-void CAPI_OnRecvNewMsg(int cbId, const char* msg);
-void CAPI_OnRecvReceipt(int cbId, const char* receipt);
-void CAPI_OnMsgRevoked(int cbId, const char* msg);
-void CAPI_OnRecvOffline(int cbId, const char* msg);
-void CAPI_OnMsgDeleted(int cbId, const char* msg);
-void CAPI_OnRecvOnline(int cbId, const char* msg);
+void CAPI_OnRecvNewMsg(char* msg);
+void CAPI_OnRecvReceipt(char* receipt);
+void CAPI_OnMsgRevoked(char* msg);
+void CAPI_OnRecvOffline(char* msg);
+void CAPI_OnMsgDeleted(char* msg);
+void CAPI_OnRecvOnline(char* msg);
 
 // 会话回调
-void CAPI_OnConvSyncStart();
-void CAPI_OnConvSyncFinish();
+void CAPI_OnConvSyncStart(int reinstalled);
+void CAPI_OnConvSyncFinish(int reinstalled);
 void CAPI_OnConvSyncProgress(int progress);
-void CAPI_OnConvSyncFailed(int cbId, const char* err);
-void CAPI_OnConvChanged(int cbId, const char* conv);
-void CAPI_OnNewConv(int cbId, const char* conv);
+void CAPI_OnConvSyncFailed(int reinstalled);
+void CAPI_OnConvChanged(char* conv);
+void CAPI_OnNewConv(char* conv);
 void CAPI_OnUnreadChanged(int totalUnreadCount);
-void CAPI_OnInputStatus(int cbId, const char* status);
+void CAPI_OnInputStatus(char* status);
 
 // 群组回调
-void CAPI_OnGroupJoinedAdd(int cbId, const char* group);
-void CAPI_OnGroupJoinedDel(int cbId, const char* group);
-void CAPI_OnGroupMemberAdd(int cbId, const char* member);
-void CAPI_OnGroupMemberDel(int cbId, const char* member);
-void CAPI_OnGroupAppAdd(int cbId, const char* application);
-void CAPI_OnGroupAppDel(int cbId, const char* application);
-void CAPI_OnGroupInfoChanged(int cbId, const char* info);
-void CAPI_OnGroupDismissed(int cbId, const char* group);
-void CAPI_OnGroupMemberInfo(int cbId, const char* info);
-void CAPI_OnGroupAppAccept(int cbId, const char* application);
-void CAPI_OnGroupAppReject(int cbId, const char* application);
+void CAPI_OnGroupJoinedAdd(char* group);
+void CAPI_OnGroupJoinedDel(char* group);
+void CAPI_OnGroupMemberAdd(char* member);
+void CAPI_OnGroupMemberDel(char* member);
+void CAPI_OnGroupAppAdd(char* application);
+void CAPI_OnGroupAppDel(char* application);
+void CAPI_OnGroupInfoChanged(char* info);
+void CAPI_OnGroupDismissed(char* group);
+void CAPI_OnGroupMemberInfo(char* info);
+void CAPI_OnGroupAppAccept(char* application);
+void CAPI_OnGroupAppReject(char* application);
 
 // 好友回调
-void CAPI_OnFriendAppAdd(int cbId, const char* application);
-void CAPI_OnFriendAppDel(int cbId, const char* application);
-void CAPI_OnFriendAppAccept(int cbId, const char* application);
-void CAPI_OnFriendAppReject(int cbId, const char* application);
-void CAPI_OnFriendAdd(int cbId, const char* frient);
-void CAPI_OnFriendDel(int cbId, const char* frient);
-void CAPI_OnFriendInfo(int cbId, const char* info);
-void CAPI_OnBlackAdd(int cbId, const char* black);
-void CAPI_OnBlackDel(int cbId, const char* black);
+void CAPI_OnFriendAppAdd(char* application);
+void CAPI_OnFriendAppDel(char* application);
+void CAPI_OnFriendAppAccept(char* application);
+void CAPI_OnFriendAppReject(char* application);
+void CAPI_OnFriendAdd(char* friendInfo);
+void CAPI_OnFriendDel(char* friendInfo);
+void CAPI_OnFriendInfo(char* info);
+void CAPI_OnBlackAdd(char* black);
+void CAPI_OnBlackDel(char* black);
 
 // 用户回调
-void CAPI_OnUserSelfInfoUpdated(int cbId, const char* userInfo);
-void CAPI_OnUserStatusChanged(int cbId, const char* status);
+void CAPI_OnUserSelfInfoUpdated(char* userInfo);
+void CAPI_OnUserStatusChanged(char* status);
 
 // 信令回调
-void CAPI_OnSignalingReceiveNewInvitation(int cbId, const char* invitation);
-void CAPI_OnSignalingInviteeAccepted(int cbId, const char* invitation);
-void CAPI_OnSignalingInviteeAcceptedByOtherDevice(int cbId, const char* invitation);
-void CAPI_OnSignalingInviteeRejected(int cbId, const char* invitation);
-void CAPI_OnSignalingInviteeRejectedByOtherDevice(int cbId, const char* invitation);
-void CAPI_OnSignalingInvitationCancelled(int cbId, const char* invitation);
-void CAPI_OnSignalingInvitationTimeout(int cbId, const char* invitation);
-void CAPI_OnSignalingHangUp(int cbId, const char* info);
-void CAPI_OnSignalingRoomParticipantConnected(int cbId, const char* info);
-void CAPI_OnSignalingRoomParticipantDisconnected(int cbId, const char* info);
+void CAPI_OnSignalingReceiveNewInvitation(char* invitation);
+void CAPI_OnSignalingInviteeAccepted(char* invitation);
+void CAPI_OnSignalingInviteeAcceptedByOtherDevice(char* invitation);
+void CAPI_OnSignalingInviteeRejected(char* invitation);
+void CAPI_OnSignalingInviteeRejectedByOtherDevice(char* invitation);
+void CAPI_OnSignalingInvitationCancelled(char* invitation);
+void CAPI_OnSignalingInvitationTimeout(char* invitation);
+void CAPI_OnSignalingHangUp(char* info);
+void CAPI_OnSignalingRoomParticipantConnected(char* info);
+void CAPI_OnSignalingRoomParticipantDisconnected(char* info);
 
 // 自定义业务回调
-void CAPI_OnRecvCustomBusinessMessage(int cbId, const char* message);
+void CAPI_OnRecvCustomBusinessMessage(char* message);
 
 // 消息 KV 信息回调
-void CAPI_OnMessageKvInfoChanged(int cbId, const char* kvInfo);
+void CAPI_OnMessageKvInfoChanged(char* kvInfo);
 }
 
 // ============================================================
@@ -180,6 +182,115 @@ struct ListenerCallbacks {
 static std::mutex g_callback_mutex;
 static bool g_callback_ids[CB_MAX] = {false};
 
+namespace {
+enum class JsArgType { Int32, Int64, String, Boolean };
+enum class CleanupType { None, Base, SendMessage, Upload, UploadLog };
+
+struct JsArg {
+    JsArgType type;
+    int64_t number = 0;
+    std::string text;
+
+    static JsArg Int(int value) { return {JsArgType::Int32, value, {}}; }
+    static JsArg Long(long long value) { return {JsArgType::Int64, value, {}}; }
+    static JsArg String(const char* value) { return {JsArgType::String, 0, value ? value : ""}; }
+    static JsArg Bool(bool value) { return {JsArgType::Boolean, value ? 1 : 0, {}}; }
+};
+
+struct CallbackEvent {
+    napi_ref callback = nullptr;
+    std::vector<JsArg> args;
+    CleanupType cleanup = CleanupType::None;
+    int callbackId = INVALID_CALLBACK_ID;
+};
+
+static napi_threadsafe_function g_callbackDispatcher = nullptr;
+
+static void ShutdownCallbackDispatcher(void*) {
+    DeleteAllCallbacks();
+    if (g_callbackDispatcher) {
+        napi_release_threadsafe_function(g_callbackDispatcher, napi_tsfn_abort);
+        g_callbackDispatcher = nullptr;
+    }
+}
+
+static void CleanupAfterCallback(const CallbackEvent& event) {
+    switch (event.cleanup) {
+        case CleanupType::Base:
+            DeleteBaseCallback(event.callbackId);
+            break;
+        case CleanupType::SendMessage:
+            DeleteSendMsgCallback(event.callbackId);
+            break;
+        case CleanupType::Upload:
+            DeleteUploadCallbacks(event.callbackId);
+            break;
+        case CleanupType::UploadLog:
+            DeleteUploadLogCallback(event.callbackId);
+            break;
+        case CleanupType::None:
+            break;
+    }
+}
+
+static void DispatchOnJsThread(napi_env env, napi_value, void*, void* data) {
+    std::unique_ptr<CallbackEvent> event(static_cast<CallbackEvent*>(data));
+    if (!env || !event || !event->callback) return;
+
+    napi_value callback = nullptr;
+    if (napi_get_reference_value(env, event->callback, &callback) != napi_ok || !callback) {
+        CleanupAfterCallback(*event);
+        return;
+    }
+
+    std::vector<napi_value> argv(event->args.size());
+    for (size_t i = 0; i < event->args.size(); ++i) {
+        const auto& arg = event->args[i];
+        switch (arg.type) {
+            case JsArgType::Int32:
+                napi_create_int32(env, static_cast<int32_t>(arg.number), &argv[i]);
+                break;
+            case JsArgType::Int64:
+                napi_create_int64(env, arg.number, &argv[i]);
+                break;
+            case JsArgType::String:
+                napi_create_string_utf8(env, arg.text.c_str(), arg.text.size(), &argv[i]);
+                break;
+            case JsArgType::Boolean:
+                napi_get_boolean(env, arg.number != 0, &argv[i]);
+                break;
+        }
+    }
+
+    napi_value receiver = nullptr;
+    napi_get_undefined(env, &receiver);
+    napi_value result = nullptr;
+    napi_call_function(env, receiver, callback, argv.size(), argv.empty() ? nullptr : argv.data(), &result);
+    CleanupAfterCallback(*event);
+}
+
+static void QueueCallback(napi_ref callback, std::initializer_list<JsArg> args = {},
+                          CleanupType cleanup = CleanupType::None, int callbackId = INVALID_CALLBACK_ID) {
+    if (!callback || !g_callbackDispatcher) return;
+    auto* event = new CallbackEvent{callback, std::vector<JsArg>(args), cleanup, callbackId};
+    if (napi_call_threadsafe_function(g_callbackDispatcher, event, napi_tsfn_nonblocking) != napi_ok) {
+        delete event;
+    }
+}
+} // namespace
+
+bool InitializeCallbackDispatcher(napi_env env) {
+    if (g_callbackDispatcher) return true;
+    napi_value name = nullptr;
+    napi_create_string_utf8(env, "OpenIMCallbackDispatcher", NAPI_AUTO_LENGTH, &name);
+    const napi_status status = napi_create_threadsafe_function(
+        env, nullptr, nullptr, name, 0, 1, nullptr, nullptr, nullptr,
+        DispatchOnJsThread, &g_callbackDispatcher);
+    if (status != napi_ok) return false;
+    napi_add_env_cleanup_hook(env, ShutdownCallbackDispatcher, nullptr);
+    return true;
+}
+
 // ============================================================
 // 工具函数实现
 // ============================================================
@@ -215,7 +326,8 @@ int StoreBaseCallback(napi_env env, napi_value onSuccess, napi_value onError) {
     g_baseCallbacks[cbId].isValid = true;
 
     // Register with SDK
-//    RegisterBaseCallback(cbId, (intptr_t)CAPI_OnBaseSuccess, (intptr_t)CAPI_OnBaseError);
+    RegisterBaseCallback(cbId, reinterpret_cast<uintptr_t>(CAPI_OnBaseSuccess),
+                         reinterpret_cast<uintptr_t>(CAPI_OnBaseError));
 
     return cbId;
 }
@@ -237,7 +349,7 @@ void DeleteBaseCallback(int cbId) {
     if (cbId <= 0 || cbId >= CB_MAX) return;
     if (!g_baseCallbacks[cbId].isValid) return;
 
-//    UnregisterBaseCallback(cbId);
+    UnregisterBaseCallback(cbId);
 
     if (g_baseCallbacks[cbId].onSuccessRef) {
         napi_delete_reference(g_baseCallbacks[cbId].env, g_baseCallbacks[cbId].onSuccessRef);
@@ -281,17 +393,16 @@ int StoreUploadCallbacks(
     ctx.isValid = true;
 
     // Register with SDK
-//    RegisterUploadFileCallback(
-//        cbId,
-//        (intptr_t)CAPI_OnUploadOpen,
-//        (intptr_t)CAPI_OnUploadPartSize,
-//        (intptr_t)CAPI_OnUploadHashProgress,
-//        (intptr_t)CAPI_OnUploadHashComplete,
-//        (intptr_t)CAPI_OnUploadID,
-//        (intptr_t)CAPI_OnUploadPartComplete,
-//        (intptr_t)CAPI_OnUploadComplete,
-//        (intptr_t)CAPI_OnUploadFinish
-//    );
+    RegisterUploadFileCallback(
+        cbId,
+        reinterpret_cast<uintptr_t>(CAPI_OnUploadOpen),
+        reinterpret_cast<uintptr_t>(CAPI_OnUploadPartSize),
+        reinterpret_cast<uintptr_t>(CAPI_OnUploadHashProgress),
+        reinterpret_cast<uintptr_t>(CAPI_OnUploadHashComplete),
+        reinterpret_cast<uintptr_t>(CAPI_OnUploadID),
+        reinterpret_cast<uintptr_t>(CAPI_OnUploadPartComplete),
+        reinterpret_cast<uintptr_t>(CAPI_OnUploadComplete),
+        reinterpret_cast<uintptr_t>(CAPI_OnUploadFinish));
 
     return cbId;
 }
@@ -307,7 +418,7 @@ void DeleteUploadCallbacks(int cbId) {
     auto& ctx = g_upload_callbacks[cbId];
     if (!ctx.isValid) return;
 
-//    UnregisterUploadFileCallback(cbId);
+    UnregisterUploadFileCallback(cbId);
 
     #define DELETE_REF(ref) if (ref) { napi_delete_reference(ctx.env, ref); ref = nullptr; }
     DELETE_REF(ctx.onOpenRef);
@@ -338,7 +449,7 @@ int StoreUploadLogCallback(napi_env env, napi_value onProgress) {
     ctx.isValid = true;
 
     // Register with SDK
-//    RegisterUploadLogProgress(cbId, (intptr_t)CAPI_OnUploadLogProgress);
+    RegisterUploadLogProgress(cbId, reinterpret_cast<uintptr_t>(CAPI_OnUploadLogProgress));
 
     return cbId;
 }
@@ -354,7 +465,7 @@ void DeleteUploadLogCallback(int cbId) {
     auto& ctx = g_uploadLog_callbacks[cbId];
     if (!ctx.isValid) return;
 
-//    UnregisterUploadLogProgress(cbId);
+    UnregisterUploadLogProgress(cbId);
 
     if (ctx.onProgressRef) {
         napi_delete_reference(ctx.env, ctx.onProgressRef);
@@ -381,8 +492,9 @@ int StoreSendMsgCallback(napi_env env, napi_value onSuccess, napi_value onError,
     ctx.isValid = true;
 
     // Register with SDK
-//    RegisterBaseCallback(cbId, (intptr_t)CAPI_OnBaseSuccess, (intptr_t)CAPI_OnBaseError);
-//    RegisterSendMsgCallback(cbId, (intptr_t)CAPI_OnSendMsg);
+    RegisterBaseCallback(cbId, reinterpret_cast<uintptr_t>(CAPI_OnBaseSuccess),
+                         reinterpret_cast<uintptr_t>(CAPI_OnBaseError));
+    RegisterSendMsgCallback(cbId, reinterpret_cast<uintptr_t>(CAPI_OnSendMsg));
 
     return cbId;
 }
@@ -407,7 +519,8 @@ void DeleteSendMsgCallback(int cbId) {
     auto& ctx = g_sendMsg_callbacks[cbId];
     if (!ctx.isValid) return;
 
-//    UnregisterSendMsgCallback(cbId);
+    UnregisterSendMsgCallback(cbId);
+    UnregisterBaseCallback(cbId);
 
     #define DELETE_REF(ref) if (ref) { napi_delete_reference(ctx.env, ref); ref = nullptr; }
     DELETE_REF(ctx.onSuccessRef);
@@ -442,22 +555,19 @@ int StoreConnListener(
     g_listeners.isValid = true;
 
     // Register with SDK
-//    RegisterConnListener(
-//        (intptr_t)CAPI_OnConnConnecting,
-//        (intptr_t)CAPI_OnConnConnectSuccess,
-//        (intptr_t)CAPI_OnConnConnectFailed,
-//        (intptr_t)CAPI_OnConnKickedOffline,
-//        (intptr_t)CAPI_OnConnUserTokenExpired,
-//        (intptr_t)CAPI_OnConnUserTokenInvalid
-//    );
+    RegisterConnListener(
+        reinterpret_cast<uintptr_t>(CAPI_OnConnConnecting),
+        reinterpret_cast<uintptr_t>(CAPI_OnConnConnectSuccess),
+        reinterpret_cast<uintptr_t>(CAPI_OnConnConnectFailed),
+        reinterpret_cast<uintptr_t>(CAPI_OnConnKickedOffline),
+        reinterpret_cast<uintptr_t>(CAPI_OnConnUserTokenExpired),
+        reinterpret_cast<uintptr_t>(CAPI_OnConnUserTokenInvalid));
 
     return 0;
 }
 
 void DeleteConnListener() {
-    if (!g_listeners.isValid) return;
-
-//    UnregisterConnListener();
+    UnregisterConnListener();
 
     #define DELETE_REF(ref) if (ref) { napi_delete_reference(g_listeners.env, ref); ref = nullptr; }
     DELETE_REF(g_listeners.onConnecting);
@@ -468,7 +578,6 @@ void DeleteConnListener() {
     DELETE_REF(g_listeners.onUserTokenInvalid);
     #undef DELETE_REF
 
-    g_listeners.isValid = false;
 }
 
 // ============================================================
@@ -493,22 +602,19 @@ int StoreMsgListener(
     g_listeners.env = env;
     g_listeners.isValid = true;
 
-//    RegisterMsgListener(
-//        (intptr_t)CAPI_OnRecvNewMsg,
-//        (intptr_t)CAPI_OnRecvReceipt,
-//        (intptr_t)CAPI_OnMsgRevoked,
-//        (intptr_t)CAPI_OnRecvOffline,
-//        (intptr_t)CAPI_OnMsgDeleted,
-//        (intptr_t)CAPI_OnRecvOnline
-//    );
+    RegisterMsgListener(
+        reinterpret_cast<uintptr_t>(CAPI_OnRecvNewMsg),
+        reinterpret_cast<uintptr_t>(CAPI_OnRecvReceipt),
+        reinterpret_cast<uintptr_t>(CAPI_OnMsgRevoked),
+        reinterpret_cast<uintptr_t>(CAPI_OnRecvOffline),
+        reinterpret_cast<uintptr_t>(CAPI_OnMsgDeleted),
+        reinterpret_cast<uintptr_t>(CAPI_OnRecvOnline));
 
     return 0;
 }
 
 void DeleteMsgListener() {
-    if (!g_listeners.isValid) return;
-
-//    UnregisterMsgListener();
+    UnregisterMsgListener();
 
     #define DELETE_REF(ref) if (ref) { napi_delete_reference(g_listeners.env, ref); ref = nullptr; }
     DELETE_REF(g_listeners.onRecvNewMsg);
@@ -546,24 +652,21 @@ int StoreConvListener(
     g_listeners.env = env;
     g_listeners.isValid = true;
 
-//    RegisterConvListener(
-//        (intptr_t)CAPI_OnConvSyncStart,
-//        (intptr_t)CAPI_OnConvSyncFinish,
-//        (intptr_t)CAPI_OnConvSyncProgress,
-//        (intptr_t)CAPI_OnConvSyncFailed,
-//        (intptr_t)CAPI_OnConvChanged,
-//        (intptr_t)CAPI_OnNewConv,
-//        (intptr_t)CAPI_OnUnreadChanged,
-//        (intptr_t)CAPI_OnInputStatus
-//    );
+    RegisterConvListener(
+        reinterpret_cast<uintptr_t>(CAPI_OnConvSyncStart),
+        reinterpret_cast<uintptr_t>(CAPI_OnConvSyncFinish),
+        reinterpret_cast<uintptr_t>(CAPI_OnConvSyncProgress),
+        reinterpret_cast<uintptr_t>(CAPI_OnConvSyncFailed),
+        reinterpret_cast<uintptr_t>(CAPI_OnConvChanged),
+        reinterpret_cast<uintptr_t>(CAPI_OnNewConv),
+        reinterpret_cast<uintptr_t>(CAPI_OnUnreadChanged),
+        reinterpret_cast<uintptr_t>(CAPI_OnInputStatus));
 
     return 0;
 }
 
 void DeleteConvListener() {
-    if (!g_listeners.isValid) return;
-
-//    UnregisterConvListener();
+    UnregisterConvListener();
 
     #define DELETE_REF(ref) if (ref) { napi_delete_reference(g_listeners.env, ref); ref = nullptr; }
     DELETE_REF(g_listeners.onSyncStart);
@@ -609,27 +712,24 @@ int StoreGroupListener(
     g_listeners.env = env;
     g_listeners.isValid = true;
 
-//    RegisterGroupListener(
-//        (intptr_t)CAPI_OnGroupJoinedAdd,
-//        (intptr_t)CAPI_OnGroupJoinedDel,
-//        (intptr_t)CAPI_OnGroupMemberAdd,
-//        (intptr_t)CAPI_OnGroupMemberDel,
-//        (intptr_t)CAPI_OnGroupAppAdd,
-//        (intptr_t)CAPI_OnGroupAppDel,
-//        (intptr_t)CAPI_OnGroupInfoChanged,
-//        (intptr_t)CAPI_OnGroupDismissed,
-//        (intptr_t)CAPI_OnGroupMemberInfo,
-//        (intptr_t)CAPI_OnGroupAppAccept,
-//        (intptr_t)CAPI_OnGroupAppReject
-//    );
+    RegisterGroupListener(
+        reinterpret_cast<uintptr_t>(CAPI_OnGroupJoinedAdd),
+        reinterpret_cast<uintptr_t>(CAPI_OnGroupJoinedDel),
+        reinterpret_cast<uintptr_t>(CAPI_OnGroupMemberAdd),
+        reinterpret_cast<uintptr_t>(CAPI_OnGroupMemberDel),
+        reinterpret_cast<uintptr_t>(CAPI_OnGroupAppAdd),
+        reinterpret_cast<uintptr_t>(CAPI_OnGroupAppDel),
+        reinterpret_cast<uintptr_t>(CAPI_OnGroupInfoChanged),
+        reinterpret_cast<uintptr_t>(CAPI_OnGroupDismissed),
+        reinterpret_cast<uintptr_t>(CAPI_OnGroupMemberInfo),
+        reinterpret_cast<uintptr_t>(CAPI_OnGroupAppAccept),
+        reinterpret_cast<uintptr_t>(CAPI_OnGroupAppReject));
 
     return 0;
 }
 
 void DeleteGroupListener() {
-    if (!g_listeners.isValid) return;
-
-//    UnregisterGroupListener();
+    UnregisterGroupListener();
 
     #define DELETE_REF(ref) if (ref) { napi_delete_reference(g_listeners.env, ref); ref = nullptr; }
     DELETE_REF(g_listeners.onJoinedAdd);
@@ -674,25 +774,22 @@ int StoreFriendListener(
     g_listeners.env = env;
     g_listeners.isValid = true;
 
-//    RegisterFriendListener(
-//        (intptr_t)CAPI_OnFriendAppAdd,
-//        (intptr_t)CAPI_OnFriendAppDel,
-//        (intptr_t)CAPI_OnFriendAppAccept,
-//        (intptr_t)CAPI_OnFriendAppReject,
-//        (intptr_t)CAPI_OnFriendAdd,
-//        (intptr_t)CAPI_OnFriendDel,
-//        (intptr_t)CAPI_OnFriendInfo,
-//        (intptr_t)CAPI_OnBlackAdd,
-//        (intptr_t)CAPI_OnBlackDel
-//    );
+    RegisterFriendListener(
+        reinterpret_cast<uintptr_t>(CAPI_OnFriendAppAdd),
+        reinterpret_cast<uintptr_t>(CAPI_OnFriendAppDel),
+        reinterpret_cast<uintptr_t>(CAPI_OnFriendAppAccept),
+        reinterpret_cast<uintptr_t>(CAPI_OnFriendAppReject),
+        reinterpret_cast<uintptr_t>(CAPI_OnFriendAdd),
+        reinterpret_cast<uintptr_t>(CAPI_OnFriendDel),
+        reinterpret_cast<uintptr_t>(CAPI_OnFriendInfo),
+        reinterpret_cast<uintptr_t>(CAPI_OnBlackAdd),
+        reinterpret_cast<uintptr_t>(CAPI_OnBlackDel));
 
     return 0;
 }
 
 void DeleteFriendListener() {
-    if (!g_listeners.isValid) return;
-
-//    UnregisterFriendListener();
+    UnregisterFriendListener();
 
     #define DELETE_REF(ref) if (ref) { napi_delete_reference(g_listeners.env, ref); ref = nullptr; }
     DELETE_REF(g_listeners.onFriendAppAdd);
@@ -717,18 +814,14 @@ int StoreUserListener(napi_env env, napi_value onSelfInfo, napi_value onUserStat
     g_listeners.env = env;
     g_listeners.isValid = true;
 
-//    RegisterUserListener(
-//        (intptr_t)CAPI_OnUserSelfInfoUpdated,
-//        (intptr_t)CAPI_OnUserStatusChanged
-//    );
+    RegisterUserListener(reinterpret_cast<uintptr_t>(CAPI_OnUserSelfInfoUpdated),
+                         reinterpret_cast<uintptr_t>(CAPI_OnUserStatusChanged));
 
     return 0;
 }
 
 void DeleteUserListener() {
-    if (!g_listeners.isValid) return;
-
-//    UnregisterUserListener();
+    UnregisterUserListener();
 
     #define DELETE_REF(ref) if (ref) { napi_delete_reference(g_listeners.env, ref); ref = nullptr; }
     DELETE_REF(g_listeners.onSelfInfo);
@@ -766,26 +859,23 @@ int StoreSignalingListener(
     g_listeners.env = env;
     g_listeners.isValid = true;
 
-//    RegisterSignalingListener(
-//        (intptr_t)CAPI_OnSignalingReceiveNewInvitation,
-//        (intptr_t)CAPI_OnSignalingInviteeAccepted,
-//        (intptr_t)CAPI_OnSignalingInviteeAcceptedByOtherDevice,
-//        (intptr_t)CAPI_OnSignalingInviteeRejected,
-//        (intptr_t)CAPI_OnSignalingInviteeRejectedByOtherDevice,
-//        (intptr_t)CAPI_OnSignalingInvitationCancelled,
-//        (intptr_t)CAPI_OnSignalingInvitationTimeout,
-//        (intptr_t)CAPI_OnSignalingHangUp,
-//        (intptr_t)CAPI_OnSignalingRoomParticipantConnected,
-//        (intptr_t)CAPI_OnSignalingRoomParticipantDisconnected
-//    );
+    RegisterSignalingListener(
+        reinterpret_cast<uintptr_t>(CAPI_OnSignalingReceiveNewInvitation),
+        reinterpret_cast<uintptr_t>(CAPI_OnSignalingInviteeAccepted),
+        reinterpret_cast<uintptr_t>(CAPI_OnSignalingInviteeAcceptedByOtherDevice),
+        reinterpret_cast<uintptr_t>(CAPI_OnSignalingInviteeRejected),
+        reinterpret_cast<uintptr_t>(CAPI_OnSignalingInviteeRejectedByOtherDevice),
+        reinterpret_cast<uintptr_t>(CAPI_OnSignalingInvitationCancelled),
+        reinterpret_cast<uintptr_t>(CAPI_OnSignalingInvitationTimeout),
+        reinterpret_cast<uintptr_t>(CAPI_OnSignalingHangUp),
+        reinterpret_cast<uintptr_t>(CAPI_OnSignalingRoomParticipantConnected),
+        reinterpret_cast<uintptr_t>(CAPI_OnSignalingRoomParticipantDisconnected));
 
     return 0;
 }
 
 void DeleteSignalingListener() {
-    if (!g_listeners.isValid) return;
-
-//    UnregisterSignalingListener();
+    UnregisterSignalingListener();
 
     #define DELETE_REF(ref) if (ref) { napi_delete_reference(g_listeners.env, ref); ref = nullptr; }
     DELETE_REF(g_listeners.onReceiveNewInvitation);
@@ -810,15 +900,13 @@ int StoreCustomBusinessListener(napi_env env, napi_value onRecvCustomBusinessMes
     g_listeners.env = env;
     g_listeners.isValid = true;
 
-//    RegisterCustomBusinessListener((intptr_t)CAPI_OnRecvCustomBusinessMessage);
+    RegisterCustomBusinessListener(reinterpret_cast<uintptr_t>(CAPI_OnRecvCustomBusinessMessage));
 
     return 0;
 }
 
 void DeleteCustomBusinessListener() {
-    if (!g_listeners.isValid) return;
-
-//    UnregisterCustomBusinessListener();
+    UnregisterCustomBusinessListener();
 
     if (g_listeners.onRecvCustomBusinessMessage) {
         napi_delete_reference(g_listeners.env, g_listeners.onRecvCustomBusinessMessage);
@@ -835,15 +923,13 @@ int StoreMsgKvInfoListener(napi_env env, napi_value onMessageKvInfoChanged) {
     g_listeners.env = env;
     g_listeners.isValid = true;
 
-//    RegisterMsgKvInfoListener((intptr_t)CAPI_OnMessageKvInfoChanged);
+    RegisterMsgKvInfoListener(reinterpret_cast<uintptr_t>(CAPI_OnMessageKvInfoChanged));
 
     return 0;
 }
 
 void DeleteMsgKvInfoListener() {
-    if (!g_listeners.isValid) return;
-
-//    UnregisterMsgKvInfoListener();
+    UnregisterMsgKvInfoListener();
 
     if (g_listeners.onMessageKvInfoChanged) {
         napi_delete_reference(g_listeners.env, g_listeners.onMessageKvInfoChanged);
@@ -888,215 +974,146 @@ void DeleteAllCallbacks() {
 // JavaScript 回调调用辅助函数实现
 // ============================================================
 
-static napi_value GetCallbackValue(napi_env env, napi_ref ref) {
-    if (!ref) return nullptr;
-    napi_value value;
-    napi_get_reference_value(env, ref, &value);
-    return value;
-}
-
 void CallVoidCallback(napi_env env, napi_ref callbackRef) {
-    if (!callbackRef) return;
-    napi_value callback = GetCallbackValue(env, callbackRef);
-    if (!callback) return;
-
-    napi_value result;
-    napi_call_function(env, nullptr, callback, 0, nullptr, &result);
+    (void)env;
+    QueueCallback(callbackRef);
 }
 
 void CallIntCallback(napi_env env, napi_ref callbackRef, int value) {
-    if (!callbackRef) return;
-    napi_value callback = GetCallbackValue(env, callbackRef);
-    if (!callback) return;
+    (void)env;
+    QueueCallback(callbackRef, {JsArg::Int(value)});
+}
 
-    napi_value argv[1];
-    napi_create_int32(env, value, &argv[0]);
-    napi_value result;
-    napi_call_function(env, nullptr, callback, 1, argv, &result);
+void CallBoolCallback(napi_env env, napi_ref callbackRef, bool value) {
+    (void)env;
+    QueueCallback(callbackRef, {JsArg::Bool(value)});
+}
+
+void CallIntStringCallback(napi_env env, napi_ref callbackRef, int value, const char* text) {
+    (void)env;
+    QueueCallback(callbackRef, {JsArg::Int(value), JsArg::String(text)});
+    if (text) FreeString(const_cast<char*>(text));
 }
 
 void CallLongLongCallback(napi_env env, napi_ref callbackRef, long long value) {
-    if (!callbackRef) return;
-    napi_value callback = GetCallbackValue(env, callbackRef);
-    if (!callback) return;
-
-    napi_value argv[1];
-    napi_create_int64(env, value, &argv[0]);
-    napi_value result;
-    napi_call_function(env, nullptr, callback, 1, argv, &result);
+    (void)env;
+    QueueCallback(callbackRef, {JsArg::Long(value)});
 }
 
 void CallStringCallback(napi_env env, napi_ref callbackRef, const char* value) {
-    if (!callbackRef) return;
-    napi_value callback = GetCallbackValue(env, callbackRef);
-    if (!callback) return;
-
-    napi_value argv[1];
-    napi_create_string_utf8(env, value, NAPI_AUTO_LENGTH, &argv[0]);
-    napi_value result;
-    napi_call_function(env, nullptr, callback, 1, argv, &result);
+    (void)env;
+    QueueCallback(callbackRef, {JsArg::String(value)});
+    if (value) FreeString(const_cast<char*>(value));
 }
 
 void CallBaseSuccessCallback(int cbId, const char* data) {
-    auto* ctx = GetBaseCallback(cbId);
-    if (!ctx || !ctx->onSuccessRef) return;
-
-    napi_value argv[2];
-    napi_create_int32(ctx->env, cbId, &argv[0]);
-    napi_create_string_utf8(ctx->env, data, NAPI_AUTO_LENGTH, &argv[1]);
-    napi_value result;
-    napi_call_function(ctx->env, nullptr, GetCallbackValue(ctx->env, ctx->onSuccessRef), 2, argv, &result);
-
-    // 检查是否是 SendMsgCallback，如果是则清理 SendMsgCallback
-    if (g_sendMsg_callbacks[cbId].isValid) {
-        DeleteSendMsgCallback(cbId);
-    } else {
-        DeleteBaseCallback(cbId);
+    napi_ref callbackRef = nullptr;
+    const bool isSendMessage = cbId > 0 && cbId < CB_MAX && g_sendMsg_callbacks[cbId].isValid;
+    if (isSendMessage) {
+        callbackRef = g_sendMsg_callbacks[cbId].onSuccessRef;
+    } else if (auto* ctx = GetBaseCallback(cbId)) {
+        callbackRef = ctx->onSuccessRef;
     }
+    QueueCallback(callbackRef, {JsArg::String(data)},
+                  isSendMessage ? CleanupType::SendMessage : CleanupType::Base, cbId);
+    if (data) FreeString(const_cast<char*>(data));
 }
 
 void CallBaseErrorCallback(int cbId, int code, const char* message) {
-    auto* ctx = GetBaseCallback(cbId);
-    if (!ctx || !ctx->onErrorRef) return;
-
-    napi_value argv[3];
-    napi_create_int32(ctx->env, cbId, &argv[0]);
-    napi_create_int32(ctx->env, code, &argv[1]);
-    napi_create_string_utf8(ctx->env, message, NAPI_AUTO_LENGTH, &argv[2]);
-    napi_value result;
-    napi_call_function(ctx->env, nullptr, GetCallbackValue(ctx->env, ctx->onErrorRef), 3, argv, &result);
-
-    // 检查是否是 SendMsgCallback，如果是则清理 SendMsgCallback
-    if (g_sendMsg_callbacks[cbId].isValid) {
-        DeleteSendMsgCallback(cbId);
-    } else {
-        DeleteBaseCallback(cbId);
+    napi_ref callbackRef = nullptr;
+    const bool isSendMessage = cbId > 0 && cbId < CB_MAX && g_sendMsg_callbacks[cbId].isValid;
+    if (isSendMessage) {
+        callbackRef = g_sendMsg_callbacks[cbId].onErrorRef;
+    } else if (auto* ctx = GetBaseCallback(cbId)) {
+        callbackRef = ctx->onErrorRef;
     }
+    QueueCallback(callbackRef, {JsArg::Int(code), JsArg::String(message)},
+                  isSendMessage ? CleanupType::SendMessage : CleanupType::Base, cbId);
+    if (message) FreeString(const_cast<char*>(message));
 }
 
 void CallUploadOpenCallback(int cbId, long long fileSize) {
     auto* ctx = GetUploadCallback(cbId);
     if (!ctx || !ctx->onOpenRef) return;
-
-    napi_value argv[1];
-    napi_create_int64(ctx->env, fileSize, &argv[0]);
-    napi_value result;
-    napi_call_function(ctx->env, nullptr, GetCallbackValue(ctx->env, ctx->onOpenRef), 1, argv, &result);
+    QueueCallback(ctx->onOpenRef, {JsArg::Long(fileSize)});
 }
 
 void CallUploadPartSizeCallback(int cbId, long long partSize, int partNumber) {
     auto* ctx = GetUploadCallback(cbId);
     if (!ctx || !ctx->onPartSizeRef) return;
 
-    napi_value argv[2];
-    napi_create_int64(ctx->env, partSize, &argv[0]);
-    napi_create_int32(ctx->env, partNumber, &argv[1]);
-    napi_value result;
-    napi_call_function(ctx->env, nullptr, GetCallbackValue(ctx->env, ctx->onPartSizeRef), 2, argv, &result);
+    QueueCallback(ctx->onPartSizeRef, {JsArg::Long(partSize), JsArg::Int(partNumber)});
 }
 
 void CallUploadHashProgressCallback(int cbId, int index, long long size, const char* partHash) {
     auto* ctx = GetUploadCallback(cbId);
     if (!ctx || !ctx->onHashPartProgressRef) return;
 
-    napi_value argv[3];
-    napi_create_int32(ctx->env, index, &argv[0]);
-    napi_create_int64(ctx->env, size, &argv[1]);
-    napi_create_string_utf8(ctx->env, partHash, NAPI_AUTO_LENGTH, &argv[2]);
-    napi_value result;
-    napi_call_function(ctx->env, nullptr, GetCallbackValue(ctx->env, ctx->onHashPartProgressRef), 3, argv, &result);
+    QueueCallback(ctx->onHashPartProgressRef,
+                  {JsArg::Int(index), JsArg::Long(size), JsArg::String(partHash)});
+    if (partHash) FreeString(const_cast<char*>(partHash));
 }
 
 void CallUploadHashCompleteCallback(int cbId, const char* partsHash, const char* fileHash) {
     auto* ctx = GetUploadCallback(cbId);
     if (!ctx || !ctx->onHashPartCompleteRef) return;
 
-    napi_value argv[2];
-    napi_create_string_utf8(ctx->env, partsHash, NAPI_AUTO_LENGTH, &argv[0]);
-    napi_create_string_utf8(ctx->env, fileHash, NAPI_AUTO_LENGTH, &argv[1]);
-    napi_value result;
-    napi_call_function(ctx->env, nullptr, GetCallbackValue(ctx->env, ctx->onHashPartCompleteRef), 2, argv, &result);
+    QueueCallback(ctx->onHashPartCompleteRef, {JsArg::String(partsHash), JsArg::String(fileHash)});
+    if (partsHash) FreeString(const_cast<char*>(partsHash));
+    if (fileHash) FreeString(const_cast<char*>(fileHash));
 }
 
 void CallUploadIDCallback(int cbId, const char* uploadID) {
     auto* ctx = GetUploadCallback(cbId);
     if (!ctx || !ctx->onUploadIDRef) return;
 
-    napi_value argv[1];
-    napi_create_string_utf8(ctx->env, uploadID, NAPI_AUTO_LENGTH, &argv[0]);
-    napi_value result;
-    napi_call_function(ctx->env, nullptr, GetCallbackValue(ctx->env, ctx->onUploadIDRef), 1, argv, &result);
+    QueueCallback(ctx->onUploadIDRef, {JsArg::String(uploadID)});
+    if (uploadID) FreeString(const_cast<char*>(uploadID));
 }
 
 void CallUploadPartCompleteCallback(int cbId, int index, long long partSize, const char* partHash) {
     auto* ctx = GetUploadCallback(cbId);
     if (!ctx || !ctx->onUploadPartCompleteRef) return;
 
-    napi_value argv[3];
-    napi_create_int32(ctx->env, index, &argv[0]);
-    napi_create_int64(ctx->env, partSize, &argv[1]);
-    napi_create_string_utf8(ctx->env, partHash, NAPI_AUTO_LENGTH, &argv[2]);
-    napi_value result;
-    napi_call_function(ctx->env, nullptr, GetCallbackValue(ctx->env, ctx->onUploadPartCompleteRef), 3, argv, &result);
+    QueueCallback(ctx->onUploadPartCompleteRef,
+                  {JsArg::Int(index), JsArg::Long(partSize), JsArg::String(partHash)});
+    if (partHash) FreeString(const_cast<char*>(partHash));
 }
 
 void CallUploadCompleteCallback(int cbId, long long fileSize, long long streamSize, long long storageSize) {
     auto* ctx = GetUploadCallback(cbId);
     if (!ctx || !ctx->onUploadCompleteRef) return;
 
-    napi_value argv[3];
-    napi_create_int64(ctx->env, fileSize, &argv[0]);
-    napi_create_int64(ctx->env, streamSize, &argv[1]);
-    napi_create_int64(ctx->env, storageSize, &argv[2]);
-    napi_value result;
-    napi_call_function(ctx->env, nullptr, GetCallbackValue(ctx->env, ctx->onUploadCompleteRef), 3, argv, &result);
+    QueueCallback(ctx->onUploadCompleteRef,
+                  {JsArg::Long(fileSize), JsArg::Long(streamSize), JsArg::Long(storageSize)});
 }
 
 void CallUploadFinishCallback(int cbId, long long size, const char* url, int fileType) {
     auto* ctx = GetUploadCallback(cbId);
     if (!ctx || !ctx->onCompleteRef) return;
 
-    napi_value argv[3];
-    napi_create_int64(ctx->env, size, &argv[0]);
-    napi_create_string_utf8(ctx->env, url, NAPI_AUTO_LENGTH, &argv[1]);
-    napi_create_int32(ctx->env, fileType, &argv[2]);
-    napi_value result;
-    napi_call_function(ctx->env, nullptr, GetCallbackValue(ctx->env, ctx->onCompleteRef), 3, argv, &result);
-
-    // 回调执行完毕后自动清理
-    DeleteUploadCallbacks(cbId);
+    QueueCallback(ctx->onCompleteRef,
+                  {JsArg::Long(size), JsArg::String(url), JsArg::Int(fileType)},
+                  CleanupType::Upload, cbId);
+    if (url) FreeString(const_cast<char*>(url));
 }
 
 void CallUploadLogProgressCallback(int cbId, long long current, long long total) {
     auto* ctx = GetUploadLogCallback(cbId);
     if (!ctx || !ctx->onProgressRef) return;
 
-    napi_value argv[2];
-    napi_create_int64(ctx->env, current, &argv[0]);
-    napi_create_int64(ctx->env, total, &argv[1]);
-    napi_value result;
-    napi_call_function(ctx->env, nullptr, GetCallbackValue(ctx->env, ctx->onProgressRef), 2, argv, &result);
-
-    // 进度达到100%时，完成回调后自动清理
-    if (total > 0 && current >= total) {
-        DeleteUploadLogCallback(cbId);
-    }
+    QueueCallback(ctx->onProgressRef, {JsArg::Long(current), JsArg::Long(total)},
+                  total > 0 && current >= total ? CleanupType::UploadLog : CleanupType::None, cbId);
 }
 
 void CallSendMsgCallback(int cbId, int progress) {
     auto* ctx = GetSendMsgCallback(cbId);
     if (!ctx || !ctx->onProgressRef) return;
 
-    napi_value argv[2];
-    napi_create_int32(ctx->env, cbId, &argv[0]);
-    napi_create_int32(ctx->env, progress, &argv[1]);
-    napi_value result;
-    napi_call_function(ctx->env, nullptr, GetCallbackValue(ctx->env, ctx->onProgressRef), 2, argv, &result);
+    QueueCallback(ctx->onProgressRef, {JsArg::Int(progress)});
 
-    // 进度达到100%时，完成回调后自动清理
-    if (progress >= 100) {
-        DeleteSendMsgCallback(cbId);
-    }
+    // The terminal success/error callback owns cleanup. A 100% progress event
+    // can arrive before the final result and must not invalidate its callbacks.
 }
 
 // ============================================================
@@ -1158,77 +1175,77 @@ void CAPI_OnSendMsg(int cbId, int progress) {
 }
 
 // 连接回调
-void CAPI_OnConnConnecting() {
+void CAPI_OnConnConnecting(int) {
     CallVoidCallback(g_listeners.env, g_listeners.onConnecting);
 }
 
-void CAPI_OnConnConnectSuccess() {
+void CAPI_OnConnConnectSuccess(int) {
     CallVoidCallback(g_listeners.env, g_listeners.onConnectSuccess);
 }
 
-void CAPI_OnConnConnectFailed(int cbId, const char* message) {
-    CallStringCallback(g_listeners.env, g_listeners.onConnectFailed, message);
+void CAPI_OnConnConnectFailed(int errCode, char* message) {
+    CallIntStringCallback(g_listeners.env, g_listeners.onConnectFailed, errCode, message);
 }
 
-void CAPI_OnConnKickedOffline() {
+void CAPI_OnConnKickedOffline(int) {
     CallVoidCallback(g_listeners.env, g_listeners.onKickedOffline);
 }
 
-void CAPI_OnConnUserTokenExpired() {
+void CAPI_OnConnUserTokenExpired(int) {
     CallVoidCallback(g_listeners.env, g_listeners.onUserTokenExpired);
 }
 
-void CAPI_OnConnUserTokenInvalid(int cbId, const char* message) {
+void CAPI_OnConnUserTokenInvalid(int, char* message) {
     CallStringCallback(g_listeners.env, g_listeners.onUserTokenInvalid, message);
 }
 
 // 消息回调
-void CAPI_OnRecvNewMsg(int cbId, const char* msg) {
+void CAPI_OnRecvNewMsg(char* msg) {
     CallStringCallback(g_listeners.env, g_listeners.onRecvNewMsg, msg);
 }
 
-void CAPI_OnRecvReceipt(int cbId, const char* receipt) {
+void CAPI_OnRecvReceipt(char* receipt) {
     CallStringCallback(g_listeners.env, g_listeners.onRecvReceipt, receipt);
 }
 
-void CAPI_OnMsgRevoked(int cbId, const char* msg) {
+void CAPI_OnMsgRevoked(char* msg) {
     CallStringCallback(g_listeners.env, g_listeners.onMsgRevoked, msg);
 }
 
-void CAPI_OnRecvOffline(int cbId, const char* msg) {
+void CAPI_OnRecvOffline(char* msg) {
     CallStringCallback(g_listeners.env, g_listeners.onRecvOffline, msg);
 }
 
-void CAPI_OnMsgDeleted(int cbId, const char* msg) {
+void CAPI_OnMsgDeleted(char* msg) {
     CallStringCallback(g_listeners.env, g_listeners.onMsgDeleted, msg);
 }
 
-void CAPI_OnRecvOnline(int cbId, const char* msg) {
+void CAPI_OnRecvOnline(char* msg) {
     CallStringCallback(g_listeners.env, g_listeners.onRecvOnline, msg);
 }
 
 // 会话回调
-void CAPI_OnConvSyncStart() {
-    CallVoidCallback(g_listeners.env, g_listeners.onSyncStart);
+void CAPI_OnConvSyncStart(int reinstalled) {
+    CallBoolCallback(g_listeners.env, g_listeners.onSyncStart, reinstalled != 0);
 }
 
-void CAPI_OnConvSyncFinish() {
-    CallVoidCallback(g_listeners.env, g_listeners.onSyncFinish);
+void CAPI_OnConvSyncFinish(int reinstalled) {
+    CallBoolCallback(g_listeners.env, g_listeners.onSyncFinish, reinstalled != 0);
 }
 
 void CAPI_OnConvSyncProgress(int progress) {
     CallIntCallback(g_listeners.env, g_listeners.onSyncProgress, progress);
 }
 
-void CAPI_OnConvSyncFailed(int cbId, const char* err) {
-    CallStringCallback(g_listeners.env, g_listeners.onSyncFailed, err);
+void CAPI_OnConvSyncFailed(int reinstalled) {
+    CallBoolCallback(g_listeners.env, g_listeners.onSyncFailed, reinstalled != 0);
 }
 
-void CAPI_OnConvChanged(int cbId, const char* conv) {
+void CAPI_OnConvChanged(char* conv) {
     CallStringCallback(g_listeners.env, g_listeners.onConvChanged, conv);
 }
 
-void CAPI_OnNewConv(int cbId, const char* conv) {
+void CAPI_OnNewConv(char* conv) {
     CallStringCallback(g_listeners.env, g_listeners.onNewConv, conv);
 }
 
@@ -1236,149 +1253,149 @@ void CAPI_OnUnreadChanged(int totalUnreadCount) {
     CallIntCallback(g_listeners.env, g_listeners.onUnreadChanged, totalUnreadCount);
 }
 
-void CAPI_OnInputStatus(int cbId, const char* status) {
+void CAPI_OnInputStatus(char* status) {
     CallStringCallback(g_listeners.env, g_listeners.onInputStatus, status);
 }
 
 // 群组回调
-void CAPI_OnGroupJoinedAdd(int cbId, const char* group) {
+void CAPI_OnGroupJoinedAdd(char* group) {
     CallStringCallback(g_listeners.env, g_listeners.onJoinedAdd, group);
 }
 
-void CAPI_OnGroupJoinedDel(int cbId, const char* group) {
+void CAPI_OnGroupJoinedDel(char* group) {
     CallStringCallback(g_listeners.env, g_listeners.onJoinedDel, group);
 }
 
-void CAPI_OnGroupMemberAdd(int cbId, const char* member) {
+void CAPI_OnGroupMemberAdd(char* member) {
     CallStringCallback(g_listeners.env, g_listeners.onMemberAdd, member);
 }
 
-void CAPI_OnGroupMemberDel(int cbId, const char* member) {
+void CAPI_OnGroupMemberDel(char* member) {
     CallStringCallback(g_listeners.env, g_listeners.onMemberDel, member);
 }
 
-void CAPI_OnGroupAppAdd(int cbId, const char* application) {
+void CAPI_OnGroupAppAdd(char* application) {
     CallStringCallback(g_listeners.env, g_listeners.onAppAdd, application);
 }
 
-void CAPI_OnGroupAppDel(int cbId, const char* application) {
+void CAPI_OnGroupAppDel(char* application) {
     CallStringCallback(g_listeners.env, g_listeners.onAppDel, application);
 }
 
-void CAPI_OnGroupInfoChanged(int cbId, const char* info) {
+void CAPI_OnGroupInfoChanged(char* info) {
     CallStringCallback(g_listeners.env, g_listeners.onInfoChanged, info);
 }
 
-void CAPI_OnGroupDismissed(int cbId, const char* group) {
+void CAPI_OnGroupDismissed(char* group) {
     CallStringCallback(g_listeners.env, g_listeners.onDismissed, group);
 }
 
-void CAPI_OnGroupMemberInfo(int cbId, const char* info) {
+void CAPI_OnGroupMemberInfo(char* info) {
     CallStringCallback(g_listeners.env, g_listeners.onMemberInfo, info);
 }
 
-void CAPI_OnGroupAppAccept(int cbId, const char* application) {
+void CAPI_OnGroupAppAccept(char* application) {
     CallStringCallback(g_listeners.env, g_listeners.onAppAccept, application);
 }
 
-void CAPI_OnGroupAppReject(int cbId, const char* application) {
+void CAPI_OnGroupAppReject(char* application) {
     CallStringCallback(g_listeners.env, g_listeners.onAppReject, application);
 }
 
 // 好友回调
-void CAPI_OnFriendAppAdd(int cbId, const char* application) {
+void CAPI_OnFriendAppAdd(char* application) {
     CallStringCallback(g_listeners.env, g_listeners.onFriendAppAdd, application);
 }
 
-void CAPI_OnFriendAppDel(int cbId, const char* application) {
+void CAPI_OnFriendAppDel(char* application) {
     CallStringCallback(g_listeners.env, g_listeners.onFriendAppDel, application);
 }
 
-void CAPI_OnFriendAppAccept(int cbId, const char* application) {
+void CAPI_OnFriendAppAccept(char* application) {
     CallStringCallback(g_listeners.env, g_listeners.onFriendAppAccept, application);
 }
 
-void CAPI_OnFriendAppReject(int cbId, const char* application) {
+void CAPI_OnFriendAppReject(char* application) {
     CallStringCallback(g_listeners.env, g_listeners.onFriendAppReject, application);
 }
 
-void CAPI_OnFriendAdd(int cbId, const char* frient) {
-    CallStringCallback(g_listeners.env, g_listeners.onFriendAdd, frient);
+void CAPI_OnFriendAdd(char* friendInfo) {
+    CallStringCallback(g_listeners.env, g_listeners.onFriendAdd, friendInfo);
 }
 
-void CAPI_OnFriendDel(int cbId, const char* frient) {
-    CallStringCallback(g_listeners.env, g_listeners.onFriendDel, frient);
+void CAPI_OnFriendDel(char* friendInfo) {
+    CallStringCallback(g_listeners.env, g_listeners.onFriendDel, friendInfo);
 }
 
-void CAPI_OnFriendInfo(int cbId, const char* info) {
+void CAPI_OnFriendInfo(char* info) {
     CallStringCallback(g_listeners.env, g_listeners.onFriendInfo, info);
 }
 
-void CAPI_OnBlackAdd(int cbId, const char* black) {
+void CAPI_OnBlackAdd(char* black) {
     CallStringCallback(g_listeners.env, g_listeners.onBlackAdd, black);
 }
 
-void CAPI_OnBlackDel(int cbId, const char* black) {
+void CAPI_OnBlackDel(char* black) {
     CallStringCallback(g_listeners.env, g_listeners.onBlackDel, black);
 }
 
 // 用户回调
-void CAPI_OnUserSelfInfoUpdated(int cbId, const char* userInfo) {
+void CAPI_OnUserSelfInfoUpdated(char* userInfo) {
     CallStringCallback(g_listeners.env, g_listeners.onSelfInfo, userInfo);
 }
 
-void CAPI_OnUserStatusChanged(int cbId, const char* status) {
+void CAPI_OnUserStatusChanged(char* status) {
     CallStringCallback(g_listeners.env, g_listeners.onUserStatus, status);
 }
 
 // 信令回调
-void CAPI_OnSignalingReceiveNewInvitation(int cbId, const char* invitation) {
+void CAPI_OnSignalingReceiveNewInvitation(char* invitation) {
     CallStringCallback(g_listeners.env, g_listeners.onReceiveNewInvitation, invitation);
 }
 
-void CAPI_OnSignalingInviteeAccepted(int cbId, const char* invitation) {
+void CAPI_OnSignalingInviteeAccepted(char* invitation) {
     CallStringCallback(g_listeners.env, g_listeners.onInviteeAccepted, invitation);
 }
 
-void CAPI_OnSignalingInviteeAcceptedByOtherDevice(int cbId, const char* invitation) {
+void CAPI_OnSignalingInviteeAcceptedByOtherDevice(char* invitation) {
     CallStringCallback(g_listeners.env, g_listeners.onInviteeAcceptedByOtherDevice, invitation);
 }
 
-void CAPI_OnSignalingInviteeRejected(int cbId, const char* invitation) {
+void CAPI_OnSignalingInviteeRejected(char* invitation) {
     CallStringCallback(g_listeners.env, g_listeners.onInviteeRejected, invitation);
 }
 
-void CAPI_OnSignalingInviteeRejectedByOtherDevice(int cbId, const char* invitation) {
+void CAPI_OnSignalingInviteeRejectedByOtherDevice(char* invitation) {
     CallStringCallback(g_listeners.env, g_listeners.onInviteeRejectedByOtherDevice, invitation);
 }
 
-void CAPI_OnSignalingInvitationCancelled(int cbId, const char* invitation) {
+void CAPI_OnSignalingInvitationCancelled(char* invitation) {
     CallStringCallback(g_listeners.env, g_listeners.onInvitationCancelled, invitation);
 }
 
-void CAPI_OnSignalingInvitationTimeout(int cbId, const char* invitation) {
+void CAPI_OnSignalingInvitationTimeout(char* invitation) {
     CallStringCallback(g_listeners.env, g_listeners.onInvitationTimeout, invitation);
 }
 
-void CAPI_OnSignalingHangUp(int cbId, const char* info) {
+void CAPI_OnSignalingHangUp(char* info) {
     CallStringCallback(g_listeners.env, g_listeners.onHangUp, info);
 }
 
-void CAPI_OnSignalingRoomParticipantConnected(int cbId, const char* info) {
+void CAPI_OnSignalingRoomParticipantConnected(char* info) {
     CallStringCallback(g_listeners.env, g_listeners.onRoomParticipantConnected, info);
 }
 
-void CAPI_OnSignalingRoomParticipantDisconnected(int cbId, const char* info) {
+void CAPI_OnSignalingRoomParticipantDisconnected(char* info) {
     CallStringCallback(g_listeners.env, g_listeners.onRoomParticipantDisconnected, info);
 }
 
 // 自定义业务回调
-void CAPI_OnRecvCustomBusinessMessage(int cbId, const char* message) {
+void CAPI_OnRecvCustomBusinessMessage(char* message) {
     CallStringCallback(g_listeners.env, g_listeners.onRecvCustomBusinessMessage, message);
 }
 
 // 消息 KV 信息回调
-void CAPI_OnMessageKvInfoChanged(int cbId, const char* kvInfo) {
+void CAPI_OnMessageKvInfoChanged(char* kvInfo) {
     CallStringCallback(g_listeners.env, g_listeners.onMessageKvInfoChanged, kvInfo);
 }
 

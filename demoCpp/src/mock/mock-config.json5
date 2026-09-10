@@ -1,5 +1,0 @@
-{
-  "libdemocpp.so": {
-    "source": "src/mock/Libdemocpp.mock.ets"
-  }
-}

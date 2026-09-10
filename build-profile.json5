@@ -49,18 +49,6 @@
           ]
         }
       ]
-    },
-    {
-      "name": "demoCpp",
-      "srcPath": "./demoCpp",
-      "targets": [
-        {
-          "name": "default",
-          "applyToProducts": [
-            "default"
-          ]
-        }
-      ]
     }
   ]
 }

@@ -24,9 +24,13 @@ add_library(imsdk SHARED
     user.cpp
     utils.cpp)
 
-# 链接依赖（暂时注释掉libopenimsdk.so，先确保libimsdk.so能正常加载）
+set_target_properties(imsdk PROPERTIES SKIP_BUILD_RPATH TRUE)
+target_compile_features(imsdk PRIVATE cxx_std_17)
+target_compile_options(imsdk PRIVATE -Wall -Wextra -Werror=array-bounds)
+target_link_options(imsdk PRIVATE -Wl,--no-undefined)
+
 target_link_libraries(imsdk
-    PUBLIC
+    PRIVATE
         libhilog_ndk.z.so
         libace_napi.z.so
         ${NATIVERENDER_ROOT_PATH}/../../../libs/${OHOS_ARCH}/libopenimsdk.so

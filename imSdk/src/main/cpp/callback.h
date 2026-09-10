@@ -11,6 +11,10 @@
 #define CB_MAX 64
 #define INVALID_CALLBACK_ID (-1)
 
+// Initializes the single dispatcher used to marshal Go callbacks onto the
+// ArkTS event-loop thread. Must be called once from the N-API module init.
+bool InitializeCallbackDispatcher(napi_env env);
+
 // ============================================================
 // 回调类型定义（与 libopenimsdk.h 保持一致）
 // ============================================================
@@ -300,28 +304,30 @@ void CallVoidCallback(napi_env env, napi_ref callbackRef);
 
 // 调用单个参数回调（int）
 void CallIntCallback(napi_env env, napi_ref callbackRef, int value);
+void CallBoolCallback(napi_env env, napi_ref callbackRef, bool value);
+void CallIntStringCallback(napi_env env, napi_ref callbackRef, int value, const char* text);
 
 // 调用单个参数回调（long long）
 void CallLongLongCallback(napi_env env, napi_ref callbackRef, long long value);
 
 // 调用字符串参数回调
-void CallStringCallback(napi_env env, napi_ref callbackRef, char* value);
+void CallStringCallback(napi_env env, napi_ref callbackRef, const char* value);
 
 // 调用 Base 成功回调
-void CallBaseSuccessCallback(int cbId, char* data);
+void CallBaseSuccessCallback(int cbId, const char* data);
 
 // 调用 Base 错误回调
-void CallBaseErrorCallback(int cbId, int code, char* message);
+void CallBaseErrorCallback(int cbId, int code, const char* message);
 
 // 调用上传文件回调
 void CallUploadOpenCallback(int cbId, long long fileSize);
 void CallUploadPartSizeCallback(int cbId, long long partSize, int partNumber);
-void CallUploadHashProgressCallback(int cbId, int index, long long size, char* partHash);
-void CallUploadHashCompleteCallback(int cbId, char* partsHash, char* fileHash);
-void CallUploadIDCallback(int cbId, char* uploadID);
-void CallUploadPartCompleteCallback(int cbId, int index, long long partSize, char* partHash);
+void CallUploadHashProgressCallback(int cbId, int index, long long size, const char* partHash);
+void CallUploadHashCompleteCallback(int cbId, const char* partsHash, const char* fileHash);
+void CallUploadIDCallback(int cbId, const char* uploadID);
+void CallUploadPartCompleteCallback(int cbId, int index, long long partSize, const char* partHash);
 void CallUploadCompleteCallback(int cbId, long long fileSize, long long streamSize, long long storageSize);
-void CallUploadFinishCallback(int cbId, long long size, char* url, int fileType);
+void CallUploadFinishCallback(int cbId, long long size, const char* url, int fileType);
 
 // 调用日志上传回调
 void CallUploadLogProgressCallback(int cbId, long long current, long long total);

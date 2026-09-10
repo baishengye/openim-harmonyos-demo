@@ -1,7 +1,0 @@
-{
-  "module": {
-    "name": "demoCpp",
-    "type": "har",
-    "deviceTypes": ["default"],
-  }
-}

@@ -6,12 +6,12 @@
 
 napi_value NAPI_setConnListener(napi_env env, napi_callback_info info) {
     size_t argc = 1;
-    napi_value args[1];
+    napi_value args[1] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
 
     if (!args[0]) {
         DeleteConnListener();
-        return nullptr;
+        return CreateJSUndefined(env);
     }
 
     napi_value listener = args[0];
@@ -26,17 +26,17 @@ napi_value NAPI_setConnListener(napi_env env, napi_callback_info info) {
 
     StoreConnListener(env, onConnecting, onConnectSuccess, onConnectFailed, onKickedOffline, onUserTokenExpired, onUserTokenInvalid);
 
-    return nullptr;
+    return CreateJSUndefined(env);
 }
 
 napi_value NAPI_setAdvancedMsgListener(napi_env env, napi_callback_info info) {
     size_t argc = 1;
-    napi_value args[1];
+    napi_value args[1] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
 
     if (!args[0]) {
         DeleteMsgListener();
-        return nullptr;
+        return CreateJSUndefined(env);
     }
 
     napi_value listener = args[0];
@@ -51,22 +51,22 @@ napi_value NAPI_setAdvancedMsgListener(napi_env env, napi_callback_info info) {
 
     StoreMsgListener(env, onRecvNewMsg, onRecvReceipt, onMsgRevoked, onRecvOffline, onMsgDeleted, onRecvOnline);
 
-    return nullptr;
+    return CreateJSUndefined(env);
 }
 
 napi_value NAPI_setBatchMsgListener(napi_env env, napi_callback_info info) {
     // BatchMsgListener 暂未在 callback.cpp 中实现，保持原有逻辑
-    return nullptr;
+    return CreateJSUndefined(env);
 }
 
 napi_value NAPI_setConversationListener(napi_env env, napi_callback_info info) {
     size_t argc = 1;
-    napi_value args[1];
+    napi_value args[1] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
 
     if (!args[0]) {
         DeleteConvListener();
-        return nullptr;
+        return CreateJSUndefined(env);
     }
 
     napi_value listener = args[0];
@@ -83,17 +83,17 @@ napi_value NAPI_setConversationListener(napi_env env, napi_callback_info info) {
 
     StoreConvListener(env, onSyncStart, onSyncFinish, onSyncProgress, onSyncFailed, onConvChanged, onNewConv, onUnreadChanged, onInputStatus);
 
-    return nullptr;
+    return CreateJSUndefined(env);
 }
 
 napi_value NAPI_setGroupListener(napi_env env, napi_callback_info info) {
     size_t argc = 1;
-    napi_value args[1];
+    napi_value args[1] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
 
     if (!args[0]) {
         DeleteGroupListener();
-        return nullptr;
+        return CreateJSUndefined(env);
     }
 
     napi_value listener = args[0];
@@ -113,17 +113,17 @@ napi_value NAPI_setGroupListener(napi_env env, napi_callback_info info) {
 
     StoreGroupListener(env, onJoinedAdd, onJoinedDel, onMemberAdd, onMemberDel, onAppAdd, onAppDel, onInfoChanged, onDismissed, onMemberInfo, onAppAccept, onAppReject);
 
-    return nullptr;
+    return CreateJSUndefined(env);
 }
 
 napi_value NAPI_setFriendListener(napi_env env, napi_callback_info info) {
     size_t argc = 1;
-    napi_value args[1];
+    napi_value args[1] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
 
     if (!args[0]) {
         DeleteFriendListener();
-        return nullptr;
+        return CreateJSUndefined(env);
     }
 
     napi_value listener = args[0];
@@ -141,17 +141,17 @@ napi_value NAPI_setFriendListener(napi_env env, napi_callback_info info) {
 
     StoreFriendListener(env, onAppAdd, onAppDel, onAppAccept, onAppReject, onFriendAdd, onFriendDel, onFriendInfo, onBlackAdd, onBlackDel);
 
-    return nullptr;
+    return CreateJSUndefined(env);
 }
 
 napi_value NAPI_setUserListener(napi_env env, napi_callback_info info) {
     size_t argc = 1;
-    napi_value args[1];
+    napi_value args[1] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
 
     if (!args[0]) {
         DeleteUserListener();
-        return nullptr;
+        return CreateJSUndefined(env);
     }
 
     napi_value listener = args[0];
@@ -162,17 +162,17 @@ napi_value NAPI_setUserListener(napi_env env, napi_callback_info info) {
 
     StoreUserListener(env, onSelfInfo, onUserStatus);
 
-    return nullptr;
+    return CreateJSUndefined(env);
 }
 
 napi_value NAPI_setSignalingListener(napi_env env, napi_callback_info info) {
     size_t argc = 1;
-    napi_value args[1];
+    napi_value args[1] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
 
     if (!args[0]) {
         DeleteSignalingListener();
-        return nullptr;
+        return CreateJSUndefined(env);
     }
 
     napi_value listener = args[0];
@@ -191,17 +191,17 @@ napi_value NAPI_setSignalingListener(napi_env env, napi_callback_info info) {
 
     StoreSignalingListener(env, onReceiveNewInvitation, onInviteeAccepted, onInviteeAcceptedByOtherDevice, onInviteeRejected, onInviteeRejectedByOtherDevice, onInvitationCancelled, onInvitationTimeout, onHangUp, onRoomParticipantConnected, onRoomParticipantDisconnected);
 
-    return nullptr;
+    return CreateJSUndefined(env);
 }
 
 napi_value NAPI_setCustomBusinessListener(napi_env env, napi_callback_info info) {
     size_t argc = 1;
-    napi_value args[1];
+    napi_value args[1] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
 
     if (!args[0]) {
         DeleteCustomBusinessListener();
-        return nullptr;
+        return CreateJSUndefined(env);
     }
 
     napi_value listener = args[0];
@@ -210,17 +210,17 @@ napi_value NAPI_setCustomBusinessListener(napi_env env, napi_callback_info info)
 
     StoreCustomBusinessListener(env, onRecvCustomBusinessMessage);
 
-    return nullptr;
+    return CreateJSUndefined(env);
 }
 
 napi_value NAPI_setMsgKvInfoListener(napi_env env, napi_callback_info info) {
     size_t argc = 1;
-    napi_value args[1];
+    napi_value args[1] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
 
     if (!args[0]) {
         DeleteMsgKvInfoListener();
-        return nullptr;
+        return CreateJSUndefined(env);
     }
 
     napi_value listener = args[0];
@@ -229,5 +229,5 @@ napi_value NAPI_setMsgKvInfoListener(napi_env env, napi_callback_info info) {
 
     StoreMsgKvInfoListener(env, onMessageKvInfoChanged);
 
-    return nullptr;
+    return CreateJSUndefined(env);
 }

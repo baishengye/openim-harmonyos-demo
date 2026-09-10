@@ -4,12 +4,8 @@
 #include "hilog/log.h"
 #include "libopenimsdk.h"
 #include "napi/native_api.h"
+#include <cstddef>
 #include <string>
-
-#define LOGI(tag,format, args) OH_LOG_Print(LOG_APP, LOG_INFO, 0, tag, format, args);
-#define LOGE(tag,format, args) OH_LOG_Print(LOG_APP, LOG_ERROR, 0, tag, format, args);
-#define LOGD(tag,format, args) OH_LOG_Print(LOG_APP, LOG_DEBUG, 0, tag, format, args);
-
 
 // Get values from JavaScript
 std::string GetStringFromJS(napi_env env, napi_value value);
@@ -17,6 +13,7 @@ int GetIntFromJS(napi_env env, napi_value value);
 long long GetInt64FromJS(napi_env env, napi_value value);
 bool GetBoolFromJS(napi_env env, napi_value value);
 double GetDoubleFromJS(napi_env env, napi_value value);
+bool GetArgs(napi_env env, napi_callback_info info, size_t expected, napi_value* args);
 
 // Create JavaScript values
 napi_value CreateJSString(napi_env env, const std::string& str);
@@ -31,6 +28,22 @@ napi_value CreateJSError(napi_env env, int errCode, const char* errMsg);
 // Utility functions
 void SafeStringCopy(char* dest, const char* src, size_t destSize);
 std::string GenerateOperationID();
+std::string OperationIDOrGenerated(const std::string& operationID);
+char* MutableCString(const std::string& value);
+
+// Owns strings allocated by libopenimsdk.so and releases them with FreeString.
+class SdkString final {
+public:
+    explicit SdkString(char* value) : value_(value) {}
+    ~SdkString();
+    SdkString(const SdkString&) = delete;
+    SdkString& operator=(const SdkString&) = delete;
+    const char* c_str() const { return value_ ? value_ : ""; }
+    std::string str() const { return value_ ? value_ : ""; }
+
+private:
+    char* value_;
+};
 
 void LogInfo(const char* tag, const char* fmt, ...);
 void LogError(const char* tag, const char* fmt, ...);

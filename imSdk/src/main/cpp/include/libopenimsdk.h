@@ -24,6 +24,7 @@ typedef struct { const char *p; ptrdiff_t n; } _GoString_;
 #ifndef LIBOPENIMSDK_H
 #define LIBOPENIMSDK_H
 
+#include <stdint.h>
 #include <stdlib.h>
 
 // Callback types
@@ -287,14 +288,19 @@ extern void Login(int baseCallbackID, char* uid, char* token, char* operationID)
 extern void Logout(int baseCallbackID, char* operationID);
 extern int GetLoginStatus(char* operationID);
 extern char* GetLoginUserID();
+
+//export UploadFile
 extern void UploadFile(int baseCallbackID, int uploadCallbackID, char* operationID, char* reqData);
+
+// Message creation functions (no callback needed)
+//
 extern char* CreateTextMessage(char* text, char* operationID);
 extern char* CreateImageMessage(char* imagePath, char* operationID);
 extern char* CreateAdvancedQuoteMessage(char* operationID, char* text, char* message, char* messageEntityList);
 extern char* CreateAdvancedTextMessage(char* operationID, char* text, char* messageEntityList);
-extern char* CreateSoundMessage(char* soundPath, long long int duration, char* operationID);
+extern char* CreateSoundMessage(char* soundPath, long long duration, char* operationID);
 extern char* CreateFileMessage(char* filePath, char* fileName, char* operationID);
-extern char* CreateVideoMessage(char* videoPath, char* videoType, long long int duration, char* snapshotPath, char* operationID);
+extern char* CreateVideoMessage(char* videoPath, char* videoType, long long duration, char* snapshotPath, char* operationID);
 extern char* CreateLocationMessage(char* operationID, char* description, double longitude, double latitude);
 extern char* CreateCustomMessage(char* data, char* extension, char* description, char* operationID);
 extern char* CreateQuoteMessage(char* text, char* message, char* operationID);
@@ -309,6 +315,9 @@ extern char* CreateVideoMessageByURL(char* operationID, char* params);
 extern char* CreateFileMessageByURL(char* operationID, char* params);
 extern void SendMessage(int baseCallbackID, int sendReceiptCallbackID, char* message, char* recvID, char* groupID, char* offlinePushInfo, char* operationID, int isOnlineOnly);
 extern void SendMessageNotOss(int baseCallbackID, int sendReceiptCallbackID, char* message, char* recvID, char* groupID, char* offlinePushInfo, char* operationID, int isOnlineOnly);
+
+// Message retrieval functions
+//
 extern void GetAllConversationList(int baseCallbackID, char* operationID);
 extern void GetConversationListSplit(int baseCallbackID, char* operationID, int offset, int count);
 extern void GetOneConversation(int baseCallbackID, char* operationID, int sessionType, char* isSession);
@@ -324,6 +333,9 @@ extern void GetTotalUnreadMsgCount(int baseCallbackID, char* operationID);
 extern void GetConversationRecvMessageOpt(char* operationID, char* conversationIDList);
 extern void SearchConversation(int baseCallbackID, char* operationID, char* searchParam);
 extern void SearchLocalMessages(int baseCallbackID, char* operationID, char* searchParam);
+
+// Message history functions
+//
 extern void GetAdvancedHistoryMessageList(int baseCallbackID, char* operationID, char* getMessageOptions);
 extern void GetHistoryMessageList(char* operationID, char* conversationID, int count, int startSeq);
 extern void FindMessageList(int baseCallbackID, char* operationID, char* findOptions);
@@ -343,6 +355,9 @@ extern void DeleteAllMsgFromLocal(int baseCallbackID, char* operationID);
 extern void InsertGroupMessageToLocalStorage(int baseCallbackID, char* operationID, char* message, char* groupID, char* sendID);
 extern void SetMessageLocalEx(int baseCallbackID, char* operationID, char* conversationID, char* clientMsgID, char* localEx);
 extern void SetAppBadge(int baseCallbackID, char* operationID, int appUnreadCount);
+
+// User functions
+//
 extern void GetUsersInfo(int baseCallbackID, char* operationID, char* userIDList);
 extern void GetSelfUserInfo(int baseCallbackID, char* operationID);
 extern void SetSelfInfo(int baseCallbackID, char* operationID, char* userInfo);
@@ -360,7 +375,7 @@ extern void SetGroupInfo(int baseCallbackID, char* operationID, char* groupInfo)
 extern void SetGroupInfoEx(char* operationID, char* groupInfo);
 extern void GetJoinedGroupListPage(int baseCallbackID, char* operationID, int offset, int count);
 extern void ChangeGroupMute(int baseCallbackID, char* operationID, char* groupID, int isMute);
-extern void ChangeGroupMemberMute(int baseCallbackID, char* operationID, char* groupID, char* userID, long long int mutedSeconds);
+extern void ChangeGroupMemberMute(int baseCallbackID, char* operationID, char* groupID, char* userID, long long mutedSeconds);
 extern void GetGroupMemberList(int baseCallbackID, char* operationID, char* groupID, int filter, int offset, int count);
 extern void GetGroupMemberOwnerAndAdmin(int baseCallbackID, char* operationID, char* groupID);
 extern void GetUsersInGroup(int baseCallbackID, char* operationID, char* groupID, char* userIDList);
@@ -397,32 +412,32 @@ extern void GetBlackList(int baseCallbackID, char* operationID);
 extern void RemoveBlack(int baseCallbackID, char* operationID, char* removeUserID);
 extern void GetFriendApplicationUnhandledCount(int baseCallbackID, char* operationID, char* req);
 extern void SetFriendRemark(int baseCallbackID, char* operationID, char* friendUserID, char* remark);
-extern void UpdateFcmToken(int baseCallbackID, char* operationID, char* fcmToken, long long int expireTime);
-extern void Logs(int baseCallbackID, char* operationID, int logLevel, char* file, long long int line, char* msgs, char* err, char* keyAndValue);
+extern void UpdateFcmToken(int baseCallbackID, char* operationID, char* fcmToken, long long expireTime);
+extern void Logs(int baseCallbackID, char* operationID, int logLevel, char* file, long long line, char* msgs, char* err, char* keyAndValue);
 extern char* GetSdkVersion();
 extern void UnInitSDK(char* operationID);
 extern void FreeString(char* str);
 extern char* GetAtAllTag(char* operationID);
 extern char* CreateFileMessageFromFullPath(char* operationID, char* fileFullPath, char* fileName);
-extern char* CreateSoundMessageFromFullPath(char* operationID, char* soundPath, long long int duration);
-extern char* CreateVideoMessageFromFullPath(char* operationID, char* videoFullPath, char* videoType, long long int duration, char* snapshotFullPath);
+extern char* CreateSoundMessageFromFullPath(char* operationID, char* soundPath, long long duration);
+extern char* CreateVideoMessageFromFullPath(char* operationID, char* videoFullPath, char* videoType, long long duration, char* snapshotFullPath);
 extern void GetAdvancedHistoryMessageListReverse(int baseCallbackID, char* operationID, char* getMessageOptions);
 extern void GetSpecifiedGroupMembersInfo(int baseCallbackID, char* operationID, char* groupID, char* userIDList);
 extern void UploadLogs(int baseCallbackID, int uploadLogsCallbackID, char* operationID, int line, char* ex);
-extern void GetGroupMemberListByJoinTimeFilter(int baseCallbackID, char* operationID, char* groupID, long long int offset, long long int count, long long int joinTimeBegin, long long int joinTimeEnd, char* filterUserIDList);
-extern void RegisterConnListener(int onConnecting, int onConnectSuccess, int onConnectFailed, int onKickedOffline, int onUserTokenExpired, int onUserTokenInvalid);
-extern void RegisterMsgListener(int onRecvNewMsg, int onRecvReceipt, int onMsgRevoked, int onRecvOffline, int onMsgDeleted, int onRecvOnline);
-extern void RegisterConvListener(int onSyncStart, int onSyncFinish, int onSyncProgress, int onSyncFailed, int onConvChanged, int onNewConv, int onUnreadChanged, int onInputStatus);
-extern void RegisterGroupListener(int onJoinedAdd, int onJoinedDel, int onMemberAdd, int onMemberDel, int onAppAdd, int onAppDel, int onInfoChanged, int onDismissed, int onMemberInfo, int onAppAccept, int onAppReject);
-extern void RegisterFriendListener(int onAppAdd, int onAppDel, int onAppAccept, int onAppReject, int onFriendAdd, int onFriendDel, int onFriendInfo, int onBlackAdd, int onBlackDel);
-extern void RegisterUserListener(int onSelfInfo, int onUserStatus);
-extern void RegisterSignalingListener(int onReceiveNewInvitation, int onInviteeAccepted, int onInviteeAcceptedByOtherDevice, int onInviteeRejected, int onInviteeRejectedByOtherDevice, int onInvitationCancelled, int onInvitationTimeout, int onHangUp, int onRoomParticipantConnected, int onRoomParticipantDisconnected);
-extern void RegisterCustomBusinessListener(int onRecvCustomBusinessMessage);
-extern void RegisterMsgKvInfoListener(int onMessageKvInfoChanged);
-extern void RegisterUploadFileCallback(int uploadCallbackID, int onOpen, int onPartSize, int onHashPartProgress, int onHashPartComplete, int onUploadID, int onUploadPartComplete, int onUploadComplete, int onComplete);
-extern void RegisterUploadLogProgress(int uploadLogsCallbackID, int onProgress);
-extern void RegisterBaseCallback(int baseCallbackID, int onSuccess, int onError);
-extern void RegisterSendMsgCallback(int sendReceiptCallbackID, int onProgress);
+extern void GetGroupMemberListByJoinTimeFilter(int baseCallbackID, char* operationID, char* groupID, long long offset, long long count, long long joinTimeBegin, long long joinTimeEnd, char* filterUserIDList);
+extern void RegisterConnListener(uintptr_t onConnecting, uintptr_t onConnectSuccess, uintptr_t onConnectFailed, uintptr_t onKickedOffline, uintptr_t onUserTokenExpired, uintptr_t onUserTokenInvalid);
+extern void RegisterMsgListener(uintptr_t onRecvNewMsg, uintptr_t onRecvReceipt, uintptr_t onMsgRevoked, uintptr_t onRecvOffline, uintptr_t onMsgDeleted, uintptr_t onRecvOnline);
+extern void RegisterConvListener(uintptr_t onSyncStart, uintptr_t onSyncFinish, uintptr_t onSyncProgress, uintptr_t onSyncFailed, uintptr_t onConvChanged, uintptr_t onNewConv, uintptr_t onUnreadChanged, uintptr_t onInputStatus);
+extern void RegisterGroupListener(uintptr_t onJoinedAdd, uintptr_t onJoinedDel, uintptr_t onMemberAdd, uintptr_t onMemberDel, uintptr_t onAppAdd, uintptr_t onAppDel, uintptr_t onInfoChanged, uintptr_t onDismissed, uintptr_t onMemberInfo, uintptr_t onAppAccept, uintptr_t onAppReject);
+extern void RegisterFriendListener(uintptr_t onAppAdd, uintptr_t onAppDel, uintptr_t onAppAccept, uintptr_t onAppReject, uintptr_t onFriendAdd, uintptr_t onFriendDel, uintptr_t onFriendInfo, uintptr_t onBlackAdd, uintptr_t onBlackDel);
+extern void RegisterUserListener(uintptr_t onSelfInfo, uintptr_t onUserStatus);
+extern void RegisterSignalingListener(uintptr_t onReceiveNewInvitation, uintptr_t onInviteeAccepted, uintptr_t onInviteeAcceptedByOtherDevice, uintptr_t onInviteeRejected, uintptr_t onInviteeRejectedByOtherDevice, uintptr_t onInvitationCancelled, uintptr_t onInvitationTimeout, uintptr_t onHangUp, uintptr_t onRoomParticipantConnected, uintptr_t onRoomParticipantDisconnected);
+extern void RegisterCustomBusinessListener(uintptr_t onRecvCustomBusinessMessage);
+extern void RegisterMsgKvInfoListener(uintptr_t onMessageKvInfoChanged);
+extern void RegisterUploadFileCallback(int uploadCallbackID, uintptr_t onOpen, uintptr_t onPartSize, uintptr_t onHashPartProgress, uintptr_t onHashPartComplete, uintptr_t onUploadID, uintptr_t onUploadPartComplete, uintptr_t onUploadComplete, uintptr_t onComplete);
+extern void RegisterUploadLogProgress(int uploadLogsCallbackID, uintptr_t onProgress);
+extern void RegisterBaseCallback(int baseCallbackID, uintptr_t onSuccess, uintptr_t onError);
+extern void RegisterSendMsgCallback(int sendReceiptCallbackID, uintptr_t onProgress);
 extern void UnregisterUploadFileCallback(int uploadCallbackID);
 extern void UnregisterUploadLogProgress(int uploadLogsCallbackID);
 extern void UnregisterSendMsgCallback(int sendReceiptCallbackID);

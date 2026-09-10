@@ -1,55 +1,68 @@
 #include "utils.h"
-#include "include/libopenimsdk.h"
-#include "napi/native_api.h"
-#include <string>
-#include <cstring>
-#include <cstdarg>
 #include <chrono>
+#include <cstdarg>
+#include <cstdio>
+#include <cstring>
 
 
 // Get string from napi_value
 std::string GetStringFromJS(napi_env env, napi_value value) {
     if (!value) return "";
 
-    napi_valuetype type;
-    napi_typeof(env, value, &type);
-    if (type != napi_string) return "";
+    napi_valuetype type = napi_undefined;
+    if (napi_typeof(env, value, &type) != napi_ok || type != napi_string) return "";
 
-    size_t len;
-    napi_get_value_string_utf8(env, value, nullptr, 0, &len);
+    size_t len = 0;
+    if (napi_get_value_string_utf8(env, value, nullptr, 0, &len) != napi_ok) return "";
     if (len == 0) return "";
 
-    std::string result(len, '\0');
-    napi_get_value_string_utf8(env, value, &result[0], len + 1, &len);
+    std::string result(len + 1, '\0');
+    if (napi_get_value_string_utf8(env, value, &result[0], result.size(), &len) != napi_ok) return "";
+    result.resize(len);
     return result;
 }
 
 // Get int from napi_value
 int GetIntFromJS(napi_env env, napi_value value) {
     int32_t result = 0;
-    napi_get_value_int32(env, value, &result);
+    if (value) napi_get_value_int32(env, value, &result);
     return result;
 }
 
 // Get int64 from napi_value
 long long GetInt64FromJS(napi_env env, napi_value value) {
-    double result = 0;
-    napi_get_value_double(env, value, &result);
-    return (long long)result;
+    int64_t result = 0;
+    if (value && napi_get_value_int64(env, value, &result) == napi_ok) return result;
+    double fallback = 0;
+    if (value) napi_get_value_double(env, value, &fallback);
+    return static_cast<long long>(fallback);
 }
 
 // Get bool from napi_value
 bool GetBoolFromJS(napi_env env, napi_value value) {
     bool result = false;
-    napi_get_value_bool(env, value, &result);
+    if (value) napi_get_value_bool(env, value, &result);
     return result;
 }
 
 // Get double from napi_value
 double GetDoubleFromJS(napi_env env, napi_value value) {
     double result = 0;
-    napi_get_value_double(env, value, &result);
+    if (value) napi_get_value_double(env, value, &result);
     return result;
+}
+
+bool GetArgs(napi_env env, napi_callback_info info, size_t expected, napi_value* args) {
+    size_t argc = expected;
+    if (!args || napi_get_cb_info(env, info, &argc, args, nullptr, nullptr) != napi_ok) {
+        napi_throw_error(env, nullptr, "Failed to read native arguments");
+        return false;
+    }
+    if (argc < expected) {
+        napi_throw_type_error(env, nullptr, "Not enough arguments");
+        return false;
+    }
+    return true;
 }
 
 // Create string napi_value
@@ -129,33 +142,42 @@ std::string GenerateOperationID() {
     return "napi_" + std::to_string(timestamp);
 }
 
+std::string OperationIDOrGenerated(const std::string& operationID) {
+    return operationID.empty() ? GenerateOperationID() : operationID;
+}
+
+char* MutableCString(const std::string& value) {
+    return const_cast<char*>(value.c_str());
+}
+
+SdkString::~SdkString() {
+    if (value_) FreeString(value_);
+}
+
 // Log helper
 void LogInfo(const char* tag, const char* fmt, ...) {
-    LOGI("OpenIM","调用宏======%s==================","11111");
     char buf[512];
     va_list args;
     va_start(args, fmt);
     vsnprintf(buf, sizeof(buf), fmt, args);
     va_end(args);
-    LOGI(tag, "%{public}s", buf)
+    OH_LOG_Print(LOG_APP, LOG_INFO, 0, tag, "%{public}s", buf);
 }
 
 void LogError(const char* tag, const char* fmt, ...) {
-    LOGE("OpenIM","调用宏======%s==================","11111");
     char buf[512];
     va_list args;
     va_start(args, fmt);
     vsnprintf(buf, sizeof(buf), fmt, args);
     va_end(args);
-    LOGE(tag, "%{public}s", buf)
+    OH_LOG_Print(LOG_APP, LOG_ERROR, 0, tag, "%{public}s", buf);
 }
 
 void LogDebug(const char *tag, const char *fmt, ...){
-    LOGD("OpenIM","调用宏======%s==================","11111");
     char buf[512];
     va_list args;
     va_start(args, fmt);
     vsnprintf(buf, sizeof(buf), fmt, args);
     va_end(args);
-    LOGD(tag, "%{public}s", buf)
+    OH_LOG_Print(LOG_APP, LOG_DEBUG, 0, tag, "%{public}s", buf);
 }
