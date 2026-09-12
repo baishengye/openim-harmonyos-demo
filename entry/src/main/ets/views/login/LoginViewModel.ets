@@ -8,12 +8,16 @@ import { Utils } from "../../common/utils/Utils";
 @ObservedV2
 export default class LoginViewModel {
   @Trace public isLogin: boolean = false;
-  @Trace private account: string = "";
-  @Trace private password: string = "";
+  @Trace public account: string = "13682215018";
+  @Trace public password: string = "Aa111111";
   @Trace chatToken: string = "";
   @Trace imToken: string = "";
   @Trace public isLoading: boolean = false;
   @Trace public errorMsg: string = "";
+
+  constructor() {
+    this.isLoginAvailable();
+  }
 
   setAccount(account: string) {
     this.account = account;
@@ -41,6 +45,8 @@ export default class LoginViewModel {
     this.errorMsg = "";
 
     try {
+      await AppRuntime.getInstance().waitUntilReady();
+
       // 1. 调用后端API登录获取token
       const req: LoginRequest = {
         areaCode: "+86",

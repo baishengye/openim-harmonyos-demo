@@ -37,78 +37,11 @@ typedef void (*SyncBoolCb)(int);
 typedef void (*SyncProgressCb)(int);
 typedef void (*UnreadCb)(int);
 
-// Storage for callbacks (index 0 is used)
+// Callback registry API. Implemented once in harmony_callback_storage.c.
 #define CB_MAX 64
-static ConnNoMsgCb gConnConnecting[CB_MAX];
-static ConnNoMsgCb gConnSuccess[CB_MAX];
-static ConnWithMsgCb gConnFailed[CB_MAX];
-static ConnNoMsgCb gConnKicked[CB_MAX];
-static ConnNoMsgCb gConnTokenExpired[CB_MAX];
-static ConnWithMsgCb gConnTokenInvalid[CB_MAX];
-
-static InfoCb gRecvNewMsg[CB_MAX];
-static ReceiptCb gRecvReceipt[CB_MAX];
-static InfoCb gMsgRevoked[CB_MAX];
-static InfoCb gRecvOffline[CB_MAX];
-static DeletedCb gMsgDeleted[CB_MAX];
-static InfoCb gRecvOnline[CB_MAX];
-
-static SyncBoolCb gSyncStart[CB_MAX];
-static SyncBoolCb gSyncFinish[CB_MAX];
-static SyncProgressCb gSyncProgress[CB_MAX];
-static SyncBoolCb gSyncFailed[CB_MAX];
-static InfoCb gConvChanged[CB_MAX];
-static InfoCb gNewConv[CB_MAX];
-static UnreadCb gUnreadChanged[CB_MAX];
-static InfoCb gInputStatus[CB_MAX];
-
-static InfoCb gGroupJoinedAdd[CB_MAX];
-static InfoCb gGroupJoinedDel[CB_MAX];
-static InfoCb gGroupMemberAdd[CB_MAX];
-static InfoCb gGroupMemberDel[CB_MAX];
-static InfoCb gGroupAppAdd[CB_MAX];
-static InfoCb gGroupAppDel[CB_MAX];
-static InfoCb gGroupInfoChanged[CB_MAX];
-static InfoCb gGroupDismissed[CB_MAX];
-static InfoCb gGroupMemberInfo[CB_MAX];
-static InfoCb gGroupAppAccept[CB_MAX];
-static InfoCb gGroupAppReject[CB_MAX];
-
-static InfoCb gFriendAppAdd[CB_MAX];
-static InfoCb gFriendAppDel[CB_MAX];
-static InfoCb gFriendAppAccept[CB_MAX];
-static InfoCb gFriendAppReject[CB_MAX];
-static InfoCb gFriendAdd[CB_MAX];
-static InfoCb gFriendDel[CB_MAX];
-static InfoCb gFriendInfo[CB_MAX];
-static InfoCb gBlackAdd[CB_MAX];
-static InfoCb gBlackDel[CB_MAX];
-
-static InfoCb gSelfInfo[CB_MAX];
-static InfoCb gUserStatus[CB_MAX];
-
-// Signaling callback type
 typedef void (*SignalingCb)(char*);
-static SignalingCb gSignalingReceiveNewInvitation[CB_MAX];
-static SignalingCb gSignalingInviteeAccepted[CB_MAX];
-static SignalingCb gSignalingInviteeAcceptedByOtherDevice[CB_MAX];
-static SignalingCb gSignalingInviteeRejected[CB_MAX];
-static SignalingCb gSignalingInviteeRejectedByOtherDevice[CB_MAX];
-static SignalingCb gSignalingInvitationCancelled[CB_MAX];
-static SignalingCb gSignalingInvitationTimeout[CB_MAX];
-static SignalingCb gSignalingHangUp[CB_MAX];
-static SignalingCb gSignalingRoomParticipantConnected[CB_MAX];
-static SignalingCb gSignalingRoomParticipantDisconnected[CB_MAX];
-
-// Custom business callback
 typedef void (*CustomBusinessCb)(char*);
-static CustomBusinessCb gCustomBusiness[CB_MAX];
-
-// Message kv info callback
 typedef void (*MsgKvInfoCb)(char*);
-static MsgKvInfoCb gMsgKvInfoChanged[CB_MAX];
-
-// Upload callbacks
 typedef void (*UploadOpenCb)(int, long long);
 typedef void (*UploadPartSizeCb)(int, long long, int);
 typedef void (*UploadHashProgressCb)(int, int, long long, char*);
@@ -117,113 +50,115 @@ typedef void (*UploadIDCb)(int, char*);
 typedef void (*UploadPartCompleteCb)(int, int, long long, char*);
 typedef void (*UploadCompleteCb)(int, long long, long long, long long);
 typedef void (*UploadFinishCb)(int, long long, char*, int);
-
-static UploadOpenCb gUploadOpen[CB_MAX];
-static UploadPartSizeCb gUploadPartSize[CB_MAX];
-static UploadHashProgressCb gUploadHashProgress[CB_MAX];
-static UploadHashCompleteCb gUploadHashComplete[CB_MAX];
-static UploadIDCb gUploadID[CB_MAX];
-static UploadPartCompleteCb gUploadPartComplete[CB_MAX];
-static UploadCompleteCb gUploadComplete[CB_MAX];
-static UploadFinishCb gUploadFinish[CB_MAX];
-
-// Upload log progress callback
 typedef void (*UploadLogProgressCb)(int, long long, long long);
-static UploadLogProgressCb gUploadLogProgress[CB_MAX];
-
-// Send message callback
 typedef void (*SendMsgCb)(int, int);
-static SendMsgCb gSendMsg[CB_MAX];
-
-// Base callback type - for OnSuccess/OnError
 typedef void (*BaseSuccessCb)(int, char*);
 typedef void (*BaseErrorCb)(int, int, char*);
-static BaseSuccessCb gBaseSuccess[CB_MAX];
-static BaseErrorCb gBaseError[CB_MAX];
 
-// Callbacks - invoked by Go
-static void callConnConnecting(int v) { if(gConnConnecting[0]) gConnConnecting[0](v); }
-static void callConnSuccess(int v) { if(gConnSuccess[0]) gConnSuccess[0](v); }
-static void callConnFailed(int v, char* m) { if(gConnFailed[0]) gConnFailed[0](v, m); }
-static void callConnKicked(int v) { if(gConnKicked[0]) gConnKicked[0](v); }
-static void callConnTokenExpired(int v) { if(gConnTokenExpired[0]) gConnTokenExpired[0](v); }
-static void callConnTokenInvalid(int v, char* m) { if(gConnTokenInvalid[0]) gConnTokenInvalid[0](v, m); }
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-static void callRecvNewMsg(char* m) { if(gRecvNewMsg[0]) gRecvNewMsg[0](m); }
-static void callRecvReceipt(char* m) { if(gRecvReceipt[0]) gRecvReceipt[0](m); }
-static void callMsgRevoked(char* m) { if(gMsgRevoked[0]) gMsgRevoked[0](m); }
-static void callRecvOffline(char* m) { if(gRecvOffline[0]) gRecvOffline[0](m); }
-static void callMsgDeleted(char* m) { if(gMsgDeleted[0]) gMsgDeleted[0](m); }
-static void callRecvOnline(char* m) { if(gRecvOnline[0]) gRecvOnline[0](m); }
+int RegisterConnListener(ConnNoMsgCb, ConnNoMsgCb, ConnWithMsgCb, ConnNoMsgCb, ConnNoMsgCb, ConnWithMsgCb);
+int RegisterMsgListener(InfoCb, ReceiptCb, InfoCb, InfoCb, DeletedCb, InfoCb);
+int RegisterConvListener(SyncBoolCb, SyncBoolCb, SyncProgressCb, SyncBoolCb, InfoCb, InfoCb, UnreadCb, InfoCb);
+int RegisterGroupListener(InfoCb, InfoCb, InfoCb, InfoCb, InfoCb, InfoCb, InfoCb, InfoCb, InfoCb, InfoCb, InfoCb);
+int RegisterFriendListener(InfoCb, InfoCb, InfoCb, InfoCb, InfoCb, InfoCb, InfoCb, InfoCb, InfoCb);
+int RegisterUserListener(InfoCb, InfoCb);
+int RegisterSignalingListener(SignalingCb, SignalingCb, SignalingCb, SignalingCb, SignalingCb, SignalingCb, SignalingCb, SignalingCb, SignalingCb, SignalingCb);
+int RegisterCustomBusinessListener(CustomBusinessCb);
+int RegisterMsgKvInfoListener(MsgKvInfoCb);
+int RegisterUploadFileCallback(int, UploadOpenCb, UploadPartSizeCb, UploadHashProgressCb, UploadHashCompleteCb, UploadIDCb, UploadPartCompleteCb, UploadCompleteCb, UploadFinishCb);
+int RegisterUploadLogProgress(int, UploadLogProgressCb);
+int RegisterBaseCallback(int, BaseSuccessCb, BaseErrorCb);
+int RegisterSendMsgCallback(int, SendMsgCb);
 
-static void callSyncStart(int v) { if(gSyncStart[0]) gSyncStart[0](v); }
-static void callSyncFinish(int v) { if(gSyncFinish[0]) gSyncFinish[0](v); }
-static void callSyncProgress(int v) { if(gSyncProgress[0]) gSyncProgress[0](v); }
-static void callSyncFailed(int v) { if(gSyncFailed[0]) gSyncFailed[0](v); }
-static void callConvChanged(char* m) { if(gConvChanged[0]) gConvChanged[0](m); }
-static void callNewConv(char* m) { if(gNewConv[0]) gNewConv[0](m); }
-static void callUnreadChanged(int v) { if(gUnreadChanged[0]) gUnreadChanged[0](v); }
-static void callInputStatus(char* m) { if(gInputStatus[0]) gInputStatus[0](m); }
+void UnregisterConnListener(void);
+void UnregisterMsgListener(void);
+void UnregisterConvListener(void);
+void UnregisterGroupListener(void);
+void UnregisterFriendListener(void);
+void UnregisterUserListener(void);
+void UnregisterSignalingListener(void);
+void UnregisterCustomBusinessListener(void);
+void UnregisterMsgKvInfoListener(void);
+void UnregisterUploadFileCallback(int);
+void UnregisterUploadLogProgress(int);
+void UnregisterBaseCallback(int);
+void UnregisterSendMsgCallback(int);
+void UnregisterAllUploadCallbacks(void);
+void UnregisterAllListeners(void);
 
-static void callGroupJoinedAdd(char* m) { if(gGroupJoinedAdd[0]) gGroupJoinedAdd[0](m); }
-static void callGroupJoinedDel(char* m) { if(gGroupJoinedDel[0]) gGroupJoinedDel[0](m); }
-static void callGroupMemberAdd(char* m) { if(gGroupMemberAdd[0]) gGroupMemberAdd[0](m); }
-static void callGroupMemberDel(char* m) { if(gGroupMemberDel[0]) gGroupMemberDel[0](m); }
-static void callGroupAppAdd(char* m) { if(gGroupAppAdd[0]) gGroupAppAdd[0](m); }
-static void callGroupAppDel(char* m) { if(gGroupAppDel[0]) gGroupAppDel[0](m); }
-static void callGroupInfoChanged(char* m) { if(gGroupInfoChanged[0]) gGroupInfoChanged[0](m); }
-static void callGroupDismissed(char* m) { if(gGroupDismissed[0]) gGroupDismissed[0](m); }
-static void callGroupMemberInfo(char* m) { if(gGroupMemberInfo[0]) gGroupMemberInfo[0](m); }
-static void callGroupAppAccept(char* m) { if(gGroupAppAccept[0]) gGroupAppAccept[0](m); }
-static void callGroupAppReject(char* m) { if(gGroupAppReject[0]) gGroupAppReject[0](m); }
+void openim_call_conn_connecting(int);
+void openim_call_conn_success(int);
+void openim_call_conn_failed(int, char*);
+void openim_call_conn_kicked(int);
+void openim_call_conn_token_expired(int);
+void openim_call_conn_token_invalid(int, char*);
+void openim_call_recv_new_msg(char*);
+void openim_call_recv_receipt(char*);
+void openim_call_msg_revoked(char*);
+void openim_call_recv_offline(char*);
+void openim_call_msg_deleted(char*);
+void openim_call_recv_online(char*);
+void openim_call_sync_start(int);
+void openim_call_sync_finish(int);
+void openim_call_sync_progress(int);
+void openim_call_sync_failed(int);
+void openim_call_conv_changed(char*);
+void openim_call_new_conv(char*);
+void openim_call_unread_changed(int);
+void openim_call_input_status(char*);
+void openim_call_group_joined_add(char*);
+void openim_call_group_joined_del(char*);
+void openim_call_group_member_add(char*);
+void openim_call_group_member_del(char*);
+void openim_call_group_app_add(char*);
+void openim_call_group_app_del(char*);
+void openim_call_group_info_changed(char*);
+void openim_call_group_dismissed(char*);
+void openim_call_group_member_info(char*);
+void openim_call_group_app_accept(char*);
+void openim_call_group_app_reject(char*);
+void openim_call_friend_app_add(char*);
+void openim_call_friend_app_del(char*);
+void openim_call_friend_app_accept(char*);
+void openim_call_friend_app_reject(char*);
+void openim_call_friend_add(char*);
+void openim_call_friend_del(char*);
+void openim_call_friend_info(char*);
+void openim_call_black_add(char*);
+void openim_call_black_del(char*);
+void openim_call_self_info(char*);
+void openim_call_user_status(char*);
+void openim_call_signaling_receive_new_invitation(char*);
+void openim_call_signaling_invitee_accepted(char*);
+void openim_call_signaling_invitee_accepted_other(char*);
+void openim_call_signaling_invitee_rejected(char*);
+void openim_call_signaling_invitee_rejected_other(char*);
+void openim_call_signaling_invitation_cancelled(char*);
+void openim_call_signaling_invitation_timeout(char*);
+void openim_call_signaling_hangup(char*);
+void openim_call_signaling_participant_connected(char*);
+void openim_call_signaling_participant_disconnected(char*);
+void openim_call_custom_business(char*);
+void openim_call_msg_kv_changed(char*);
+void openim_call_upload_open(int, long long);
+void openim_call_upload_part_size(int, long long, int);
+void openim_call_upload_hash_progress(int, int, long long, char*);
+void openim_call_upload_hash_complete(int, char*, char*);
+void openim_call_upload_id(int, char*);
+void openim_call_upload_part_complete(int, int, long long, char*);
+void openim_call_upload_complete(int, long long, long long, long long);
+void openim_call_upload_finish(int, long long, char*, int);
+void openim_call_upload_log_progress(int, long long, long long);
+void openim_call_send_msg(int, int);
+void openim_call_base_success(int, char*);
+void openim_call_base_error(int, int, char*);
 
-static void callFriendAppAdd(char* m) { if(gFriendAppAdd[0]) gFriendAppAdd[0](m); }
-static void callFriendAppDel(char* m) { if(gFriendAppDel[0]) gFriendAppDel[0](m); }
-static void callFriendAppAccept(char* m) { if(gFriendAppAccept[0]) gFriendAppAccept[0](m); }
-static void callFriendAppReject(char* m) { if(gFriendAppReject[0]) gFriendAppReject[0](m); }
-static void callFriendAdd(char* m) { if(gFriendAdd[0]) gFriendAdd[0](m); }
-static void callFriendDel(char* m) { if(gFriendDel[0]) gFriendDel[0](m); }
-static void callFriendInfo(char* m) { if(gFriendInfo[0]) gFriendInfo[0](m); }
-static void callBlackAdd(char* m) { if(gBlackAdd[0]) gBlackAdd[0](m); }
-static void callBlackDel(char* m) { if(gBlackDel[0]) gBlackDel[0](m); }
-
-static void callSelfInfo(char* m) { if(gSelfInfo[0]) gSelfInfo[0](m); }
-static void callUserStatus(char* m) { if(gUserStatus[0]) gUserStatus[0](m); }
-
-// Signaling callbacks
-static void callSignalingReceiveNewInvitation(char* m) { if(gSignalingReceiveNewInvitation[0]) gSignalingReceiveNewInvitation[0](m); }
-static void callSignalingInviteeAccepted(char* m) { if(gSignalingInviteeAccepted[0]) gSignalingInviteeAccepted[0](m); }
-static void callSignalingInviteeAcceptedByOtherDevice(char* m) { if(gSignalingInviteeAcceptedByOtherDevice[0]) gSignalingInviteeAcceptedByOtherDevice[0](m); }
-static void callSignalingInviteeRejected(char* m) { if(gSignalingInviteeRejected[0]) gSignalingInviteeRejected[0](m); }
-static void callSignalingInviteeRejectedByOtherDevice(char* m) { if(gSignalingInviteeRejectedByOtherDevice[0]) gSignalingInviteeRejectedByOtherDevice[0](m); }
-static void callSignalingInvitationCancelled(char* m) { if(gSignalingInvitationCancelled[0]) gSignalingInvitationCancelled[0](m); }
-static void callSignalingInvitationTimeout(char* m) { if(gSignalingInvitationTimeout[0]) gSignalingInvitationTimeout[0](m); }
-static void callSignalingHangUp(char* m) { if(gSignalingHangUp[0]) gSignalingHangUp[0](m); }
-static void callSignalingRoomParticipantConnected(char* m) { if(gSignalingRoomParticipantConnected[0]) gSignalingRoomParticipantConnected[0](m); }
-static void callSignalingRoomParticipantDisconnected(char* m) { if(gSignalingRoomParticipantDisconnected[0]) gSignalingRoomParticipantDisconnected[0](m); }
-
-// Custom business callback
-static void callCustomBusiness(char* m) { if(gCustomBusiness[0]) gCustomBusiness[0](m); }
-
-// Message kv info callback
-static void callMsgKvInfoChanged(char* m) { if(gMsgKvInfoChanged[0]) gMsgKvInfoChanged[0](m); }
-
-// Upload callbacks
-static void callUploadOpen(int cb, long long s) { if(gUploadOpen[cb]) gUploadOpen[cb](cb, s); }
-static void callUploadPartSize(int cb, long long s, int n) { if(gUploadPartSize[cb]) gUploadPartSize[cb](cb, s, n); }
-static void callUploadHashProgress(int cb, int i, long long s, char* h) { if(gUploadHashProgress[cb]) gUploadHashProgress[cb](cb, i, s, h); }
-static void callUploadHashComplete(int cb, char* p, char* f) { if(gUploadHashComplete[cb]) gUploadHashComplete[cb](cb, p, f); }
-static void callUploadID(int cb, char* u) { if(gUploadID[cb]) gUploadID[cb](cb, u); }
-static void callUploadPartComplete(int cb, int i, long long s, char* h) { if(gUploadPartComplete[cb]) gUploadPartComplete[cb](cb, i, s, h); }
-static void callUploadComplete(int cb, long long f, long long s, long long st) { if(gUploadComplete[cb]) gUploadComplete[cb](cb, f, s, st); }
-static void callUploadFinish(int cb, long long s, char* u, int t) { if(gUploadFinish[cb]) gUploadFinish[cb](cb, s, u, t); }
-
-// Upload log progress callback
-static void callUploadLogProgress(int cb, long long c, long long t) { if(gUploadLogProgress[cb]) gUploadLogProgress[cb](cb, c, t); }
-
-static void callSendMsg(int cb, int v) { if(gSendMsg[cb]) gSendMsg[cb](cb, v); }
-static void callBaseSuccess(int cb, char* d) { if(gBaseSuccess[cb]) gBaseSuccess[cb](cb, d); }
-static void callBaseError(int cb, int code, char* m) { if(gBaseError[cb]) gBaseError[cb](cb, code, m); }
+#ifdef __cplusplus
+}
+#endif
 
 #endif // LIBOPENIMSDK_H
 
@@ -425,34 +360,6 @@ extern void GetAdvancedHistoryMessageListReverse(int baseCallbackID, char* opera
 extern void GetSpecifiedGroupMembersInfo(int baseCallbackID, char* operationID, char* groupID, char* userIDList);
 extern void UploadLogs(int baseCallbackID, int uploadLogsCallbackID, char* operationID, int line, char* ex);
 extern void GetGroupMemberListByJoinTimeFilter(int baseCallbackID, char* operationID, char* groupID, long long offset, long long count, long long joinTimeBegin, long long joinTimeEnd, char* filterUserIDList);
-extern void RegisterConnListener(uintptr_t onConnecting, uintptr_t onConnectSuccess, uintptr_t onConnectFailed, uintptr_t onKickedOffline, uintptr_t onUserTokenExpired, uintptr_t onUserTokenInvalid);
-extern void RegisterMsgListener(uintptr_t onRecvNewMsg, uintptr_t onRecvReceipt, uintptr_t onMsgRevoked, uintptr_t onRecvOffline, uintptr_t onMsgDeleted, uintptr_t onRecvOnline);
-extern void RegisterConvListener(uintptr_t onSyncStart, uintptr_t onSyncFinish, uintptr_t onSyncProgress, uintptr_t onSyncFailed, uintptr_t onConvChanged, uintptr_t onNewConv, uintptr_t onUnreadChanged, uintptr_t onInputStatus);
-extern void RegisterGroupListener(uintptr_t onJoinedAdd, uintptr_t onJoinedDel, uintptr_t onMemberAdd, uintptr_t onMemberDel, uintptr_t onAppAdd, uintptr_t onAppDel, uintptr_t onInfoChanged, uintptr_t onDismissed, uintptr_t onMemberInfo, uintptr_t onAppAccept, uintptr_t onAppReject);
-extern void RegisterFriendListener(uintptr_t onAppAdd, uintptr_t onAppDel, uintptr_t onAppAccept, uintptr_t onAppReject, uintptr_t onFriendAdd, uintptr_t onFriendDel, uintptr_t onFriendInfo, uintptr_t onBlackAdd, uintptr_t onBlackDel);
-extern void RegisterUserListener(uintptr_t onSelfInfo, uintptr_t onUserStatus);
-extern void RegisterSignalingListener(uintptr_t onReceiveNewInvitation, uintptr_t onInviteeAccepted, uintptr_t onInviteeAcceptedByOtherDevice, uintptr_t onInviteeRejected, uintptr_t onInviteeRejectedByOtherDevice, uintptr_t onInvitationCancelled, uintptr_t onInvitationTimeout, uintptr_t onHangUp, uintptr_t onRoomParticipantConnected, uintptr_t onRoomParticipantDisconnected);
-extern void RegisterCustomBusinessListener(uintptr_t onRecvCustomBusinessMessage);
-extern void RegisterMsgKvInfoListener(uintptr_t onMessageKvInfoChanged);
-extern void RegisterUploadFileCallback(int uploadCallbackID, uintptr_t onOpen, uintptr_t onPartSize, uintptr_t onHashPartProgress, uintptr_t onHashPartComplete, uintptr_t onUploadID, uintptr_t onUploadPartComplete, uintptr_t onUploadComplete, uintptr_t onComplete);
-extern void RegisterUploadLogProgress(int uploadLogsCallbackID, uintptr_t onProgress);
-extern void RegisterBaseCallback(int baseCallbackID, uintptr_t onSuccess, uintptr_t onError);
-extern void RegisterSendMsgCallback(int sendReceiptCallbackID, uintptr_t onProgress);
-extern void UnregisterUploadFileCallback(int uploadCallbackID);
-extern void UnregisterUploadLogProgress(int uploadLogsCallbackID);
-extern void UnregisterSendMsgCallback(int sendReceiptCallbackID);
-extern void UnregisterBaseCallback(int baseCallbackID);
-extern void UnregisterAllUploadCallbacks();
-extern void UnregisterAllListeners();
-extern void UnregisterConnListener();
-extern void UnregisterMsgListener();
-extern void UnregisterConvListener();
-extern void UnregisterGroupListener();
-extern void UnregisterFriendListener();
-extern void UnregisterUserListener();
-extern void UnregisterSignalingListener();
-extern void UnregisterCustomBusinessListener();
-extern void UnregisterMsgKvInfoListener();
 
 #ifdef __cplusplus
 }

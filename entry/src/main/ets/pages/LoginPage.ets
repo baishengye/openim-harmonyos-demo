@@ -63,7 +63,7 @@ struct LoginPage {
           })
 
         Column() {
-          TextInput({ placeholder: $r('app.string.account'),  text: "13682215018"})
+          TextInput({ placeholder: $r('app.string.account'), text: this.loginViewModel.account })
             .maxLength(11)
             .type(InputType.USER_NAME)
             .inputStyle()
@@ -73,7 +73,7 @@ struct LoginPage {
 
           Line().lineStyle()
 
-          TextInput({ placeholder: $r('app.string.password'),  text: "Aa111111" })
+          TextInput({ placeholder: $r('app.string.password'), text: this.loginViewModel.password })
             .maxLength(Constants.INPUT_PASSWORD_LENGTH)
             .type(InputType.Password)
             .inputStyle()
@@ -102,6 +102,14 @@ struct LoginPage {
           right: $r('app.float.forgot_margin_right')
         })
 
+        if (this.loginViewModel.errorMsg.length > 0) {
+          Text(this.loginViewModel.errorMsg)
+            .width(Constants.BUTTON_WIDTH)
+            .fontSize($r('app.float.small_text_size'))
+            .fontColor('#E84026')
+            .margin({ top: 12 })
+        }
+
         Button($r('app.string.login'), { type: ButtonType.Capsule })
           .width(Constants.BUTTON_WIDTH)
           .height($r('app.float.login_button_height'))
@@ -113,15 +121,22 @@ struct LoginPage {
             top: $r('app.float.button_top'),
             bottom: $r('app.float.button_bottom')
           })
-          .enabled(this.loginViewModel.isLogin)
+          .enabled(this.loginViewModel.isLogin && !this.loginViewModel.isLoading)
           .onClick(async () => {
-            await this.loginViewModel.login();
-            this.getUIContext().getRouter().replaceUrl({
-              url: 'pages/HomePage'
-            }).catch((error: BusinessError) => {
-              Logger.error(`replaceUrl error ${error.code}`)
-            });
+            const success = await this.loginViewModel.login();
+            if (success) {
+              this.getUIContext().getRouter().replaceUrl({
+                url: 'pages/HomePage'
+              }).catch((error: BusinessError) => {
+                Logger.error(`replaceUrl error ${error.code}`)
+              });
+            }
           })
+        if (this.loginViewModel.isLoading) {
+          LoadingProgress()
+            .width(32)
+            .height(32)
+        }
         Text($r('app.string.register_account'))
           .fontColor($r('app.color.login_blue_color'))
           .fontSize($r('app.float.normal_text_size'))

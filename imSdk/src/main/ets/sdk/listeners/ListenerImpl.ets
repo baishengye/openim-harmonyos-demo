@@ -533,7 +533,13 @@ export class BaseCallbackWrapper<T> implements NativeBaseCallback {
 
   onSuccess(data: string): void {
     if (this.callback != null) {
-      this.callback.onSuccess(JSON.parse(data) as T);
+      try {
+        this.callback.onSuccess(JSON.parse(data) as T);
+      } catch (error) {
+        // Login/logout and several command-style APIs legitimately return an
+        // empty or plain string instead of JSON.
+        this.callback.onSuccess(data as T);
+      }
     }
   }
 }

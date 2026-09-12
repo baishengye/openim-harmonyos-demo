@@ -23,6 +23,7 @@ napi_value NAPI_getSpecifyFriendsInfo(napi_env env, napi_callback_info info) {
         operationID = "napi_getSpecifyFriendsInfo_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: GetSpecifyFriendsInfo(int baseCallbackID, char* operationID, char* userIDList, int filterBlack)
     GetSpecifyFriendsInfo(cbId, (char*)operationID.c_str(), (char*)userIDList.c_str(), filterBlack);
     return CreateJSUndefined(env);
@@ -38,6 +39,7 @@ napi_value NAPI_getFriendList(napi_env env, napi_callback_info info) {
         operationID = "napi_getFriendList_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: GetFriendList(int baseCallbackID, char* operationID, int filterBlack)
     GetFriendList(cbId, (char*)operationID.c_str(), filterBlack);
     return CreateJSUndefined(env);
@@ -55,6 +57,7 @@ napi_value NAPI_getFriendListPage(napi_env env, napi_callback_info info) {
         operationID = "napi_getFriendListPage_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: GetFriendListPage(int baseCallbackID, char* operationID, int offset, int count, int filterBlack)
     GetFriendListPage(cbId, (char*)operationID.c_str(), offset, count, filterBlack);
     return CreateJSUndefined(env);
@@ -70,6 +73,7 @@ napi_value NAPI_searchFriends(napi_env env, napi_callback_info info) {
         operationID = "napi_searchFriends_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: SearchFriends(int baseCallbackID, char* operationID, char* searchParam)
     SearchFriends(cbId, (char*)operationID.c_str(), (char*)searchParam.c_str());
     return CreateJSUndefined(env);
@@ -85,6 +89,7 @@ napi_value NAPI_checkFriend(napi_env env, napi_callback_info info) {
         operationID = "napi_checkFriend_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: CheckFriend(int baseCallbackID, char* operationID, char* userIDList)
     CheckFriend(cbId, (char*)operationID.c_str(), (char*)userIDList.c_str());
     return CreateJSUndefined(env);
@@ -100,6 +105,7 @@ napi_value NAPI_addFriend(napi_env env, napi_callback_info info) {
         operationID = "napi_addFriend_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: AddFriend(int baseCallbackID, char* operationID, char* userIDReqMsg)
     AddFriend(cbId, (char*)operationID.c_str(), (char*)userIDReqMsg.c_str());
     return CreateJSUndefined(env);
@@ -115,6 +121,7 @@ napi_value NAPI_updateFriends(napi_env env, napi_callback_info info) {
         operationID = "napi_updateFriends_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: UpdateFriends(int baseCallbackID, char* operationID, char* req)
     UpdateFriends(cbId, (char*)operationID.c_str(), (char*)req.c_str());
     return CreateJSUndefined(env);
@@ -130,6 +137,7 @@ napi_value NAPI_deleteFriend(napi_env env, napi_callback_info info) {
         operationID = "napi_deleteFriend_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: DeleteFriend(int baseCallbackID, char* operationID, char* friendUserID)
     DeleteFriend(cbId, (char*)operationID.c_str(), (char*)friendUserID.c_str());
     return CreateJSUndefined(env);
@@ -145,6 +153,7 @@ napi_value NAPI_getFriendApplicationListAsRecipient(napi_env env, napi_callback_
         operationID = "napi_getFriendApplicationListAsRecipient_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: GetFriendApplicationListAsRecipient(int baseCallbackID, char* operationID, char* req)
     GetFriendApplicationListAsRecipient(cbId, (char*)operationID.c_str(), (char*)req.c_str());
     return CreateJSUndefined(env);
@@ -160,6 +169,7 @@ napi_value NAPI_getFriendApplicationListAsApplicant(napi_env env, napi_callback_
         operationID = "napi_getFriendApplicationListAsApplicant_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: GetFriendApplicationListAsApplicant(int baseCallbackID, char* operationID, char* req)
     GetFriendApplicationListAsApplicant(cbId, (char*)operationID.c_str(), (char*)req.c_str());
     return CreateJSUndefined(env);
@@ -175,6 +185,7 @@ napi_value NAPI_acceptFriendApplication(napi_env env, napi_callback_info info) {
         operationID = "napi_acceptFriendApplication_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: AcceptFriendApplication(int baseCallbackID, char* operationID, char* userIDHandleMsg)
     AcceptFriendApplication(cbId, (char*)operationID.c_str(), (char*)userIDHandleMsg.c_str());
     return CreateJSUndefined(env);
@@ -190,6 +201,7 @@ napi_value NAPI_refuseFriendApplication(napi_env env, napi_callback_info info) {
         operationID = "napi_refuseFriendApplication_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: RefuseFriendApplication(int baseCallbackID, char* operationID, char* userIDHandleMsg)
     RefuseFriendApplication(cbId, (char*)operationID.c_str(), (char*)userIDHandleMsg.c_str());
     return CreateJSUndefined(env);
@@ -206,6 +218,7 @@ napi_value NAPI_addBlack(napi_env env, napi_callback_info info) {
         operationID = "napi_addBlack_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: AddBlack(int baseCallbackID, char* operationID, char* blackUserID, char* ex)
     AddBlack(cbId, (char*)operationID.c_str(), (char*)blackUserID.c_str(), (char*)ex.c_str());
     return CreateJSUndefined(env);
@@ -220,6 +233,7 @@ napi_value NAPI_getBlackList(napi_env env, napi_callback_info info) {
         operationID = "napi_getBlackList_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: GetBlackList(int baseCallbackID, char* operationID)
     GetBlackList(cbId, (char*)operationID.c_str());
     return CreateJSUndefined(env);
@@ -235,6 +249,7 @@ napi_value NAPI_removeBlack(napi_env env, napi_callback_info info) {
         operationID = "napi_removeBlack_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: RemoveBlack(int baseCallbackID, char* operationID, char* removeUserID)
     RemoveBlack(cbId, (char*)operationID.c_str(), (char*)removeUserID.c_str());
     return CreateJSUndefined(env);
@@ -250,6 +265,7 @@ napi_value NAPI_getFriendApplicationUnhandledCount(napi_env env, napi_callback_i
         operationID = "napi_getFriendApplicationUnhandledCount_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: GetFriendApplicationUnhandledCount(int baseCallbackID, char* operationID, char* req)
     GetFriendApplicationUnhandledCount(cbId, (char*)operationID.c_str(), (char*)req.c_str());
     return CreateJSUndefined(env);
@@ -266,6 +282,7 @@ napi_value NAPI_setFriendRemark(napi_env env, napi_callback_info info) {
         operationID = "napi_setFriendRemark_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: SetFriendRemark(int baseCallbackID, char* operationID, char* friendUserID, char* remark)
     SetFriendRemark(cbId, (char*)operationID.c_str(), (char*)friendUserID.c_str(), (char*)remark.c_str());
     return CreateJSUndefined(env);
@@ -282,6 +299,7 @@ napi_value NAPI_getSpecifiedFriendsInfo(napi_env env, napi_callback_info info) {
         operationID = "napi_getSpecifiedFriendsInfo_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: GetSpecifyFriendsInfo(int baseCallbackID, char* operationID, char* userIDList, int filterBlack)
     GetSpecifyFriendsInfo(cbId, (char*)operationID.c_str(), (char*)userIDList.c_str(), filterBlack);
     return CreateJSUndefined(env);

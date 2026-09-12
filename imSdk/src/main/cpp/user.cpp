@@ -21,6 +21,7 @@ napi_value NAPI_getUsersInfo(napi_env env, napi_callback_info info) {
         operationID = "napi_getUsersInfo_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: GetUsersInfo(int baseCallbackID, char* operationID, char* userIDList)
     GetUsersInfo(cbId, (char*)operationID.c_str(), (char*)userIDList.c_str());
     return CreateJSUndefined(env);
@@ -35,6 +36,7 @@ napi_value NAPI_getSelfUserInfo(napi_env env, napi_callback_info info) {
         operationID = "napi_getSelfUserInfo_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: GetSelfUserInfo(int baseCallbackID, char* operationID)
     GetSelfUserInfo(cbId, (char*)operationID.c_str());
     return CreateJSUndefined(env);
@@ -50,6 +52,7 @@ napi_value NAPI_setSelfInfo(napi_env env, napi_callback_info info) {
         operationID = "napi_setSelfInfo_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: SetSelfInfo(int baseCallbackID, char* operationID, char* userInfo)
     SetSelfInfo(cbId, (char*)operationID.c_str(), (char*)userInfo.c_str());
     return CreateJSUndefined(env);
@@ -65,6 +68,7 @@ napi_value NAPI_getUserStatus(napi_env env, napi_callback_info info) {
         operationID = "napi_getUserStatus_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: GetUserStatus(int baseCallbackID, char* operationID, char* userIDList)
     GetUserStatus(cbId, (char*)operationID.c_str(), (char*)userIDList.c_str());
     return CreateJSUndefined(env);
@@ -80,6 +84,7 @@ napi_value NAPI_subscribeUsersStatus(napi_env env, napi_callback_info info) {
         operationID = "napi_subscribeUsersStatus_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: SubscribeUsersStatus(int baseCallbackID, char* operationID, char* userIDList)
     SubscribeUsersStatus(cbId, (char*)operationID.c_str(), (char*)userIDList.c_str());
     return CreateJSUndefined(env);
@@ -95,6 +100,7 @@ napi_value NAPI_unsubscribeUsersStatus(napi_env env, napi_callback_info info) {
         operationID = "napi_unsubscribeUsersStatus_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: UnsubscribeUsersStatus(int baseCallbackID, char* operationID, char* userIDList)
     UnsubscribeUsersStatus(cbId, (char*)operationID.c_str(), (char*)userIDList.c_str());
     return CreateJSUndefined(env);
@@ -109,6 +115,7 @@ napi_value NAPI_getSubscribeUsersStatus(napi_env env, napi_callback_info info) {
         operationID = "napi_getSubscribeUsersStatus_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: GetSubscribeUsersStatus(int baseCallbackID, char* operationID)
     GetSubscribeUsersStatus(cbId, (char*)operationID.c_str());
     return CreateJSUndefined(env);
@@ -124,6 +131,7 @@ napi_value NAPI_setAppBackgroundStatus(napi_env env, napi_callback_info info) {
         operationID = "napi_setAppBackgroundStatus_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: SetAppBackgroundStatus(int baseCallbackID, char* operationID, int isBackground)
     SetAppBackgroundStatus(cbId, (char*)operationID.c_str(), isBackground ? 1 : 0);
     return CreateJSUndefined(env);
@@ -138,6 +146,7 @@ napi_value NAPI_networkStatusChanged(napi_env env, napi_callback_info info) {
         operationID = "napi_networkStatusChanged_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: NetworkStatusChanged(int baseCallbackID, char* operationID)
     NetworkStatusChanged(cbId, (char*)operationID.c_str());
     return CreateJSUndefined(env);

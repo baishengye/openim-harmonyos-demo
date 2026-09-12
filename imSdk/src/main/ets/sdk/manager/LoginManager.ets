@@ -8,7 +8,6 @@ import { debug, error, info } from '../internal/log/Logger';
 import { BaseCallback, ConnListener } from '../listeners/listener';
 import { BaseCallbackWrapper, ConnListenerWrapper } from '../listeners/ListenerImpl';
 import { InitConfig } from '../models/entity';
-import { buildOperationID } from '../utils/Utils';
 import { toString } from '../utils/JsonUtil';
 import { LoginStatus } from '../enums/enum';
 
@@ -87,10 +86,7 @@ export class LoginManager {
    * @returns 用户ID
    */
   getLoginUserID(): string {
-
-    im.add(1,2)
-    // return im.getLoginUserID();
-    return "";
+    return im.getLoginUserID();
   }
 
   /**

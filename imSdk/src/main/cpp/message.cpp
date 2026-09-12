@@ -4,7 +4,6 @@
 
 //#include "include/libopenimsdk.h"
 #include "napi/native_api.h"
-#include "hilog/log.h"
 #include "callback.h"
 #include "utils.h"
 #include <string>
@@ -326,6 +325,7 @@ napi_value NAPI_sendMessage(napi_env env, napi_callback_info info) {
     }
 //    // Store SendMsgCallBack callback (extracts onSuccess, onError, onProgress from args[0])
     int cbId = StoreSendMsgCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
 //    // New signature: SendMessage(int baseCallbackID, int sendReceiptCallbackID, char* message, char* recvID, char* groupID, char* offlinePushInfo, char* operationID, int isOnlineOnly)
     SendMessage(cbId, cbId, (char*)message.c_str(), (char*)recvID.c_str(), (char*)groupID.c_str(), (char*)offlinePushInfo.c_str(), (char*)operationID.c_str(), isOnlineOnly);
     return CreateJSUndefined(env);
@@ -346,6 +346,7 @@ napi_value NAPI_sendMessageNotOss(napi_env env, napi_callback_info info) {
     }
 //    // Store SendMsgCallBack callback (extracts onSuccess, onError, onProgress from args[0])
     int cbId = StoreSendMsgCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
 //    // New signature: SendMessageNotOss(int baseCallbackID, int sendReceiptCallbackID, char* message, char* recvID, char* groupID, char* offlinePushInfo, char* operationID, int isOnlineOnly)
     SendMessageNotOss(cbId, cbId, (char*)message.c_str(), (char*)recvID.c_str(), (char*)groupID.c_str(), (char*)offlinePushInfo.c_str(), (char*)operationID.c_str(), isOnlineOnly);
     return CreateJSUndefined(env);
@@ -362,6 +363,7 @@ napi_value NAPI_typingStatusUpdate(napi_env env, napi_callback_info info) {
         operationID = "napi_typing_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
 //    // New signature: TypingStatusUpdate(int baseCallbackID, char* operationID, char* conversationID, char* msgTip)
     TypingStatusUpdate(cbId, (char*)operationID.c_str(), (char*)conversationID.c_str(), (char*)msgTip.c_str());
     return CreateJSUndefined(env);
@@ -378,6 +380,7 @@ napi_value NAPI_markMessageAsRead(napi_env env, napi_callback_info info) {
         operationID = "napi_markRead_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
 //    // New signature: MarkConversationMessageAsRead(int baseCallbackID, char* operationID, char* conversationID)
     MarkConversationMessageAsRead(cbId, (char*)operationID.c_str(), (char*)conversationID.c_str());
     (void)clientMsgID;
@@ -393,6 +396,7 @@ napi_value NAPI_markAllMessageAsRead(napi_env env, napi_callback_info info) {
         operationID = "napi_markAllRead_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: MarkAllConversationMessageAsRead(int baseCallbackID, char* operationID)
     MarkAllConversationMessageAsRead(cbId, (char*)operationID.c_str());
     return CreateJSUndefined(env);
@@ -409,6 +413,7 @@ napi_value NAPI_revokeMessage(napi_env env, napi_callback_info info) {
         operationID = "napi_revoke_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: RevokeMessage(int baseCallbackID, char* operationID, char* conversationID, char* clientMsgID)
     RevokeMessage(cbId, (char*)operationID.c_str(), (char*)conversationID.c_str(), (char*)clientMsgID.c_str());
     return CreateJSUndefined(env);
@@ -425,6 +430,7 @@ napi_value NAPI_deleteMessageFromLocal(napi_env env, napi_callback_info info) {
         operationID = "napi_deleteLocal_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: DeleteMessageFromLocal(int baseCallbackID, char* operationID, char* conversationID, char* clientMsgID)
     DeleteMessageFromLocal(cbId, (char*)operationID.c_str(), (char*)conversationID.c_str(), (char*)clientMsgID.c_str());
     return CreateJSUndefined(env);
@@ -441,6 +447,7 @@ napi_value NAPI_deleteMessage(napi_env env, napi_callback_info info) {
         operationID = "napi_deleteMsg_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: DeleteMessage(int baseCallbackID, char* operationID, char* conversationID, char* seqList)
     DeleteMessage(cbId, (char*)operationID.c_str(), (char*)conversationID.c_str(), (char*)clientMsgID.c_str());
     return CreateJSUndefined(env);
@@ -455,6 +462,7 @@ napi_value NAPI_deleteAllMessageFromLocal(napi_env env, napi_callback_info info)
         operationID = "napi_deleteAllLocal_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: DeleteAllMsgFromLocal(int baseCallbackID, char* operationID)
     DeleteAllMsgFromLocal(cbId, (char*)operationID.c_str());
     return CreateJSUndefined(env);
@@ -469,6 +477,7 @@ napi_value NAPI_deleteAllMsgFromLocalAndSvr(napi_env env, napi_callback_info inf
         operationID = "napi_deleteAll_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     DeleteAllMsgFromLocalAndSvr(cbId, (char*)operationID.c_str());
     return CreateJSUndefined(env);
 }
@@ -482,6 +491,7 @@ napi_value NAPI_deleteAllMsgFromLocal(napi_env env, napi_callback_info info) {
         operationID = "napi_deleteAllLocal_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     DeleteAllMsgFromLocal(cbId, (char*)operationID.c_str());
     return CreateJSUndefined(env);
 }
@@ -498,6 +508,7 @@ napi_value NAPI_insertSingleMessageToLocal(napi_env env, napi_callback_info info
         operationID = "napi_insertSingle_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     InsertSingleMessageToLocal(cbId, (char*)operationID.c_str(), (char*)message.c_str(), (char*)recvID.c_str(), (char*)sendID.c_str());
     return CreateJSUndefined(env);
 }
@@ -514,6 +525,7 @@ napi_value NAPI_insertSingleMessageToLocalStorage(napi_env env, napi_callback_in
         operationID = "napi_insertSingleStorage_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     InsertSingleMessageToLocal(cbId, (char*)operationID.c_str(), (char*)message.c_str(), (char*)recvID.c_str(), (char*)sendID.c_str());
     return CreateJSUndefined(env);
 }
@@ -528,6 +540,7 @@ napi_value NAPI_findMessageList(napi_env env, napi_callback_info info) {
         operationID = "napi_findMsg_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: FindMessageList(int baseCallbackID, char* operationID, char* findOptions)
     FindMessageList(cbId, (char*)operationID.c_str(), (char*)findOptions.c_str());
     return CreateJSUndefined(env);
@@ -551,6 +564,7 @@ napi_value NAPI_getAdvancedHistoryMessageList(napi_env env, napi_callback_info i
         operationID = "napi_getAdvHistory_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: GetAdvancedHistoryMessageList(int baseCallbackID, char* operationID, char* getMessageOptions)
     GetAdvancedHistoryMessageList(cbId, (char*)operationID.c_str(), (char*)getOptions.c_str());
     return CreateJSUndefined(env);
@@ -566,6 +580,7 @@ napi_value NAPI_getAdvancedHistoryMessageListReverse(napi_env env, napi_callback
         operationID = "napi_getAdvHistoryRev_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: GetAdvancedHistoryMessageListReverse(int baseCallbackID, char* operationID, char* getMessageOptions)
     GetAdvancedHistoryMessageListReverse(cbId, (char*)operationID.c_str(), (char*)getOptions.c_str());
     return CreateJSUndefined(env);
@@ -581,6 +596,7 @@ napi_value NAPI_searchLocalMessages(napi_env env, napi_callback_info info) {
         operationID = "napi_searchLocal_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: SearchLocalMessages(int baseCallbackID, char* operationID, char* searchParam)
     SearchLocalMessages(cbId, (char*)operationID.c_str(), (char*)searchParam.c_str());
     return CreateJSUndefined(env);
@@ -596,6 +612,7 @@ napi_value NAPI_searchConversation(napi_env env, napi_callback_info info) {
         operationID = "napi_searchConv_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: SearchConversation(int baseCallbackID, char* operationID, char* searchParam)
     SearchConversation(cbId, (char*)operationID.c_str(), (char*)searchParam.c_str());
     return CreateJSUndefined(env);
@@ -613,6 +630,7 @@ napi_value NAPI_setMessageLocalEx(napi_env env, napi_callback_info info) {
         operationID = "napi_setLocalEx_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: SetMessageLocalEx(int baseCallbackID, char* operationID, char* conversationID, char* clientMsgID, char* localEx)
     SetMessageLocalEx(cbId, (char*)operationID.c_str(), (char*)conversationID.c_str(), (char*)clientMsgID.c_str(), (char*)localEx.c_str());
     return CreateJSUndefined(env);
@@ -629,6 +647,7 @@ napi_value NAPI_deleteMessageFromLocalStorage(napi_env env, napi_callback_info i
         operationID = "napi_deleteMessageFromLocalStorage_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: DeleteMessageFromLocalStorage(int baseCallbackID, char* operationID, char* conversationID, char* seqList)
     DeleteMessageFromLocalStorage(cbId, (char*)operationID.c_str(), (char*)conversationID.c_str(), (char*)seqList.c_str());
     return CreateJSUndefined(env);
@@ -646,6 +665,7 @@ napi_value NAPI_insertGroupMessageToLocalStorage(napi_env env, napi_callback_inf
         operationID = "napi_insertGroupMessageToLocalStorage_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: InsertGroupMessageToLocalStorage(int baseCallbackID, char* operationID, char* message, char* groupID, char* sendID)
     InsertGroupMessageToLocalStorage(cbId, (char*)operationID.c_str(), (char*)message.c_str(), (char*)groupID.c_str(), (char*)sendID.c_str());
     return CreateJSUndefined(env);
@@ -662,6 +682,7 @@ napi_value NAPI_markMessagesAsReadByMsgID(napi_env env, napi_callback_info info)
         operationID = "napi_markMsgsReadById_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: MarkMessagesAsReadByMsgID(int baseCallbackID, char* operationID, char* conversationID, char* clientMsgIDs)
     MarkMessagesAsReadByMsgID(cbId, (char*)operationID.c_str(), (char*)conversationID.c_str(), (char*)clientMsgIDs.c_str());
     return CreateJSUndefined(env);

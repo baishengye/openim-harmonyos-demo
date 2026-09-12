@@ -1,6 +1,20 @@
 {
   "app": {
-    "signingConfigs": [],
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "/Users/baishengye/.ohos/config/default_openim-harmonyos-demo_y2_qtdnqpU4FbfghUp8eeKa4NtqxrBWV_N2raU_o9ac=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001BE8C800592C43DC8D9EC92727CFB18AC7ADFF434B854F60D521E032B4356C4B489487DE97E325D5",
+          "profile": "/Users/baishengye/.ohos/config/default_openim-harmonyos-demo_y2_qtdnqpU4FbfghUp8eeKa4NtqxrBWV_N2raU_o9ac=.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "/Users/baishengye/.ohos/config/default_openim-harmonyos-demo_y2_qtdnqpU4FbfghUp8eeKa4NtqxrBWV_N2raU_o9ac=.p12",
+          "storePassword": "0000001BEB63ECB6181FDF6DFE1F3DB3F6E4EBB67DD717754C6C8F58AC91AB665A3A27600906ADF6D57C5B"
+        }
+      }
+    ],
     "products": [
       {
         "name": "default",

@@ -31,10 +31,6 @@ import {
   buildOperationID,
 } from "imsdk";
 
-import {
-  add
-} from "democpp";
-
 /**
  * SDK包装类，提供Promise风格的API
  */
@@ -150,9 +146,53 @@ export class OpenIMAppWrapper {
    * 获取当前用户ID
    */
   getLoginUserID(): string {
-    add(1,2)
-    return "";
+    return OpenIMClient.loginManager.getLoginUserID()
   }
+
+  getSdkVersion(): string {
+    return OpenIMClient.loginManager.getSdkVersion();
+  }
+
+  unInitSDK(): void {
+    OpenIMClient.loginManager.unInitSDK(buildOperationID());
+  }
+
+  getAllConversationList(): Promise<ConversationInfo[]> {
+    return new Promise<ConversationInfo[]>((resolve, reject) => {
+      OpenIMClient.conversationManager.getAllConversationList(
+        new PromiseBaseCallback<ConversationInfo[]>(resolve, reject),
+        buildOperationID()
+      );
+    });
+  }
+
+  getFriendList(): Promise<FriendInfo[]> {
+    return new Promise<FriendInfo[]>((resolve, reject) => {
+      OpenIMClient.friendshipManager.getFriendList(
+        new PromiseBaseCallback<FriendInfo[]>(resolve, reject),
+        buildOperationID()
+      );
+    });
+  }
+
+  getJoinedGroupList(): Promise<GroupInfo[]> {
+    return new Promise<GroupInfo[]>((resolve, reject) => {
+      OpenIMClient.groupManager.getJoinedGroupList(
+        new PromiseBaseCallback<GroupInfo[]>(resolve, reject),
+        buildOperationID()
+      );
+    });
+  }
+
+  getSelfUserInfo(): Promise<UserInfo> {
+    return new Promise<UserInfo>((resolve, reject) => {
+      OpenIMClient.userInfoManager.getSelfUserInfo(
+        new PromiseBaseCallback<UserInfo>(resolve, reject),
+        buildOperationID()
+      );
+    });
+  }
+
   //
   // /**
   //  * 获取所有会话列表

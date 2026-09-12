@@ -11,18 +11,18 @@
 // ============================================================
 extern "C" {
 // Base 回调
-void CAPI_OnBaseSuccess(int cbId, const char* data);
-void CAPI_OnBaseError(int cbId, int code, const char* message);
+void CAPI_OnBaseSuccess(int cbId, char* data);
+void CAPI_OnBaseError(int cbId, int code, char* message);
 
 // 上传文件回调（SDK 现在传递 cbId 作为第一个参数）
 void CAPI_OnUploadOpen(int cbId, long long fileSize);
 void CAPI_OnUploadPartSize(int cbId, long long partSize, int partNumber);
-void CAPI_OnUploadHashProgress(int cbId, int index, long long size, const char* partHash);
-void CAPI_OnUploadHashComplete(int cbId, const char* partsHash, const char* fileHash);
-void CAPI_OnUploadID(int cbId, const char* uploadID);
-void CAPI_OnUploadPartComplete(int cbId, int index, long long partSize, const char* partHash);
+void CAPI_OnUploadHashProgress(int cbId, int index, long long size, char* partHash);
+void CAPI_OnUploadHashComplete(int cbId, char* partsHash, char* fileHash);
+void CAPI_OnUploadID(int cbId, char* uploadID);
+void CAPI_OnUploadPartComplete(int cbId, int index, long long partSize, char* partHash);
 void CAPI_OnUploadComplete(int cbId, long long fileSize, long long streamSize, long long storageSize);
-void CAPI_OnUploadFinish(int cbId, long long size, const char* url, int fileType);
+void CAPI_OnUploadFinish(int cbId, long long size, char* url, int fileType);
 
 // 日志上传回调（SDK 现在传递 cbId 作为第一个参数）
 void CAPI_OnUploadLogProgress(int cbId, long long current, long long total);
@@ -206,6 +206,31 @@ struct CallbackEvent {
 
 static napi_threadsafe_function g_callbackDispatcher = nullptr;
 
+static bool CreateFunctionReference(napi_env env, napi_value value, napi_ref* reference) {
+    napi_valuetype type = napi_undefined;
+    if (!value || napi_typeof(env, value, &type) != napi_ok || type != napi_function) {
+        napi_throw_type_error(env, nullptr, "OpenIM callback must be a function");
+        return false;
+    }
+    if (napi_create_reference(env, value, 1, reference) != napi_ok) {
+        napi_throw_error(env, nullptr, "Failed to retain OpenIM callback");
+        return false;
+    }
+    return true;
+}
+
+static void DeleteReference(napi_env env, napi_ref& reference) {
+    if (!reference) return;
+    napi_delete_reference(env, reference);
+    reference = nullptr;
+}
+
+static int CallbackRegistrationFailed(napi_env env, int callbackId, const char* message) {
+    FreeCallbackId(callbackId);
+    napi_throw_error(env, nullptr, message);
+    return INVALID_CALLBACK_ID;
+}
+
 static void ShutdownCallbackDispatcher(void*) {
     DeleteAllCallbacks();
     if (g_callbackDispatcher) {
@@ -318,16 +343,27 @@ void FreeCallbackId(int cbId) {
 
 int StoreBaseCallback(napi_env env, napi_value onSuccess, napi_value onError) {
     int cbId = AllocateCallbackId();
-    if (cbId < 0) return INVALID_CALLBACK_ID;
+    if (cbId < 0) {
+        napi_throw_error(env, nullptr, "OpenIM callback capacity exhausted");
+        return INVALID_CALLBACK_ID;
+    }
 
-    napi_create_reference(env, onSuccess, 1, &g_baseCallbacks[cbId].onSuccessRef);
-    napi_create_reference(env, onError, 1, &g_baseCallbacks[cbId].onErrorRef);
-    g_baseCallbacks[cbId].env = env;
-    g_baseCallbacks[cbId].isValid = true;
+    auto& ctx = g_baseCallbacks[cbId];
+    ctx.env = env;
+    if (!CreateFunctionReference(env, onSuccess, &ctx.onSuccessRef) ||
+        !CreateFunctionReference(env, onError, &ctx.onErrorRef)) {
+        DeleteReference(env, ctx.onSuccessRef);
+        DeleteReference(env, ctx.onErrorRef);
+        FreeCallbackId(cbId);
+        return INVALID_CALLBACK_ID;
+    }
 
-    // Register with SDK
-    RegisterBaseCallback(cbId, reinterpret_cast<uintptr_t>(CAPI_OnBaseSuccess),
-                         reinterpret_cast<uintptr_t>(CAPI_OnBaseError));
+    if (!RegisterBaseCallback(cbId, CAPI_OnBaseSuccess, CAPI_OnBaseError)) {
+        DeleteReference(env, ctx.onSuccessRef);
+        DeleteReference(env, ctx.onErrorRef);
+        return CallbackRegistrationFailed(env, cbId, "Failed to register OpenIM base callback");
+    }
+    ctx.isValid = true;
 
     return cbId;
 }
@@ -378,31 +414,54 @@ int StoreUploadCallbacks(
     napi_value onComplete
 ) {
     int cbId = AllocateCallbackId();
-    if (cbId < 0) return INVALID_CALLBACK_ID;
+    if (cbId < 0) {
+        napi_throw_error(env, nullptr, "OpenIM callback capacity exhausted");
+        return INVALID_CALLBACK_ID;
+    }
 
     auto& ctx = g_upload_callbacks[cbId];
-    napi_create_reference(env, onOpen, 1, &ctx.onOpenRef);
-    napi_create_reference(env, onPartSize, 1, &ctx.onPartSizeRef);
-    napi_create_reference(env, onHashPartProgress, 1, &ctx.onHashPartProgressRef);
-    napi_create_reference(env, onHashPartComplete, 1, &ctx.onHashPartCompleteRef);
-    napi_create_reference(env, onUploadID, 1, &ctx.onUploadIDRef);
-    napi_create_reference(env, onUploadPartComplete, 1, &ctx.onUploadPartCompleteRef);
-    napi_create_reference(env, onUploadComplete, 1, &ctx.onUploadCompleteRef);
-    napi_create_reference(env, onComplete, 1, &ctx.onCompleteRef);
     ctx.env = env;
-    ctx.isValid = true;
+    if (!CreateFunctionReference(env, onOpen, &ctx.onOpenRef) ||
+        !CreateFunctionReference(env, onPartSize, &ctx.onPartSizeRef) ||
+        !CreateFunctionReference(env, onHashPartProgress, &ctx.onHashPartProgressRef) ||
+        !CreateFunctionReference(env, onHashPartComplete, &ctx.onHashPartCompleteRef) ||
+        !CreateFunctionReference(env, onUploadID, &ctx.onUploadIDRef) ||
+        !CreateFunctionReference(env, onUploadPartComplete, &ctx.onUploadPartCompleteRef) ||
+        !CreateFunctionReference(env, onUploadComplete, &ctx.onUploadCompleteRef) ||
+        !CreateFunctionReference(env, onComplete, &ctx.onCompleteRef)) {
+        DeleteReference(env, ctx.onOpenRef);
+        DeleteReference(env, ctx.onPartSizeRef);
+        DeleteReference(env, ctx.onHashPartProgressRef);
+        DeleteReference(env, ctx.onHashPartCompleteRef);
+        DeleteReference(env, ctx.onUploadIDRef);
+        DeleteReference(env, ctx.onUploadPartCompleteRef);
+        DeleteReference(env, ctx.onUploadCompleteRef);
+        DeleteReference(env, ctx.onCompleteRef);
+        FreeCallbackId(cbId);
+        return INVALID_CALLBACK_ID;
+    }
 
-    // Register with SDK
-    RegisterUploadFileCallback(
+    if (!RegisterUploadFileCallback(
         cbId,
-        reinterpret_cast<uintptr_t>(CAPI_OnUploadOpen),
-        reinterpret_cast<uintptr_t>(CAPI_OnUploadPartSize),
-        reinterpret_cast<uintptr_t>(CAPI_OnUploadHashProgress),
-        reinterpret_cast<uintptr_t>(CAPI_OnUploadHashComplete),
-        reinterpret_cast<uintptr_t>(CAPI_OnUploadID),
-        reinterpret_cast<uintptr_t>(CAPI_OnUploadPartComplete),
-        reinterpret_cast<uintptr_t>(CAPI_OnUploadComplete),
-        reinterpret_cast<uintptr_t>(CAPI_OnUploadFinish));
+        CAPI_OnUploadOpen,
+        CAPI_OnUploadPartSize,
+        CAPI_OnUploadHashProgress,
+        CAPI_OnUploadHashComplete,
+        CAPI_OnUploadID,
+        CAPI_OnUploadPartComplete,
+        CAPI_OnUploadComplete,
+        CAPI_OnUploadFinish)) {
+        DeleteReference(env, ctx.onOpenRef);
+        DeleteReference(env, ctx.onPartSizeRef);
+        DeleteReference(env, ctx.onHashPartProgressRef);
+        DeleteReference(env, ctx.onHashPartCompleteRef);
+        DeleteReference(env, ctx.onUploadIDRef);
+        DeleteReference(env, ctx.onUploadPartCompleteRef);
+        DeleteReference(env, ctx.onUploadCompleteRef);
+        DeleteReference(env, ctx.onCompleteRef);
+        return CallbackRegistrationFailed(env, cbId, "Failed to register OpenIM upload callbacks");
+    }
+    ctx.isValid = true;
 
     return cbId;
 }
@@ -441,15 +500,23 @@ void DeleteUploadCallbacks(int cbId) {
 
 int StoreUploadLogCallback(napi_env env, napi_value onProgress) {
     int cbId = AllocateCallbackId();
-    if (cbId < 0) return INVALID_CALLBACK_ID;
+    if (cbId < 0) {
+        napi_throw_error(env, nullptr, "OpenIM callback capacity exhausted");
+        return INVALID_CALLBACK_ID;
+    }
 
     auto& ctx = g_uploadLog_callbacks[cbId];
-    napi_create_reference(env, onProgress, 1, &ctx.onProgressRef);
     ctx.env = env;
-    ctx.isValid = true;
+    if (!CreateFunctionReference(env, onProgress, &ctx.onProgressRef)) {
+        FreeCallbackId(cbId);
+        return INVALID_CALLBACK_ID;
+    }
 
-    // Register with SDK
-    RegisterUploadLogProgress(cbId, reinterpret_cast<uintptr_t>(CAPI_OnUploadLogProgress));
+    if (!RegisterUploadLogProgress(cbId, CAPI_OnUploadLogProgress)) {
+        DeleteReference(env, ctx.onProgressRef);
+        return CallbackRegistrationFailed(env, cbId, "Failed to register OpenIM log upload callback");
+    }
+    ctx.isValid = true;
 
     return cbId;
 }
@@ -482,19 +549,33 @@ void DeleteUploadLogCallback(int cbId) {
 
 int StoreSendMsgCallback(napi_env env, napi_value onSuccess, napi_value onError, napi_value onProgress) {
     int cbId = AllocateCallbackId();
-    if (cbId < 0) return INVALID_CALLBACK_ID;
+    if (cbId < 0) {
+        napi_throw_error(env, nullptr, "OpenIM callback capacity exhausted");
+        return INVALID_CALLBACK_ID;
+    }
 
     auto& ctx = g_sendMsg_callbacks[cbId];
-    napi_create_reference(env, onSuccess, 1, &ctx.onSuccessRef);
-    napi_create_reference(env, onError, 1, &ctx.onErrorRef);
-    napi_create_reference(env, onProgress, 1, &ctx.onProgressRef);
     ctx.env = env;
-    ctx.isValid = true;
+    if (!CreateFunctionReference(env, onSuccess, &ctx.onSuccessRef) ||
+        !CreateFunctionReference(env, onError, &ctx.onErrorRef) ||
+        !CreateFunctionReference(env, onProgress, &ctx.onProgressRef)) {
+        DeleteReference(env, ctx.onSuccessRef);
+        DeleteReference(env, ctx.onErrorRef);
+        DeleteReference(env, ctx.onProgressRef);
+        FreeCallbackId(cbId);
+        return INVALID_CALLBACK_ID;
+    }
 
-    // Register with SDK
-    RegisterBaseCallback(cbId, reinterpret_cast<uintptr_t>(CAPI_OnBaseSuccess),
-                         reinterpret_cast<uintptr_t>(CAPI_OnBaseError));
-    RegisterSendMsgCallback(cbId, reinterpret_cast<uintptr_t>(CAPI_OnSendMsg));
+    if (!RegisterBaseCallback(cbId, CAPI_OnBaseSuccess, CAPI_OnBaseError) ||
+        !RegisterSendMsgCallback(cbId, CAPI_OnSendMsg)) {
+        UnregisterBaseCallback(cbId);
+        UnregisterSendMsgCallback(cbId);
+        DeleteReference(env, ctx.onSuccessRef);
+        DeleteReference(env, ctx.onErrorRef);
+        DeleteReference(env, ctx.onProgressRef);
+        return CallbackRegistrationFailed(env, cbId, "Failed to register OpenIM send-message callback");
+    }
+    ctx.isValid = true;
 
     return cbId;
 }
@@ -545,6 +626,7 @@ int StoreConnListener(
     napi_value onUserTokenExpired,
     napi_value onUserTokenInvalid
 ) {
+    DeleteConnListener();
     napi_create_reference(env, onConnecting, 1, &g_listeners.onConnecting);
     napi_create_reference(env, onConnectSuccess, 1, &g_listeners.onConnectSuccess);
     napi_create_reference(env, onConnectFailed, 1, &g_listeners.onConnectFailed);
@@ -556,12 +638,12 @@ int StoreConnListener(
 
     // Register with SDK
     RegisterConnListener(
-        reinterpret_cast<uintptr_t>(CAPI_OnConnConnecting),
-        reinterpret_cast<uintptr_t>(CAPI_OnConnConnectSuccess),
-        reinterpret_cast<uintptr_t>(CAPI_OnConnConnectFailed),
-        reinterpret_cast<uintptr_t>(CAPI_OnConnKickedOffline),
-        reinterpret_cast<uintptr_t>(CAPI_OnConnUserTokenExpired),
-        reinterpret_cast<uintptr_t>(CAPI_OnConnUserTokenInvalid));
+        CAPI_OnConnConnecting,
+        CAPI_OnConnConnectSuccess,
+        CAPI_OnConnConnectFailed,
+        CAPI_OnConnKickedOffline,
+        CAPI_OnConnUserTokenExpired,
+        CAPI_OnConnUserTokenInvalid);
 
     return 0;
 }
@@ -593,6 +675,7 @@ int StoreMsgListener(
     napi_value onMsgDeleted,
     napi_value onRecvOnline
 ) {
+    DeleteMsgListener();
     napi_create_reference(env, onRecvNewMsg, 1, &g_listeners.onRecvNewMsg);
     napi_create_reference(env, onRecvReceipt, 1, &g_listeners.onRecvReceipt);
     napi_create_reference(env, onMsgRevoked, 1, &g_listeners.onMsgRevoked);
@@ -603,12 +686,12 @@ int StoreMsgListener(
     g_listeners.isValid = true;
 
     RegisterMsgListener(
-        reinterpret_cast<uintptr_t>(CAPI_OnRecvNewMsg),
-        reinterpret_cast<uintptr_t>(CAPI_OnRecvReceipt),
-        reinterpret_cast<uintptr_t>(CAPI_OnMsgRevoked),
-        reinterpret_cast<uintptr_t>(CAPI_OnRecvOffline),
-        reinterpret_cast<uintptr_t>(CAPI_OnMsgDeleted),
-        reinterpret_cast<uintptr_t>(CAPI_OnRecvOnline));
+        CAPI_OnRecvNewMsg,
+        CAPI_OnRecvReceipt,
+        CAPI_OnMsgRevoked,
+        CAPI_OnRecvOffline,
+        CAPI_OnMsgDeleted,
+        CAPI_OnRecvOnline);
 
     return 0;
 }
@@ -641,6 +724,7 @@ int StoreConvListener(
     napi_value onUnreadChanged,
     napi_value onInputStatus
 ) {
+    DeleteConvListener();
     napi_create_reference(env, onSyncStart, 1, &g_listeners.onSyncStart);
     napi_create_reference(env, onSyncFinish, 1, &g_listeners.onSyncFinish);
     napi_create_reference(env, onSyncProgress, 1, &g_listeners.onSyncProgress);
@@ -653,14 +737,14 @@ int StoreConvListener(
     g_listeners.isValid = true;
 
     RegisterConvListener(
-        reinterpret_cast<uintptr_t>(CAPI_OnConvSyncStart),
-        reinterpret_cast<uintptr_t>(CAPI_OnConvSyncFinish),
-        reinterpret_cast<uintptr_t>(CAPI_OnConvSyncProgress),
-        reinterpret_cast<uintptr_t>(CAPI_OnConvSyncFailed),
-        reinterpret_cast<uintptr_t>(CAPI_OnConvChanged),
-        reinterpret_cast<uintptr_t>(CAPI_OnNewConv),
-        reinterpret_cast<uintptr_t>(CAPI_OnUnreadChanged),
-        reinterpret_cast<uintptr_t>(CAPI_OnInputStatus));
+        CAPI_OnConvSyncStart,
+        CAPI_OnConvSyncFinish,
+        CAPI_OnConvSyncProgress,
+        CAPI_OnConvSyncFailed,
+        CAPI_OnConvChanged,
+        CAPI_OnNewConv,
+        CAPI_OnUnreadChanged,
+        CAPI_OnInputStatus);
 
     return 0;
 }
@@ -698,6 +782,7 @@ int StoreGroupListener(
     napi_value onAppAccept,
     napi_value onAppReject
 ) {
+    DeleteGroupListener();
     napi_create_reference(env, onJoinedAdd, 1, &g_listeners.onJoinedAdd);
     napi_create_reference(env, onJoinedDel, 1, &g_listeners.onJoinedDel);
     napi_create_reference(env, onMemberAdd, 1, &g_listeners.onMemberAdd);
@@ -713,17 +798,17 @@ int StoreGroupListener(
     g_listeners.isValid = true;
 
     RegisterGroupListener(
-        reinterpret_cast<uintptr_t>(CAPI_OnGroupJoinedAdd),
-        reinterpret_cast<uintptr_t>(CAPI_OnGroupJoinedDel),
-        reinterpret_cast<uintptr_t>(CAPI_OnGroupMemberAdd),
-        reinterpret_cast<uintptr_t>(CAPI_OnGroupMemberDel),
-        reinterpret_cast<uintptr_t>(CAPI_OnGroupAppAdd),
-        reinterpret_cast<uintptr_t>(CAPI_OnGroupAppDel),
-        reinterpret_cast<uintptr_t>(CAPI_OnGroupInfoChanged),
-        reinterpret_cast<uintptr_t>(CAPI_OnGroupDismissed),
-        reinterpret_cast<uintptr_t>(CAPI_OnGroupMemberInfo),
-        reinterpret_cast<uintptr_t>(CAPI_OnGroupAppAccept),
-        reinterpret_cast<uintptr_t>(CAPI_OnGroupAppReject));
+        CAPI_OnGroupJoinedAdd,
+        CAPI_OnGroupJoinedDel,
+        CAPI_OnGroupMemberAdd,
+        CAPI_OnGroupMemberDel,
+        CAPI_OnGroupAppAdd,
+        CAPI_OnGroupAppDel,
+        CAPI_OnGroupInfoChanged,
+        CAPI_OnGroupDismissed,
+        CAPI_OnGroupMemberInfo,
+        CAPI_OnGroupAppAccept,
+        CAPI_OnGroupAppReject);
 
     return 0;
 }
@@ -762,6 +847,7 @@ int StoreFriendListener(
     napi_value onBlackAdd,
     napi_value onBlackDel
 ) {
+    DeleteFriendListener();
     napi_create_reference(env, onAppAdd, 1, &g_listeners.onFriendAppAdd);
     napi_create_reference(env, onAppDel, 1, &g_listeners.onFriendAppDel);
     napi_create_reference(env, onAppAccept, 1, &g_listeners.onFriendAppAccept);
@@ -775,15 +861,15 @@ int StoreFriendListener(
     g_listeners.isValid = true;
 
     RegisterFriendListener(
-        reinterpret_cast<uintptr_t>(CAPI_OnFriendAppAdd),
-        reinterpret_cast<uintptr_t>(CAPI_OnFriendAppDel),
-        reinterpret_cast<uintptr_t>(CAPI_OnFriendAppAccept),
-        reinterpret_cast<uintptr_t>(CAPI_OnFriendAppReject),
-        reinterpret_cast<uintptr_t>(CAPI_OnFriendAdd),
-        reinterpret_cast<uintptr_t>(CAPI_OnFriendDel),
-        reinterpret_cast<uintptr_t>(CAPI_OnFriendInfo),
-        reinterpret_cast<uintptr_t>(CAPI_OnBlackAdd),
-        reinterpret_cast<uintptr_t>(CAPI_OnBlackDel));
+        CAPI_OnFriendAppAdd,
+        CAPI_OnFriendAppDel,
+        CAPI_OnFriendAppAccept,
+        CAPI_OnFriendAppReject,
+        CAPI_OnFriendAdd,
+        CAPI_OnFriendDel,
+        CAPI_OnFriendInfo,
+        CAPI_OnBlackAdd,
+        CAPI_OnBlackDel);
 
     return 0;
 }
@@ -809,13 +895,14 @@ void DeleteFriendListener() {
 // ============================================================
 
 int StoreUserListener(napi_env env, napi_value onSelfInfo, napi_value onUserStatus) {
+    DeleteUserListener();
     napi_create_reference(env, onSelfInfo, 1, &g_listeners.onSelfInfo);
     napi_create_reference(env, onUserStatus, 1, &g_listeners.onUserStatus);
     g_listeners.env = env;
     g_listeners.isValid = true;
 
-    RegisterUserListener(reinterpret_cast<uintptr_t>(CAPI_OnUserSelfInfoUpdated),
-                         reinterpret_cast<uintptr_t>(CAPI_OnUserStatusChanged));
+    RegisterUserListener(CAPI_OnUserSelfInfoUpdated,
+                         CAPI_OnUserStatusChanged);
 
     return 0;
 }
@@ -846,6 +933,7 @@ int StoreSignalingListener(
     napi_value onRoomParticipantConnected,
     napi_value onRoomParticipantDisconnected
 ) {
+    DeleteSignalingListener();
     napi_create_reference(env, onReceiveNewInvitation, 1, &g_listeners.onReceiveNewInvitation);
     napi_create_reference(env, onInviteeAccepted, 1, &g_listeners.onInviteeAccepted);
     napi_create_reference(env, onInviteeAcceptedByOtherDevice, 1, &g_listeners.onInviteeAcceptedByOtherDevice);
@@ -860,16 +948,16 @@ int StoreSignalingListener(
     g_listeners.isValid = true;
 
     RegisterSignalingListener(
-        reinterpret_cast<uintptr_t>(CAPI_OnSignalingReceiveNewInvitation),
-        reinterpret_cast<uintptr_t>(CAPI_OnSignalingInviteeAccepted),
-        reinterpret_cast<uintptr_t>(CAPI_OnSignalingInviteeAcceptedByOtherDevice),
-        reinterpret_cast<uintptr_t>(CAPI_OnSignalingInviteeRejected),
-        reinterpret_cast<uintptr_t>(CAPI_OnSignalingInviteeRejectedByOtherDevice),
-        reinterpret_cast<uintptr_t>(CAPI_OnSignalingInvitationCancelled),
-        reinterpret_cast<uintptr_t>(CAPI_OnSignalingInvitationTimeout),
-        reinterpret_cast<uintptr_t>(CAPI_OnSignalingHangUp),
-        reinterpret_cast<uintptr_t>(CAPI_OnSignalingRoomParticipantConnected),
-        reinterpret_cast<uintptr_t>(CAPI_OnSignalingRoomParticipantDisconnected));
+        CAPI_OnSignalingReceiveNewInvitation,
+        CAPI_OnSignalingInviteeAccepted,
+        CAPI_OnSignalingInviteeAcceptedByOtherDevice,
+        CAPI_OnSignalingInviteeRejected,
+        CAPI_OnSignalingInviteeRejectedByOtherDevice,
+        CAPI_OnSignalingInvitationCancelled,
+        CAPI_OnSignalingInvitationTimeout,
+        CAPI_OnSignalingHangUp,
+        CAPI_OnSignalingRoomParticipantConnected,
+        CAPI_OnSignalingRoomParticipantDisconnected);
 
     return 0;
 }
@@ -896,11 +984,12 @@ void DeleteSignalingListener() {
 // ============================================================
 
 int StoreCustomBusinessListener(napi_env env, napi_value onRecvCustomBusinessMessage) {
+    DeleteCustomBusinessListener();
     napi_create_reference(env, onRecvCustomBusinessMessage, 1, &g_listeners.onRecvCustomBusinessMessage);
     g_listeners.env = env;
     g_listeners.isValid = true;
 
-    RegisterCustomBusinessListener(reinterpret_cast<uintptr_t>(CAPI_OnRecvCustomBusinessMessage));
+    RegisterCustomBusinessListener(CAPI_OnRecvCustomBusinessMessage);
 
     return 0;
 }
@@ -919,11 +1008,12 @@ void DeleteCustomBusinessListener() {
 // ============================================================
 
 int StoreMsgKvInfoListener(napi_env env, napi_value onMessageKvInfoChanged) {
+    DeleteMsgKvInfoListener();
     napi_create_reference(env, onMessageKvInfoChanged, 1, &g_listeners.onMessageKvInfoChanged);
     g_listeners.env = env;
     g_listeners.isValid = true;
 
-    RegisterMsgKvInfoListener(reinterpret_cast<uintptr_t>(CAPI_OnMessageKvInfoChanged));
+    RegisterMsgKvInfoListener(CAPI_OnMessageKvInfoChanged);
 
     return 0;
 }
@@ -992,7 +1082,6 @@ void CallBoolCallback(napi_env env, napi_ref callbackRef, bool value) {
 void CallIntStringCallback(napi_env env, napi_ref callbackRef, int value, const char* text) {
     (void)env;
     QueueCallback(callbackRef, {JsArg::Int(value), JsArg::String(text)});
-    if (text) FreeString(const_cast<char*>(text));
 }
 
 void CallLongLongCallback(napi_env env, napi_ref callbackRef, long long value) {
@@ -1003,7 +1092,6 @@ void CallLongLongCallback(napi_env env, napi_ref callbackRef, long long value) {
 void CallStringCallback(napi_env env, napi_ref callbackRef, const char* value) {
     (void)env;
     QueueCallback(callbackRef, {JsArg::String(value)});
-    if (value) FreeString(const_cast<char*>(value));
 }
 
 void CallBaseSuccessCallback(int cbId, const char* data) {
@@ -1016,7 +1104,6 @@ void CallBaseSuccessCallback(int cbId, const char* data) {
     }
     QueueCallback(callbackRef, {JsArg::String(data)},
                   isSendMessage ? CleanupType::SendMessage : CleanupType::Base, cbId);
-    if (data) FreeString(const_cast<char*>(data));
 }
 
 void CallBaseErrorCallback(int cbId, int code, const char* message) {
@@ -1029,7 +1116,6 @@ void CallBaseErrorCallback(int cbId, int code, const char* message) {
     }
     QueueCallback(callbackRef, {JsArg::Int(code), JsArg::String(message)},
                   isSendMessage ? CleanupType::SendMessage : CleanupType::Base, cbId);
-    if (message) FreeString(const_cast<char*>(message));
 }
 
 void CallUploadOpenCallback(int cbId, long long fileSize) {
@@ -1051,7 +1137,6 @@ void CallUploadHashProgressCallback(int cbId, int index, long long size, const c
 
     QueueCallback(ctx->onHashPartProgressRef,
                   {JsArg::Int(index), JsArg::Long(size), JsArg::String(partHash)});
-    if (partHash) FreeString(const_cast<char*>(partHash));
 }
 
 void CallUploadHashCompleteCallback(int cbId, const char* partsHash, const char* fileHash) {
@@ -1059,8 +1144,6 @@ void CallUploadHashCompleteCallback(int cbId, const char* partsHash, const char*
     if (!ctx || !ctx->onHashPartCompleteRef) return;
 
     QueueCallback(ctx->onHashPartCompleteRef, {JsArg::String(partsHash), JsArg::String(fileHash)});
-    if (partsHash) FreeString(const_cast<char*>(partsHash));
-    if (fileHash) FreeString(const_cast<char*>(fileHash));
 }
 
 void CallUploadIDCallback(int cbId, const char* uploadID) {
@@ -1068,7 +1151,6 @@ void CallUploadIDCallback(int cbId, const char* uploadID) {
     if (!ctx || !ctx->onUploadIDRef) return;
 
     QueueCallback(ctx->onUploadIDRef, {JsArg::String(uploadID)});
-    if (uploadID) FreeString(const_cast<char*>(uploadID));
 }
 
 void CallUploadPartCompleteCallback(int cbId, int index, long long partSize, const char* partHash) {
@@ -1077,7 +1159,6 @@ void CallUploadPartCompleteCallback(int cbId, int index, long long partSize, con
 
     QueueCallback(ctx->onUploadPartCompleteRef,
                   {JsArg::Int(index), JsArg::Long(partSize), JsArg::String(partHash)});
-    if (partHash) FreeString(const_cast<char*>(partHash));
 }
 
 void CallUploadCompleteCallback(int cbId, long long fileSize, long long streamSize, long long storageSize) {
@@ -1095,7 +1176,6 @@ void CallUploadFinishCallback(int cbId, long long size, const char* url, int fil
     QueueCallback(ctx->onCompleteRef,
                   {JsArg::Long(size), JsArg::String(url), JsArg::Int(fileType)},
                   CleanupType::Upload, cbId);
-    if (url) FreeString(const_cast<char*>(url));
 }
 
 void CallUploadLogProgressCallback(int cbId, long long current, long long total) {
@@ -1123,11 +1203,11 @@ void CallSendMsgCallback(int cbId, int progress) {
 extern "C" {
 
 // Base 回调
-void CAPI_OnBaseSuccess(int cbId, const char* data) {
+void CAPI_OnBaseSuccess(int cbId, char* data) {
     CallBaseSuccessCallback(cbId, data);
 }
 
-void CAPI_OnBaseError(int cbId, int code, const char* message) {
+void CAPI_OnBaseError(int cbId, int code, char* message) {
     CallBaseErrorCallback(cbId, code, message);
 }
 
@@ -1140,19 +1220,19 @@ void CAPI_OnUploadPartSize(int cbId, long long partSize, int partNumber) {
     CallUploadPartSizeCallback(cbId, partSize, partNumber);
 }
 
-void CAPI_OnUploadHashProgress(int cbId, int index, long long size, const char* partHash) {
+void CAPI_OnUploadHashProgress(int cbId, int index, long long size, char* partHash) {
     CallUploadHashProgressCallback(cbId, index, size, partHash);
 }
 
-void CAPI_OnUploadHashComplete(int cbId, const char* partsHash, const char* fileHash) {
+void CAPI_OnUploadHashComplete(int cbId, char* partsHash, char* fileHash) {
     CallUploadHashCompleteCallback(cbId, partsHash, fileHash);
 }
 
-void CAPI_OnUploadID(int cbId, const char* uploadID) {
+void CAPI_OnUploadID(int cbId, char* uploadID) {
     CallUploadIDCallback(cbId, uploadID);
 }
 
-void CAPI_OnUploadPartComplete(int cbId, int index, long long partSize, const char* partHash) {
+void CAPI_OnUploadPartComplete(int cbId, int index, long long partSize, char* partHash) {
     CallUploadPartCompleteCallback(cbId, index, partSize, partHash);
 }
 
@@ -1160,7 +1240,7 @@ void CAPI_OnUploadComplete(int cbId, long long fileSize, long long streamSize, l
     CallUploadCompleteCallback(cbId, fileSize, streamSize, storageSize);
 }
 
-void CAPI_OnUploadFinish(int cbId, long long size, const char* url, int fileType) {
+void CAPI_OnUploadFinish(int cbId, long long size, char* url, int fileType) {
     CallUploadFinishCallback(cbId, size, url, fileType);
 }
 

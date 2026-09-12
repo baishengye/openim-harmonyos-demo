@@ -40,6 +40,9 @@ export class AppRuntime {
   imToken: string = "";
   isRunning: boolean;
   currentUserID: string = "";
+  private initTask: Promise<number> | null = null;
+  private initResult: number = -1;
+  private initError: string = "SDK 尚未初始化";
 
   private constructor() {
     this.isRunning = false;
@@ -55,9 +58,9 @@ export class AppRuntime {
   /**
    * 启动SDK
    */
-  start(dataDir: string): void {
-    if (this.isRunning) {
-      return;
+  start(dataDir: string): Promise<number> {
+    if (this.initTask !== null) {
+      return this.initTask;
     }
 
     this.isRunning = true;
@@ -72,17 +75,55 @@ export class AppRuntime {
       logFilePath: dataDir,
     }
 
-    // 初始化SDK
-    IM.init(config, new ConnListenerImpl());
-    IM.getLoginUserID()
-    Logger.info('AppRuntime started')
+    this.initTask = IM.init(config, new ConnListenerImpl())
+      .then((result: number) => {
+        this.initResult = result;
+        if (result !== 0) {
+          this.isRunning = false;
+          this.initError = `initSdk 返回 ${result}`;
+          throw new Error(this.initError);
+        }
+        this.initError = "";
+        const version = IM.getSdkVersion();
+        Logger.info(`AppRuntime started, SDK version: ${version}`);
+        return result;
+      })
+      .catch((error: Error) => {
+        this.isRunning = false;
+        this.initError = error.message;
+        Logger.error(`AppRuntime start failed: ${error.message}`);
+        throw error;
+      });
+    return this.initTask;
+  }
+
+  async waitUntilReady(): Promise<void> {
+    if (this.initTask === null) {
+      throw new Error(this.initError);
+    }
+    await this.initTask;
+    if (this.initResult !== 0) {
+      throw new Error(this.initError);
+    }
+  }
+
+  getInitResult(): number {
+    return this.initResult;
+  }
+
+  getInitError(): string {
+    return this.initError;
   }
 
   stop(): void {
     if (!this.isRunning) {
       return;
     }
+    IM.unInitSDK();
     this.isRunning = false;
+    this.initTask = null;
+    this.initResult = -1;
+    this.initError = "SDK 已释放";
     Logger.info('AppRuntime stopped');
   }
 

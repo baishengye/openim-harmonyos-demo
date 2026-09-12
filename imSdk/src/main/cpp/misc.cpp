@@ -23,6 +23,7 @@ napi_value NAPI_updateFcmToken(napi_env env, napi_callback_info info) {
         operationID = "napi_updateFcmToken_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: UpdateFcmToken(int baseCallbackID, char* operationID, char* fcmToken, long long expireTime)
     UpdateFcmToken(cbId, (char*)operationID.c_str(), (char*)fcmToken.c_str(), expireTime);
     return CreateJSUndefined(env);
@@ -38,6 +39,7 @@ napi_value NAPI_setAppBadge(napi_env env, napi_callback_info info) {
         operationID = "napi_setAppBadge_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: SetAppBadge(int baseCallbackID, char* operationID, int appUnreadCount)
     SetAppBadge(cbId, (char*)operationID.c_str(), appUnreadCount);
     return CreateJSUndefined(env);
@@ -60,7 +62,12 @@ napi_value NAPI_uploadLogs(napi_env env, napi_callback_info info) {
     napi_value onProgress;
     napi_get_named_property(env, uploadLogProgress, "onProgress", &onProgress);
     int baseCbId = StoreBaseCallback(env, baseCallback);
+    if (baseCbId == INVALID_CALLBACK_ID) return nullptr;
     int uploadCbId = StoreUploadLogCallback(env, onProgress);
+    if (uploadCbId == INVALID_CALLBACK_ID) {
+        DeleteBaseCallback(baseCbId);
+        return nullptr;
+    }
     // New signature: UploadLogs(int baseCallbackID, int uploadLogCallbackID, char* operationID, int line, char* ex)
     UploadLogs(baseCbId, uploadCbId, (char*)operationID.c_str(), line, (char*)ex.c_str());
     return CreateJSUndefined(env);
@@ -82,6 +89,7 @@ napi_value NAPI_uploadFile(napi_env env, napi_callback_info info) {
 
     // 存储 Base 回调
     int baseCbId = StoreBaseCallback(env, baseCallback);
+    if (baseCbId == INVALID_CALLBACK_ID) return nullptr;
 
     // 从 uploadFileCallback 中提取 8 个回调方法
     napi_value onOpen = nullptr, onPartSize = nullptr, onHashPartProgress = nullptr, onHashPartComplete = nullptr;
@@ -103,6 +111,10 @@ napi_value NAPI_uploadFile(napi_env env, napi_callback_info info) {
         env, onOpen, onPartSize, onHashPartProgress, onHashPartComplete,
         onUploadID, onUploadPartComplete, onUploadComplete, onComplete
     );
+    if (uploadCbId == INVALID_CALLBACK_ID) {
+        DeleteBaseCallback(baseCbId);
+        return nullptr;
+    }
 
     // 调用 SDK
     UploadFile(baseCbId, uploadCbId, (char*)operationID.c_str(), (char*)reqData.c_str());
@@ -114,6 +126,7 @@ napi_value NAPI_logs(napi_env env, napi_callback_info info) {
     napi_value args[8] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     int logLevel = GetIntFromJS(env, args[2]);
     std::string file = GetStringFromJS(env, args[3]);
     long long line = GetInt64FromJS(env, args[4]);
@@ -171,6 +184,7 @@ napi_value NAPI_changeInputStates(napi_env env, napi_callback_info info) {
         operationID = "napi_changeInputStates_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: ChangeInputStates(int baseCallbackID, char* operationID, char* conversationID, int focus)
     ChangeInputStates(cbId, (char*)operationID.c_str(), (char*)conversationID.c_str(), focus);
     return CreateJSUndefined(env);
@@ -187,6 +201,7 @@ napi_value NAPI_getInputStates(napi_env env, napi_callback_info info) {
         operationID = "napi_getInputStates_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: GetInputStates(int baseCallbackID, char* operationID, char* conversationID, char* userID)
     GetInputStates(cbId, (char*)operationID.c_str(), (char*)conversationID.c_str(), (char*)userID.c_str());
     return CreateJSUndefined(env);

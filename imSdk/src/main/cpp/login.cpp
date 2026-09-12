@@ -30,9 +30,11 @@ napi_value NAPI_initSdk(napi_env env, napi_callback_info info) {
         napi_get_named_property(env, args[0], "onUserTokenExpired", &onUserTokenExpired);
         napi_get_named_property(env, args[0], "onUserTokenInvalid", &onUserTokenInvalid);
 
-        // Delete existing listener and register new one
-        DeleteConnListener();
-        StoreConnListener(env, onConnecting, onConnectSuccess, onConnectFailed, onKickedOffline, onUserTokenExpired, onUserTokenInvalid);
+        if (StoreConnListener(env, onConnecting, onConnectSuccess, onConnectFailed,
+                              onKickedOffline, onUserTokenExpired, onUserTokenInvalid) != 0) {
+            napi_throw_error(env, nullptr, "Failed to register OpenIM connection listener");
+            return nullptr;
+        }
         LogError("OpenIM", "NAPI_initSdk connection listener registered");
     }
 
@@ -59,6 +61,7 @@ napi_value NAPI_login(napi_env env, napi_callback_info info) {
     }
     // Store callback and register with SDK - callback ID is passed to SDK
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: Login(int baseCallbackID, char* uid, char* token, char* operationID)
     Login(cbId, (char*)userID.c_str(), (char*)token.c_str(), (char*)operationID.c_str());
     return CreateJSUndefined(env);
@@ -74,6 +77,7 @@ napi_value NAPI_logout(napi_env env, napi_callback_info info) {
     }
     // Store callback and register with SDK
     int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: Logout(int baseCallbackID, char* operationID)
     Logout(cbId, (char*)operationID.c_str());
     return CreateJSUndefined(env);

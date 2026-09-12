@@ -13,7 +13,9 @@ export default class EntryAbility extends UIAbility {
       hilog.error(DOMAIN, 'testTag', 'Failed to set colorMode. Cause: %{public}s', JSON.stringify(err));
     }
     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onCreate');
-    AppRuntime.getInstance().start(this.context.filesDir)
+    AppRuntime.getInstance().start(this.context.filesDir).catch((error: Error) => {
+      hilog.error(DOMAIN, 'testTag', 'OpenIM SDK init failed: %{public}s', error.message);
+    });
   }
 
   onDestroy(): void {
