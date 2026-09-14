@@ -47,7 +47,7 @@ export class Message {
   /** 消息类型 {@link MessageType} */
   contentType: number = 0;
   /** 平台类型 {@link Platform} */
-  platformID: number = 0;
+  senderPlatformID: number = 0;
   /** 发送者昵称 */
   senderNickname: string = "";
   /** 发送者头像 */
@@ -411,7 +411,7 @@ export class ConversationInfo {
   /** 显示名称 */
   showName: string = "";
   /** 头像URL */
-  faceUrl: string = "";
+  faceURL: string = "";
   /** 接收消息选项 {@link MessageReceiveOptType} */
   recvMsgOpt: number = 0;
   /** 未读消息数 */
@@ -818,6 +818,14 @@ export class GetAdvancedHistoryMessageParams {
   count: number = 20;
   /** 视图类型*/
   viewType:ViewType = ViewType.Search;
+}
+
+/** 获取历史消息结果。 */
+export class GetAdvancedHistoryMessageResult {
+  messageList: Message[] = [];
+  isEnd: boolean = true;
+  errCode: number = 0;
+  errMsg: string = '';
 }
 
 /**

@@ -10,6 +10,17 @@
 #include <string>
 #include <chrono>
 
+static napi_status GetBoundCallbackProperty(napi_env env, napi_value receiver,
+                                             const char* name, napi_value* result) {
+    napi_value callback = nullptr;
+    napi_status status = napi_get_named_property(env, receiver, name, &callback);
+    if (status != napi_ok) return status;
+    *result = BindCallbackFunction(env, receiver, callback);
+    return *result ? napi_ok : napi_generic_failure;
+}
+
+#define napi_get_named_property GetBoundCallbackProperty
+
 // ==================== Login Functions ====================
 
 napi_value NAPI_initSdk(napi_env env, napi_callback_info info) {

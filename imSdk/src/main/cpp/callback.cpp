@@ -316,6 +316,15 @@ bool InitializeCallbackDispatcher(napi_env env) {
     return true;
 }
 
+napi_value BindCallbackFunction(napi_env env, napi_value receiver, napi_value callback) {
+    if (!receiver || !callback) return nullptr;
+    napi_value bind = nullptr;
+    napi_value bound = nullptr;
+    if (napi_get_named_property(env, callback, "bind", &bind) != napi_ok || !bind) return nullptr;
+    if (napi_call_function(env, callback, bind, 1, &receiver, &bound) != napi_ok) return nullptr;
+    return bound;
+}
+
 // ============================================================
 // 工具函数实现
 // ============================================================
@@ -372,7 +381,9 @@ int StoreBaseCallback(napi_env env, napi_value callback) {
     napi_value onSuccess, onError;
     napi_get_named_property(env, callback, "onSuccess", &onSuccess);
     napi_get_named_property(env, callback, "onError", &onError);
-    return StoreBaseCallback(env, onSuccess, onError);
+    return StoreBaseCallback(env,
+        BindCallbackFunction(env, callback, onSuccess),
+        BindCallbackFunction(env, callback, onError));
 }
 
 BaseCallbackContext* GetBaseCallback(int cbId) {
@@ -586,7 +597,10 @@ int StoreSendMsgCallback(napi_env env, napi_value callback) {
     napi_get_named_property(env, callback, "onSuccess", &onSuccess);
     napi_get_named_property(env, callback, "onError", &onError);
     napi_get_named_property(env, callback, "onProgress", &onProgress);
-    return StoreSendMsgCallback(env, onSuccess, onError, onProgress);
+    return StoreSendMsgCallback(env,
+        BindCallbackFunction(env, callback, onSuccess),
+        BindCallbackFunction(env, callback, onError),
+        BindCallbackFunction(env, callback, onProgress));
 }
 
 SendMsgCallbackContext* GetSendMsgCallback(int cbId) {

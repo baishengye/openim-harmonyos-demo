@@ -1,5 +1,12 @@
 
-export const API_BASE_URL = 'http://172.16.25.203:10008';
+/** OpenIM REST API 地址。 */
+export const API_ADDR = 'http://172.16.204.62:11002';
+/** OpenIM WebSocket 地址。 */
+export const WS_ADDR = 'ws://172.16.204.62:11001';
+/** Demo 账号服务地址。 */
+export const DEMO_IM_ACCOUNT_BASE_URL = 'http://172.16.204.62:11008';
+/** 兼容现有 HttpClient 的命名。 */
+export const API_BASE_URL = DEMO_IM_ACCOUNT_BASE_URL;
 export const REQUEST_TIMEOUT = 10000; // 10 秒
 
 export default class Constants {
@@ -11,7 +18,7 @@ export default class Constants {
   /**
    * Input length of the password.
    */
-  static readonly INPUT_PASSWORD_LENGTH: number = 8;
+  static readonly INPUT_PASSWORD_LENGTH: number = 32;
 
   /**
    * Left padding of the input box.

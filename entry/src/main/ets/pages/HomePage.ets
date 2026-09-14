@@ -2,11 +2,30 @@ import Constants from '../api/Constants';
 import Logger from '../common/utils/Logger';
 import { AppRuntime } from '../appruntime/AppRuntime';
 import { IM } from '../sdkwrapper/IMAppWrapper';
-import { ConversationInfo, FriendInfo, GroupInfo, UserInfo } from 'imsdk';
+import { ConversationInfo, ConvListener, FriendInfo, GroupInfo, UserInfo } from 'imsdk';
+import { RouterMap, RouterName } from '../views/router/RouterMap';
+
+class HomeConversationListener implements ConvListener {
+  private onUpdate: (conversations: ConversationInfo[]) => void;
+  private onRefresh: () => void;
+  constructor(onUpdate: (conversations: ConversationInfo[]) => void, onRefresh: () => void) {
+    this.onUpdate = onUpdate;
+    this.onRefresh = onRefresh;
+  }
+  onSyncServerStart(_reinstalled: boolean): void {}
+  onSyncServerFinish(_reinstalled: boolean): void { this.onRefresh(); }
+  onSyncServerProgress(_progress: number): void {}
+  onSyncServerFailed(_reinstalled: boolean): void {}
+  onNewConversation(conversations: ConversationInfo[]): void { this.onUpdate(conversations); }
+  onConversationChanged(conversations: ConversationInfo[]): void { this.onUpdate(conversations); }
+  onTotalUnreadMessageCountChanged(_totalUnreadCount: number): void {}
+  onConversationUserInputStatusChanged(_change: string): void {}
+}
 
 @Entry
 @ComponentV2
 struct HomePage {
+  @Provider('navPathStack') navPathStack: NavPathStack = new NavPathStack();
   @Local index: number = Constants.CONVERSATION_TAB_INDEX;
   @Local conversations: ConversationInfo[] = [];
   @Local friends: FriendInfo[] = [];
@@ -17,7 +36,22 @@ struct HomePage {
   private tabsController: TabsController = new TabsController();
 
   aboutToAppear(): void {
+    IM.setConversationListener(new HomeConversationListener(
+      (conversations: ConversationInfo[]) => this.mergeConversations(conversations),
+      () => this.loadSdkData()));
     this.loadSdkData();
+  }
+
+  private mergeConversations(changes: ConversationInfo[]): void {
+    if (!changes) return;
+    const result: ConversationInfo[] = [...this.conversations];
+    changes.forEach((conversation: ConversationInfo) => {
+      const index = result.findIndex((item: ConversationInfo) => item.conversationID === conversation.conversationID);
+      if (index >= 0) result[index] = conversation;
+      else result.push(conversation);
+    });
+    result.sort((left: ConversationInfo, right: ConversationInfo) => right.latestMsgSendTime - left.latestMsgSendTime);
+    this.conversations = result;
   }
 
   private errorText(error: Object): string {
@@ -35,9 +69,9 @@ struct HomePage {
     this.errorMsg = '';
     try {
       await AppRuntime.getInstance().waitUntilReady();
-      this.conversations = await IM.getAllConversationList();
-      this.friends = await IM.getFriendList();
-      this.groups = await IM.getJoinedGroupList();
+      this.conversations = await IM.getAllConversationList() || [];
+      this.friends = await IM.getFriendList() || [];
+      this.groups = await IM.getJoinedGroupList() || [];
       this.selfInfo = await IM.getSelfUserInfo();
       Logger.info(`SDK data loaded: conversations=${this.conversations.length}, friends=${this.friends.length}, groups=${this.groups.length}`);
     } catch (error) {
@@ -123,7 +157,7 @@ struct HomePage {
           ForEach(this.conversations, (item: ConversationInfo) => {
             ListItem() {
               Row({ space: 12 }) {
-                Image(item.faceUrl.length > 0 ? item.faceUrl : $r('app.media.Public_avatar'))
+                Image(item.faceURL || $r('app.media.Public_avatar'))
                   .width(48)
                   .height(48)
                   .borderRadius(24)
@@ -158,7 +192,8 @@ struct HomePage {
               .padding(14)
               .backgroundColor(Color.White)
             }
-          }, (item: ConversationInfo) => item.conversationID)
+            .onClick(() => this.navPathStack.pushPath({ name: RouterName.Chat, param: item }))
+          }, (item: ConversationInfo, index: number) => item && item.conversationID ? item.conversationID : `${index}`)
         }
         .width('100%')
         .layoutWeight(1)
@@ -173,20 +208,30 @@ struct HomePage {
   private contactsView() {
     Column() {
       this.pageHeader('通讯录', `${this.friends.length} 位好友，${this.groups.length} 个群组`)
+      Row({ space: 8 }) {
+        Button('好友申请').onClick(() => this.navPathStack.pushPath({ name: RouterName.NewFriend }))
+        Button('群组申请').onClick(() => this.navPathStack.pushPath({ name: RouterName.NewGroup }))
+        Button('好友').onClick(() => this.navPathStack.pushPath({ name: RouterName.MyFriend }))
+        Button('群组').onClick(() => this.navPathStack.pushPath({ name: RouterName.MyGroup }))
+      }
+      .width('100%')
+      .padding({ left: 12, right: 12, bottom: 12 })
       List({ space: 1 }) {
         ListItemGroup({ header: this.sectionHeader(`好友 (${this.friends.length})`) }) {
           ForEach(this.friends, (item: FriendInfo) => {
             ListItem() {
               this.contactRow(item.faceURL, item.remark || item.nickname || item.userID, item.userID)
             }
-          }, (item: FriendInfo) => item.userID)
+            .onClick(() => this.openSingleChat(item))
+          }, (item: FriendInfo, index: number) => item && item.userID ? item.userID : `${index}`)
         }
         ListItemGroup({ header: this.sectionHeader(`群组 (${this.groups.length})`) }) {
           ForEach(this.groups, (item: GroupInfo) => {
             ListItem() {
               this.contactRow(item.faceURL, item.groupName || item.groupID, `${item.memberCount} 位成员`)
             }
-          }, (item: GroupInfo) => item.groupID)
+            .onClick(() => this.openGroupChat(item))
+          }, (item: GroupInfo, index: number) => item && item.groupID ? item.groupID : `${index}`)
         }
       }
       .width('100%')
@@ -195,6 +240,24 @@ struct HomePage {
     .width('100%')
     .height('100%')
     .backgroundColor('#F8FAFC')
+  }
+
+  private async openSingleChat(friend: FriendInfo): Promise<void> {
+    try {
+      const conversation = await IM.getOneConversation(1, friend.userID);
+      this.navPathStack.pushPath({ name: RouterName.Chat, param: conversation });
+    } catch (error) {
+      this.errorMsg = this.errorText(error as Object);
+    }
+  }
+
+  private async openGroupChat(group: GroupInfo): Promise<void> {
+    try {
+      const conversation = await IM.getOneConversation(2, group.groupID);
+      this.navPathStack.pushPath({ name: RouterName.Chat, param: conversation });
+    } catch (error) {
+      this.errorMsg = this.errorText(error as Object);
+    }
   }
 
   @Builder
@@ -210,7 +273,7 @@ struct HomePage {
   @Builder
   private contactRow(faceURL: string, title: string, subtitle: string) {
     Row({ space: 12 }) {
-      Image(faceURL.length > 0 ? faceURL : $r('app.media.Public_avatar'))
+      Image(faceURL || $r('app.media.Public_avatar'))
         .width(42)
         .height(42)
         .borderRadius(21)
@@ -254,7 +317,8 @@ struct HomePage {
   }
 
   build() {
-    Column() {
+    Navigation(this.navPathStack) {
+      Column() {
       if (this.errorMsg.length > 0) {
         Text(this.errorMsg)
           .width('100%')
@@ -295,8 +359,11 @@ struct HomePage {
         this.index = targetIndex;
       })
     }
-    .width('100%')
-    .height('100%')
-    .backgroundColor('#F8FAFC')
+      .width('100%')
+      .height('100%')
+      .backgroundColor('#F8FAFC')
+    }
+    .hideTitleBar(true)
+    .navDestination(RouterMap)
   }
 }

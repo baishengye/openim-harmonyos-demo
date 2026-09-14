@@ -6,6 +6,7 @@ import {
   ConnListener
 } from "imsdk";
 import Logger from "../common/utils/Logger";
+import { API_ADDR, WS_ADDR } from "../api/Constants";
 
 class ConnListenerImpl implements ConnListener{
   onConnecting(): void {
@@ -67,8 +68,8 @@ export class AppRuntime {
 
     const config: InitConfig = {
       platformID: Platform.IOS,
-      apiAddr: 'http://172.16.25.203:10002',
-      wsAddr: 'ws://172.16.25.203:10001',
+      apiAddr: API_ADDR,
+      wsAddr: WS_ADDR,
       dataDir: dataDir,
       logLevel: LogLevel.Error,
       isLogStandardOutput: false,

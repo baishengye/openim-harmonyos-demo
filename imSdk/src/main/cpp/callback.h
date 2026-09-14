@@ -126,6 +126,9 @@ int AllocateCallbackId();
 // 释放回调 ID
 void FreeCallbackId(int cbId);
 
+// 将对象方法绑定到原对象，确保异步调用时 this 不会丢失。
+napi_value BindCallbackFunction(napi_env env, napi_value receiver, napi_value callback);
+
 // 获取回调上下文
 BaseCallbackContext* GetBaseCallback(int cbId);
 UploadCallbackContext* GetUploadCallback(int cbId);

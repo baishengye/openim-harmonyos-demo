@@ -8,8 +8,8 @@ import { Utils } from "../../common/utils/Utils";
 @ObservedV2
 export default class LoginViewModel {
   @Trace public isLogin: boolean = false;
-  @Trace public account: string = "13682215018";
-  @Trace public password: string = "Aa111111";
+  @Trace public account: string = "13800000001";
+  @Trace public password: string = "openIM123";
   @Trace chatToken: string = "";
   @Trace imToken: string = "";
   @Trace public isLoading: boolean = false;
@@ -65,7 +65,7 @@ export default class LoginViewModel {
 
       this.chatToken = resp.chatToken;
       this.imToken = resp.imToken;
-      Logger.info(`userID: ${resp.userID}, imToken: ${this.imToken}`);
+      Logger.info(`account service login success, userID: ${resp.userID}`);
 
       // 保存token
       AppRuntime.getInstance().setToken(resp.chatToken, this.imToken);

@@ -32,8 +32,8 @@ import { ConnListener as NativeConnListener,
 } from 'libimsdk.so';
 import { info, debug } from '../internal/log/Logger';
 import { JSON } from '@kit.ArkTS';
-import { Message, MessageEntity } from '../models/entity';
-import { toObject } from '../utils/JsonUtil';
+import { ConversationInfo, Message, MessageEntity, RevokedInfo } from '../models/entity';
+import { toArray, toObject } from '../utils/JsonUtil';
 
 /**
  * 连接状态监听器包装类
@@ -100,43 +100,46 @@ export class MsgListenerWrapper implements NativeMsgListener {
 
   onRecvNewMessage(message: string): void {
     debug('MsgListener', `onRecvNewMessage: ${message}`);
-    if (this.listener != null) {
-      this.listener.onRecvNewMessage(toObject<Message>(message)!!);
+    const parsed = toObject<Message>(message);
+    if (this.listener != null && parsed != null) {
+      this.listener.onRecvNewMessage(parsed);
     }
   }
 
   onRecvC2CReadReceipt(msgReceiptList: string): void {
     debug('MsgListener', `onRecvC2CReadReceipt: ${msgReceiptList}`);
     if (this.listener != null) {
-      this.listener.onRecvC2CReadReceipt(toObject(msgReceiptList)!!);
+      this.listener.onRecvC2CReadReceipt(toArray(msgReceiptList));
     }
   }
 
   onNewRecvMessageRevoked(messageRevoked: string): void {
     debug('MsgListener', `onNewRecvMessageRevoked: ${messageRevoked}`);
-    if (this.listener != null) {
-      this.listener.onNewRecvMessageRevoked(toObject(messageRevoked)!!);
+    const parsed = toObject<RevokedInfo>(messageRevoked);
+    if (this.listener != null && parsed != null) {
+      this.listener.onNewRecvMessageRevoked(parsed);
     }
   }
 
   onRecvOfflineNewMessage(message: string): void {
     debug('MsgListener', `onRecvOfflineNewMessage: ${message}`);
     if (this.listener != null) {
-      this.listener.onRecvOfflineNewMessage(toObject(message)!!);
+      this.listener.onRecvOfflineNewMessage(toArray<Message>(message));
     }
   }
 
   onMsgDeleted(message: string): void {
     debug('MsgListener', `onMsgDeleted: ${message}`);
-    if (this.listener != null) {
-      this.listener.onMsgDeleted(toObject(message)!!);
+    const parsed = toObject<Message>(message);
+    if (this.listener != null && parsed != null) {
+      this.listener.onMsgDeleted(parsed);
     }
   }
 
   onRecvOnlineOnlyMessage(message: string): void {
     debug('MsgListener', `onRecvOnlineOnlyMessage: ${message}`);
     if (this.listener != null) {
-      this.listener.onRecvOnlineOnlyMessage(toObject(message)!!);
+      this.listener.onRecvOnlineOnlyMessage(message);
     }
   }
 }
@@ -182,14 +185,14 @@ export class ConvListenerWrapper implements NativeConvListener {
   onNewConversation(conversationList: string): void {
     debug('ConvListener', `onNewConversation: ${conversationList}`);
     if (this.listener != null) {
-      this.listener.onNewConversation(toObject(conversationList)!!);
+      this.listener.onNewConversation(toArray<ConversationInfo>(conversationList));
     }
   }
 
   onConversationChanged(conversationList: string): void {
     debug('ConvListener', `onConversationChanged: ${conversationList}`);
     if (this.listener != null) {
-      this.listener.onConversationChanged(toObject(conversationList)!!);
+      this.listener.onConversationChanged(toArray<ConversationInfo>(conversationList));
     }
   }
 

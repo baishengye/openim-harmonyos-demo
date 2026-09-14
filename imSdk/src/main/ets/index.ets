@@ -66,11 +66,14 @@ export {
   UserExInfo,
   SingleTypeKeyInfoSum,
   MessageKv,
+  C2CReadReceiptInfo,
+  RevokedInfo,
   UsersOnlineStatus,
   UserInfo,
   PublicUserInfo,
   OfflinePushInfo,
   GetAdvancedHistoryMessageParams,
+  GetAdvancedHistoryMessageResult,
   SearchLocalMessagesParams
 } from './sdk/models/entity';
 

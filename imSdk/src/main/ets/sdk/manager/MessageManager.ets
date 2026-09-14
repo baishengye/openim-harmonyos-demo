@@ -8,7 +8,7 @@ import im from 'libimsdk.so';
 import { debug, error, info } from '../internal/log/Logger';
 import { BaseCallback, CustomBusinessListener, MsgKvInfoListener, MsgListener, SendMsgCallBack } from '../listeners/listener';
 import { BaseCallbackWrapper, CustomBusinessListenerWrapper, MsgKvInfoListenerWrapper, MsgListenerWrapper, SendMsgCallBackWrapper } from '../listeners/ListenerImpl';
-import { GetAdvancedHistoryMessageParams, Message, SearchLocalMessagesParams } from '../models/entity';
+import { GetAdvancedHistoryMessageParams, GetAdvancedHistoryMessageResult, Message, SearchLocalMessagesParams } from '../models/entity';
 import { toString } from '../utils/JsonUtil';
 import { buildOperationID } from '../utils/Utils';
 
@@ -555,7 +555,7 @@ export class MessageManager {
    * @param count 一次拉取count条
    * @param viewType 视图类型
    */
-  getAdvancedHistoryMessageList(callback: BaseCallback<string>, operationID: string, conversationID: string, startMsg: string, count: number, viewType: number): void {
+  getAdvancedHistoryMessageList(callback: BaseCallback<GetAdvancedHistoryMessageResult>, operationID: string, conversationID: string, startMsg: string, count: number, viewType: number): void {
     debug('MessageManager', `getAdvancedHistoryMessageList, conversationID: ${conversationID}, operationID: ${operationID}`);
 
     const params: GetAdvancedHistoryMessageParams = {
@@ -581,7 +581,7 @@ export class MessageManager {
    * @param count 一次拉取count条
    * @param viewType 视图类型
    */
-  getAdvancedHistoryMessageListReverse(callback: BaseCallback<string>, operationID: string, conversationID: string, startMsg: string, count: number, viewType: number): void {
+  getAdvancedHistoryMessageListReverse(callback: BaseCallback<GetAdvancedHistoryMessageResult>, operationID: string, conversationID: string, startMsg: string, count: number, viewType: number): void {
     debug('MessageManager', `getAdvancedHistoryMessageListReverse, conversationID: ${conversationID}, operationID: ${operationID}`);
 
     const params: GetAdvancedHistoryMessageParams = {
