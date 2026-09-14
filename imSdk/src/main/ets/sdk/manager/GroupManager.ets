@@ -206,7 +206,7 @@ export class GroupManager {
    * @param groupID 群组ID
    * @param userIDList 用户ID列表
    */
-  getUsersInGroup(callback: BaseCallback<GroupMemberInfo[]>, operationID: string, groupID: string, userIDList: string[]): void {
+  getUsersInGroup(callback: BaseCallback<string[]>, operationID: string, groupID: string, userIDList: string[]): void {
     debug('GroupManager', `getUsersInGroup: ${groupID}, count: ${userIDList.length}, operationID: ${operationID}`);
 
     im.getUsersInGroup(

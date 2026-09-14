@@ -134,10 +134,23 @@ export class AppRuntime {
 
   onBackground(): void {
     Logger.info('AppRuntime onBackground');
+    if (this.initResult === 0) {
+      IM.setAppBackgroundStatus(true).catch((error: Error): void => {
+        Logger.error(`set background failed: ${error.message}`);
+      });
+    }
   }
 
   onForeground(): void {
     Logger.info('AppRuntime onForeground');
+    if (this.initResult === 0) {
+      IM.setAppBackgroundStatus(false).catch((error: Error): void => {
+        Logger.error(`set foreground failed: ${error.message}`);
+      });
+      IM.networkStatusChanged().catch((error: Error): void => {
+        Logger.error(`network status changed failed: ${error.message}`);
+      });
+    }
   }
 
   setToken(chatToken: string, imToken: string): void {

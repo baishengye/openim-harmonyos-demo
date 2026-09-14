@@ -8,6 +8,31 @@ import { debug, info } from '../internal/log/Logger';
 import { BaseCallback, UploadFileCallback, UploadLogProgress } from '../listeners/listener';
 import { BaseCallbackWrapper, UploadFileCallbackWrapper, UploadLogProgressWrapper } from '../listeners/ListenerImpl';
 import { buildOperationID } from '../utils/Utils';
+import { ConversationInputStatus } from '../models/entity';
+
+class InputStatesCallback implements BaseCallback<number[]> {
+  private callback: BaseCallback<ConversationInputStatus[]>;
+  private conversationID: string;
+  private userID: string;
+
+  constructor(callback: BaseCallback<ConversationInputStatus[]>, conversationID: string, userID: string) {
+    this.callback = callback;
+    this.conversationID = conversationID;
+    this.userID = userID;
+  }
+
+  onSuccess(platformIDs: number[]): void {
+    const status = new ConversationInputStatus();
+    status.conversationID = this.conversationID;
+    status.userID = this.userID;
+    status.platformIDs = platformIDs || [];
+    this.callback.onSuccess([status]);
+  }
+
+  onError(errCode: number, errMsg: string): void {
+    this.callback.onError(errCode, errMsg);
+  }
+}
 
 /**
  * 杂项管理器
@@ -162,12 +187,12 @@ export class MiscManager {
    * @param conversationID 会话ID
    * @param userID 用户ID
    */
-  getInputStates(callback: BaseCallback<number>, conversationID: string, userID: string): void {
+  getInputStates(callback: BaseCallback<ConversationInputStatus[]>, conversationID: string, userID: string): void {
     const operationID = buildOperationID();
     debug('MiscManager', `getInputStates: ${conversationID}, userID: ${userID}, operationID: ${operationID}`);
 
     im.getInputStates(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper<number[]>(new InputStatesCallback(callback, conversationID, userID)),
       operationID,
       conversationID,
       userID

@@ -60,6 +60,7 @@ export {
   GroupInfo,
   GroupMemberInfo,
   ConversationInfo,
+  ConversationInputStatus,
   FriendInfo,
   FriendApplication,
   BlackInfo,

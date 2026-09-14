@@ -7,7 +7,7 @@ import im from 'libimsdk.so';
 import { debug, error, info } from '../internal/log/Logger';
 import { BaseCallback, UserListener } from '../listeners/listener';
 import { BaseCallbackWrapper, UserListenerWrapper } from '../listeners/ListenerImpl';
-import { SubscribeUsersStatus, UserInfo, UserStatus } from '../models/entity';
+import { SubscribeUsersStatus, UserInfo, UsersOnlineStatus } from '../models/entity';
 import { toArray, toString } from '../utils/JsonUtil';
 import { buildOperationID } from '../utils/Utils';
 
@@ -109,7 +109,7 @@ export class UserInfoManager {
    * @param operationID 操作ID
    * @param userIDList 用户ID列表
    */
-  getUserStatus(callback: BaseCallback<UserStatus[]>, operationID: string, userIDList: string[]): void {
+  getUserStatus(callback: BaseCallback<UsersOnlineStatus[]>, operationID: string, userIDList: string[]): void {
     debug('UserInfoManager', `getUserStatus, operationID: ${operationID}`);
 
     im.getUserStatus(
@@ -149,5 +149,23 @@ export class UserInfoManager {
       operationID,
       toString(userIDList)
     );
+  }
+
+  /** 获取已经订阅用户的在线状态。 */
+  getSubscribeUsersStatus(callback: BaseCallback<UsersOnlineStatus[]>, operationID: string): void {
+    debug('UserInfoManager', `getSubscribeUsersStatus, operationID: ${operationID}`);
+    im.getSubscribeUsersStatus(new BaseCallbackWrapper(callback), operationID);
+  }
+
+  /** 通知 SDK 当前应用前后台状态。 */
+  setAppBackgroundStatus(callback: BaseCallback<string>, operationID: string, isBackground: boolean): void {
+    debug('UserInfoManager', `setAppBackgroundStatus: ${isBackground}, operationID: ${operationID}`);
+    im.setAppBackgroundStatus(new BaseCallbackWrapper(callback), operationID, isBackground);
+  }
+
+  /** 通知 SDK 网络状态发生变化并触发重连检查。 */
+  networkStatusChanged(callback: BaseCallback<string>, operationID: string): void {
+    debug('UserInfoManager', `networkStatusChanged, operationID: ${operationID}`);
+    im.networkStatusChanged(new BaseCallbackWrapper(callback), operationID);
   }
 }

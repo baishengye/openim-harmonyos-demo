@@ -442,6 +442,13 @@ export class ConversationInfo {
   isMsgDestruct: boolean = false;
 }
 
+/** 会话中指定用户当前正在输入的平台。 */
+export class ConversationInputStatus {
+  conversationID: string = "";
+  userID: string = "";
+  platformIDs: number[] = [];
+}
+
 /**
  * 群组@信息
  */

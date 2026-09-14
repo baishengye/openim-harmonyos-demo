@@ -1,10 +1,16 @@
 /** Promise 风格的 OpenIM SDK 门面，页面层不直接处理原生回调。 */
 import {
   getSDK, OpenIMClient, InitConfig, Message, ConversationInfo, FriendInfo,
-  FriendApplication, GroupInfo, GroupApplication, UserInfo,
+  FriendApplication, GroupInfo, GroupApplication, UserInfo, UsersOnlineStatus,
   SendMsgCallBack, ConnListener, MsgListener, ConvListener, GroupListener,
   FriendListener, UserListener, PromiseBaseCallback, buildOperationID
 } from 'imsdk';
+
+export class ConversationInputStatusResult {
+  conversationID: string = '';
+  userID: string = '';
+  platformIDs: number[] = [];
+}
 
 export class HistoryMessageResult {
   messageList: Message[] = [];
@@ -44,6 +50,7 @@ export class OpenIMAppWrapper {
   get friendshipManager() { return OpenIMClient.friendshipManager; }
   get groupManager() { return OpenIMClient.groupManager; }
   get userInfoManager() { return OpenIMClient.userInfoManager; }
+  get miscManager() { return OpenIMClient.miscManager; }
 
   init(config: InitConfig, listener: ConnListener): Promise<number> {
     return Promise.resolve(this.loginManager.initSdk(listener, buildOperationID(), config));
@@ -113,6 +120,21 @@ export class OpenIMAppWrapper {
   }
   getSelfUserInfo(): Promise<UserInfo> {
     return new Promise<UserInfo>((resolve, reject) => this.userInfoManager.getSelfUserInfo(new PromiseBaseCallback<UserInfo>(resolve, reject), buildOperationID()));
+  }
+  getSubscribeUsersStatus(): Promise<UsersOnlineStatus[]> {
+    return new Promise<UsersOnlineStatus[]>((resolve, reject) => this.userInfoManager.getSubscribeUsersStatus(new PromiseBaseCallback<UsersOnlineStatus[]>(resolve, reject), buildOperationID()));
+  }
+  setAppBackgroundStatus(isBackground: boolean): Promise<string> {
+    return new Promise<string>((resolve, reject) => this.userInfoManager.setAppBackgroundStatus(new PromiseBaseCallback<string>(resolve, reject), buildOperationID(), isBackground));
+  }
+  networkStatusChanged(): Promise<string> {
+    return new Promise<string>((resolve, reject) => this.userInfoManager.networkStatusChanged(new PromiseBaseCallback<string>(resolve, reject), buildOperationID()));
+  }
+  getInputStates(conversationID: string, userID: string): Promise<ConversationInputStatusResult[]> {
+    return new Promise<ConversationInputStatusResult[]>((resolve, reject) => this.miscManager.getInputStates(new PromiseBaseCallback<ConversationInputStatusResult[]>(resolve, reject), conversationID, userID));
+  }
+  getUsersInGroup(groupID: string, userIDList: string[]): Promise<string[]> {
+    return new Promise<string[]>((resolve, reject) => this.groupManager.getUsersInGroup(new PromiseBaseCallback<string[]>(resolve, reject), buildOperationID(), groupID, userIDList));
   }
   createTextMessage(text: string): Message { return JSON.parse(this.messageManager.createTextMessage(buildOperationID(), text)) as Message; }
   sendMessage(message: Message, recvUserID: string, recvGroupID: string): Promise<Message> {
