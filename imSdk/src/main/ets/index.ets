@@ -62,6 +62,9 @@ export {
   GroupMemberInfo,
   ConversationInfo,
   ConversationInputStatus,
+  FriendshipInfo,
+  SearchResult,
+  SearchResultItem,
   FriendInfo,
   FriendApplication,
   BlackInfo,
@@ -82,6 +85,7 @@ export {
 // 监听器接口
 export {
   BaseCallback,
+  CompletionCallback,
   SendMsgCallBack,
   UploadFileCallback,
   UploadLogProgress,
@@ -110,3 +114,4 @@ export {
 
 // 工具函数
 export { buildOperationID } from './sdk/utils/Utils';
+export { PromiseBaseCallback, PromiseCompletionCallback, PromiseSendMsgCallback } from './sdk/listeners/CallbackUtil';

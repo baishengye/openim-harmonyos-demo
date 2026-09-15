@@ -459,6 +459,30 @@ export class ConversationInputStatus {
   platformIDs: number[] = [];
 }
 
+/** 好友关系查询结果。result 的取值由服务端关系枚举决定。 */
+export class FriendshipInfo {
+  userID: string = "";
+  result: number = 0;
+}
+
+/** 单个会话的本地消息搜索结果。 */
+export class SearchResultItem {
+  conversationID: string = "";
+  conversationType: number = 0;
+  showName: string = "";
+  faceURL: string = "";
+  latestMsgSendTime: number = 0;
+  messageCount: number = 0;
+  messageList: Message[] = [];
+}
+
+/** 本地消息搜索与按 ID 查找消息的统一结果。 */
+export class SearchResult {
+  totalCount: number = 0;
+  searchResultItems: SearchResultItem[] = [];
+  findResultItems: SearchResultItem[] = [];
+}
+
 /**
  * 群组@信息
  */

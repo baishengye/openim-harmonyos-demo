@@ -5,8 +5,8 @@
 
 import im from 'libimsdk.so';
 import { debug, info } from '../internal/log/Logger';
-import { BaseCallback, UploadFileCallback, UploadLogProgress } from '../listeners/listener';
-import { BaseCallbackWrapper, UploadFileCallbackWrapper, UploadLogProgressWrapper } from '../listeners/ListenerImpl';
+import { BaseCallback, CompletionCallback, UploadFileCallback, UploadLogProgress } from '../listeners/listener';
+import { BaseCallbackWrapper, CompletionCallbackWrapper, decodeArray, decodeString, UploadFileCallbackWrapper, UploadLogProgressWrapper } from '../listeners/ListenerImpl';
 import { buildOperationID } from '../utils/Utils';
 import { ConversationInputStatus } from '../models/entity';
 
@@ -49,12 +49,12 @@ export class MiscManager {
    * @param fcmToken FCM Token
    * @param expireTime 过期时间（秒）
    */
-  updateFcmToken(callback: BaseCallback<string>, fcmToken: string, expireTime: number): void {
+  updateFcmToken(callback: CompletionCallback, fcmToken: string, expireTime: number): void {
     const operationID = buildOperationID();
     debug('MiscManager', `updateFcmToken, operationID: ${operationID}`);
 
     im.updateFcmToken(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       fcmToken,
       expireTime
@@ -66,12 +66,12 @@ export class MiscManager {
    * @param callback 回调
    * @param appUnreadCount 未读消息数
    */
-  setAppBadge(callback: BaseCallback<string>, appUnreadCount: number): void {
+  setAppBadge(callback: CompletionCallback, appUnreadCount: number): void {
     const operationID = buildOperationID();
     debug('MiscManager', `setAppBadge: ${appUnreadCount}, operationID: ${operationID}`);
 
     im.setAppBadge(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       appUnreadCount
     );
@@ -84,12 +84,12 @@ export class MiscManager {
    * @param ex 扩展信息
    * @param progressCallback 上传进度回调
    */
-  uploadLogs(callback: BaseCallback<string>, line: number, ex: string, progressCallback: UploadLogProgress): void {
+  uploadLogs(callback: CompletionCallback, line: number, ex: string, progressCallback: UploadLogProgress): void {
     const operationID = buildOperationID();
     debug('MiscManager', `uploadLogs, line: ${line}, operationID: ${operationID}`);
 
     im.uploadLogs(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       line,
       ex,
@@ -108,7 +108,7 @@ export class MiscManager {
     debug('MiscManager', `uploadFile, operationID: ${operationID}`);
 
     im.uploadFile(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeString),
       operationID,
       reqData,
       new UploadFileCallbackWrapper(uploadFileCallback)
@@ -124,11 +124,11 @@ export class MiscManager {
    * @param msgs 消息
    * @param err 错误信息
    */
-  logs(callback: BaseCallback<string>, operationID: string, logLevel: number, file: string, line: number, msgs: string, err: string, keyAndValue: string): void {
+  logs(callback: CompletionCallback, operationID: string, logLevel: number, file: string, line: number, msgs: string, err: string, keyAndValue: string): void {
     debug('MiscManager', `logs, logLevel: ${logLevel}, file: ${file}, operationID: ${operationID}`);
 
     im.logs(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       logLevel,
       file,
@@ -173,12 +173,12 @@ export class MiscManager {
    * @param conversationID 会话ID
    * @param focus 是否获取焦点
    */
-  changeInputStates(callback: BaseCallback<string>, conversationID: string, focus: boolean): void {
+  changeInputStates(callback: CompletionCallback, conversationID: string, focus: boolean): void {
     const operationID = buildOperationID();
     debug('MiscManager', `changeInputStates: ${conversationID}, focus: ${focus}, operationID: ${operationID}`);
 
     im.changeInputStates(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       conversationID,
       focus
@@ -196,7 +196,7 @@ export class MiscManager {
     debug('MiscManager', `getInputStates: ${conversationID}, userID: ${userID}, operationID: ${operationID}`);
 
     im.getInputStates(
-      new BaseCallbackWrapper<number[]>(new InputStatesCallback(callback, conversationID, userID)),
+      new BaseCallbackWrapper<number[]>(new InputStatesCallback(callback, conversationID, userID), decodeArray<number>),
       operationID,
       conversationID,
       userID

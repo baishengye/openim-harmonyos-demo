@@ -5,8 +5,8 @@
 
 import im from 'libimsdk.so';
 import { debug, error, info } from '../internal/log/Logger';
-import { BaseCallback, UserListener } from '../listeners/listener';
-import { BaseCallbackWrapper, UserListenerWrapper } from '../listeners/ListenerImpl';
+import { BaseCallback, CompletionCallback, UserListener } from '../listeners/listener';
+import { BaseCallbackWrapper, CompletionCallbackWrapper, decodeArray, decodeObject, UserListenerWrapper } from '../listeners/ListenerImpl';
 import { SubscribeUsersStatus, UserCommand, UserInfo, UsersOnlineStatus } from '../models/entity';
 import { toArray, toString } from '../utils/JsonUtil';
 import { buildOperationID } from '../utils/Utils';
@@ -25,17 +25,17 @@ export class UserInfoManager {
     im.setUserListener(new UserListenerWrapper(listener));
   }
 
-  addUserCommand(callback: BaseCallback<string>, operationID: string, commandType: number,
+  addUserCommand(callback: CompletionCallback, operationID: string, commandType: number,
     uuid: string, value: string): void {
-    im.addUserCommand(new BaseCallbackWrapper(callback), operationID, commandType, uuid, value);
+    im.addUserCommand(new CompletionCallbackWrapper(callback), operationID, commandType, uuid, value);
   }
 
-  deleteUserCommand(callback: BaseCallback<string>, operationID: string, commandType: number, uuid: string): void {
-    im.deleteUserCommand(new BaseCallbackWrapper(callback), operationID, commandType, uuid);
+  deleteUserCommand(callback: CompletionCallback, operationID: string, commandType: number, uuid: string): void {
+    im.deleteUserCommand(new CompletionCallbackWrapper(callback), operationID, commandType, uuid);
   }
 
   getAllUserCommands(callback: BaseCallback<UserCommand[]>, operationID: string, commandType: number): void {
-    im.getAllUserCommands(new BaseCallbackWrapper(callback), operationID, commandType);
+    im.getAllUserCommands(new BaseCallbackWrapper(callback, decodeArray<UserCommand>), operationID, commandType);
   }
 
   /**
@@ -48,7 +48,7 @@ export class UserInfoManager {
     debug('UserInfoManager', `getUsersInfo, operationID: ${operationID}`);
 
     im.getUsersInfo(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<UserInfo>),
       operationID,
       toString(userIDList)
     );
@@ -63,7 +63,7 @@ export class UserInfoManager {
     debug('UserInfoManager', `getSelfUserInfo, operationID: ${operationID}`);
 
     im.getSelfUserInfo(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeObject<UserInfo>),
       operationID
     );
   }
@@ -74,11 +74,11 @@ export class UserInfoManager {
    * @param operationID 操作ID
    * @param params 用户信息JSON
    */
-  setSelfInfo(callback: BaseCallback<string>, operationID: string, params: string): void {
+  setSelfInfo(callback: CompletionCallback, operationID: string, params: string): void {
     debug('UserInfoManager', `setSelfInfo, operationID: ${operationID}`);
 
     im.setSelfInfo(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       params
     );
@@ -90,11 +90,11 @@ export class UserInfoManager {
    * @param operationID 操作ID
    * @param nickname 昵称
    */
-  setSelfNickname(callback: BaseCallback<string>, operationID: string, nickname: string): void {
+  setSelfNickname(callback: CompletionCallback, operationID: string, nickname: string): void {
     debug('UserInfoManager', `setSelfNickname: ${nickname}, operationID: ${operationID}`);
 
     im.setSelfInfo(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       JSON.stringify({ nickname: nickname })
     );
@@ -106,11 +106,11 @@ export class UserInfoManager {
    * @param operationID 操作ID
    * @param faceUrl 头像URL
    */
-  setSelfFaceURL(callback: BaseCallback<string>, operationID: string, faceUrl: string): void {
+  setSelfFaceURL(callback: CompletionCallback, operationID: string, faceUrl: string): void {
     debug('UserInfoManager', `setSelfFaceURL: ${faceUrl}, operationID: ${operationID}`);
 
     im.setSelfInfo(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       JSON.stringify({ faceUrl: faceUrl })
     );
@@ -126,7 +126,7 @@ export class UserInfoManager {
     debug('UserInfoManager', `getUserStatus, operationID: ${operationID}`);
 
     im.getUserStatus(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<UsersOnlineStatus>),
       operationID,
       toString(userIDList)
     );
@@ -142,7 +142,7 @@ export class UserInfoManager {
     debug('UserInfoManager', `subscribeUsersStatus, operationID: ${operationID}`);
 
     im.subscribeUsersStatus(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<SubscribeUsersStatus>),
       operationID,
       toString(userIDList)
     );
@@ -154,11 +154,11 @@ export class UserInfoManager {
    * @param operationID 操作ID
    * @param userIDList 用户ID列表
    */
-  unsubscribeUsersStatus(callback: BaseCallback<string>, operationID: string, userIDList: string[]): void {
+  unsubscribeUsersStatus(callback: CompletionCallback, operationID: string, userIDList: string[]): void {
     debug('UserInfoManager', `unsubscribeUsersStatus, operationID: ${operationID}`);
 
     im.unsubscribeUsersStatus(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       toString(userIDList)
     );
@@ -167,18 +167,18 @@ export class UserInfoManager {
   /** 获取已经订阅用户的在线状态。 */
   getSubscribeUsersStatus(callback: BaseCallback<UsersOnlineStatus[]>, operationID: string): void {
     debug('UserInfoManager', `getSubscribeUsersStatus, operationID: ${operationID}`);
-    im.getSubscribeUsersStatus(new BaseCallbackWrapper(callback), operationID);
+    im.getSubscribeUsersStatus(new BaseCallbackWrapper(callback, decodeArray<UsersOnlineStatus>), operationID);
   }
 
   /** 通知 SDK 当前应用前后台状态。 */
-  setAppBackgroundStatus(callback: BaseCallback<string>, operationID: string, isBackground: boolean): void {
+  setAppBackgroundStatus(callback: CompletionCallback, operationID: string, isBackground: boolean): void {
     debug('UserInfoManager', `setAppBackgroundStatus: ${isBackground}, operationID: ${operationID}`);
-    im.setAppBackgroundStatus(new BaseCallbackWrapper(callback), operationID, isBackground);
+    im.setAppBackgroundStatus(new CompletionCallbackWrapper(callback), operationID, isBackground);
   }
 
   /** 通知 SDK 网络状态发生变化并触发重连检查。 */
-  networkStatusChanged(callback: BaseCallback<string>, operationID: string): void {
+  networkStatusChanged(callback: CompletionCallback, operationID: string): void {
     debug('UserInfoManager', `networkStatusChanged, operationID: ${operationID}`);
-    im.networkStatusChanged(new BaseCallbackWrapper(callback), operationID);
+    im.networkStatusChanged(new CompletionCallbackWrapper(callback), operationID);
   }
 }

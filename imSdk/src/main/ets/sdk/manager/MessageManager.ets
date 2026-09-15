@@ -6,9 +6,9 @@
 
 import im from 'libimsdk.so';
 import { debug, error, info } from '../internal/log/Logger';
-import { BaseCallback, BatchMsgListener, CustomBusinessListener, MsgKvInfoListener, MsgListener, SendMsgCallBack } from '../listeners/listener';
-import { BaseCallbackWrapper, BatchMsgListenerWrapper, CustomBusinessListenerWrapper, MsgKvInfoListenerWrapper, MsgListenerWrapper, SendMsgCallBackWrapper } from '../listeners/ListenerImpl';
-import { GetAdvancedHistoryMessageParams, GetAdvancedHistoryMessageResult, Message, SearchLocalMessagesParams } from '../models/entity';
+import { BaseCallback, BatchMsgListener, CompletionCallback, CustomBusinessListener, MsgKvInfoListener, MsgListener, SendMsgCallBack } from '../listeners/listener';
+import { BaseCallbackWrapper, BatchMsgListenerWrapper, CompletionCallbackWrapper, CustomBusinessListenerWrapper, decodeObject, MsgKvInfoListenerWrapper, MsgListenerWrapper, SendMsgCallBackWrapper } from '../listeners/ListenerImpl';
+import { GetAdvancedHistoryMessageParams, GetAdvancedHistoryMessageResult, Message, SearchLocalMessagesParams, SearchResult } from '../models/entity';
 import { toString } from '../utils/JsonUtil';
 import { buildOperationID } from '../utils/Utils';
 
@@ -25,8 +25,11 @@ export interface SendMsgProgressCallback {
  * 提供消息创建、发送、查询等操作
  */
 export class MessageManager {
-  markAllConversationMessageAsRead(callback: BaseCallback<string>, operationID: string): void {
-    im.markAllConversationMessageAsRead(new BaseCallbackWrapper(callback), operationID);
+  private parseMessage(raw: string): Message {
+    return decodeObject<Message>(raw);
+  }
+  markAllConversationMessageAsRead(callback: CompletionCallback, operationID: string): void {
+    im.markAllConversationMessageAsRead(new CompletionCallbackWrapper(callback), operationID);
   }
   /**
    * 设置高级消息监听器
@@ -100,11 +103,11 @@ export class MessageManager {
    * @param conversationID 会话id
    * @param clientMsgID 客户端消息id
    */
-  deleteMessageFromLocalStorage(callback: BaseCallback<string>, operationID: string, conversationID: string, clientMsgID: string): void {
+  deleteMessageFromLocalStorage(callback: CompletionCallback, operationID: string, conversationID: string, clientMsgID: string): void {
     debug('MessageManager', `deleteMessageFromLocalStorage: ${conversationID}, ${clientMsgID}, operationID: ${operationID}`);
 
     im.deleteMessageFromLocalStorage(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       conversationID,
       clientMsgID
@@ -119,11 +122,11 @@ export class MessageManager {
    * @param receiver 接收者
    * @param sender 发送者
    */
-  insertSingleMessageToLocalStorage(callback: BaseCallback<string>, operationID: string, message: string, receiver: string, sender: string): void {
+  insertSingleMessageToLocalStorage(callback: BaseCallback<Message>, operationID: string, message: string, receiver: string, sender: string): void {
     debug('MessageManager', `insertSingleMessageToLocalStorage, receiver: ${receiver}, sender: ${sender}, operationID: ${operationID}`);
 
     im.insertSingleMessageToLocalStorage(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeObject<Message>),
       operationID,
       message,
       receiver,
@@ -139,11 +142,11 @@ export class MessageManager {
    * @param groupID 群id
    * @param senderID 发送者id
    */
-  insertGroupMessageToLocalStorage(callback: BaseCallback<string>, operationID: string, message: string, groupID: string, senderID: string): void {
+  insertGroupMessageToLocalStorage(callback: BaseCallback<Message>, operationID: string, message: string, groupID: string, senderID: string): void {
     debug('MessageManager', `insertGroupMessageToLocalStorage, groupID: ${groupID}, senderID: ${senderID}, operationID: ${operationID}`);
 
     im.insertGroupMessageToLocalStorage(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeObject<Message>),
       operationID,
       message,
       groupID,
@@ -158,11 +161,11 @@ export class MessageManager {
    * @param conversationID 会话id
    * @param clientMsgIDs 消息ids
    */
-  markMessagesAsReadByMsgID(callback: BaseCallback<string>, operationID: string, conversationID: string, clientMsgIDs: string): void {
+  markMessagesAsReadByMsgID(callback: CompletionCallback, operationID: string, conversationID: string, clientMsgIDs: string): void {
     debug('MessageManager', `markMessagesAsReadByMsgID: ${conversationID}, operationID: ${operationID}`);
 
     im.markMessagesAsReadByMsgID(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       conversationID,
       clientMsgIDs
@@ -175,11 +178,11 @@ export class MessageManager {
    * @param operationID 操作ID
    * @param conversationID 会话id
    */
-  markConversationMessageAsRead(callback: BaseCallback<string>, operationID: string, conversationID: string): void {
+  markConversationMessageAsRead(callback: CompletionCallback, operationID: string, conversationID: string): void {
     debug('MessageManager', `markConversationMessageAsRead: ${conversationID}, operationID: ${operationID}`);
 
     im.markConversationMessageAsRead(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       conversationID
     );
@@ -192,11 +195,11 @@ export class MessageManager {
    * @param userID 用户ID
    * @param msgTip 提示信息
    */
-  typingStatusUpdate(callback: BaseCallback<string>, operationID: string, userID: string, msgTip: string): void {
+  typingStatusUpdate(callback: CompletionCallback, operationID: string, userID: string, msgTip: string): void {
     debug('MessageManager', `typingStatusUpdate: ${userID}, operationID: ${operationID}`);
 
     im.typingStatusUpdate(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       userID,
       msgTip
@@ -209,9 +212,9 @@ export class MessageManager {
    * @param text 内容
    * @returns 消息JSON字符串
    */
-  createTextMessage(operationID: string, text: string): string {
+  createTextMessage(operationID: string, text: string): Message {
     debug('MessageManager', `createTextMessage: ${text}, operationID: ${operationID}`);
-    return im.createTextMessage(operationID, text);
+    return this.parseMessage(im.createTextMessage(operationID, text));
   }
 
   /**
@@ -223,9 +226,9 @@ export class MessageManager {
    * @param quoteMessage @消息带引用消息
    * @returns 消息JSON字符串
    */
-  createTextAtMessage(operationID: string, text: string, atUserIDList: string, atUserInfoList: string, quoteMessage: string): string {
+  createTextAtMessage(operationID: string, text: string, atUserIDList: string, atUserInfoList: string, quoteMessage: string): Message {
     debug('MessageManager', `createTextAtMessage: ${text}, operationID: ${operationID}`);
-    return im.createTextAtMessage(operationID, text, atUserIDList, atUserInfoList, quoteMessage);
+    return this.parseMessage(im.createTextAtMessage(operationID, text, atUserIDList, atUserInfoList, quoteMessage));
   }
 
   /**
@@ -234,9 +237,9 @@ export class MessageManager {
    * @param imagePath 相对路径
    * @returns 消息JSON字符串
    */
-  createImageMessage(operationID: string, imagePath: string): string {
+  createImageMessage(operationID: string, imagePath: string): Message {
     debug('MessageManager', `createImageMessage: ${imagePath}, operationID: ${operationID}`);
-    return im.createImageMessage(operationID, imagePath);
+    return this.parseMessage(im.createImageMessage(operationID, imagePath));
   }
 
   /**
@@ -245,9 +248,9 @@ export class MessageManager {
    * @param imagePath 绝对路径
    * @returns 消息JSON字符串
    */
-  createImageMessageFromFullPath(operationID: string, imagePath: string): string {
+  createImageMessageFromFullPath(operationID: string, imagePath: string): Message {
     debug('MessageManager', `createImageMessageFromFullPath: ${imagePath}, operationID: ${operationID}`);
-    return im.createImageMessageFromFullPath(operationID, imagePath);
+    return this.parseMessage(im.createImageMessageFromFullPath(operationID, imagePath));
   }
 
   /**
@@ -257,9 +260,9 @@ export class MessageManager {
    * @param duration 时长
    * @returns 消息JSON字符串
    */
-  createSoundMessage(operationID: string, soundPath: string, duration: number): string {
+  createSoundMessage(operationID: string, soundPath: string, duration: number): Message {
     debug('MessageManager', `createSoundMessage: ${soundPath}, duration: ${duration}, operationID: ${operationID}`);
-    return im.createSoundMessage(operationID, soundPath, duration);
+    return this.parseMessage(im.createSoundMessage(operationID, soundPath, duration));
   }
 
   /**
@@ -269,9 +272,9 @@ export class MessageManager {
    * @param duration 时长
    * @returns 消息JSON字符串
    */
-  createSoundMessageFromFullPath(operationID: string, soundPath: string, duration: number): string {
+  createSoundMessageFromFullPath(operationID: string, soundPath: string, duration: number): Message {
     debug('MessageManager', `createSoundMessageFromFullPath: ${soundPath}, duration: ${duration}, operationID: ${operationID}`);
-    return im.createSoundMessageFromFullPath(operationID, soundPath, duration);
+    return this.parseMessage(im.createSoundMessageFromFullPath(operationID, soundPath, duration));
   }
 
   /**
@@ -283,9 +286,9 @@ export class MessageManager {
    * @param snapshotPath 缩略图相对路径
    * @returns 消息JSON字符串
    */
-  createVideoMessage(operationID: string, videoPath: string, videoType: string, duration: number, snapshotPath: string): string {
+  createVideoMessage(operationID: string, videoPath: string, videoType: string, duration: number, snapshotPath: string): Message {
     debug('MessageManager', `createVideoMessage: ${videoPath}, operationID: ${operationID}`);
-    return im.createVideoMessage(operationID, videoPath, videoType, duration, snapshotPath);
+    return this.parseMessage(im.createVideoMessage(operationID, videoPath, videoType, duration, snapshotPath));
   }
 
   /**
@@ -297,9 +300,9 @@ export class MessageManager {
    * @param snapshotPath 缩略图绝对路径
    * @returns 消息JSON字符串
    */
-  createVideoMessageFromFullPath(operationID: string, videoPath: string, videoType: string, duration: number, snapshotPath: string): string {
+  createVideoMessageFromFullPath(operationID: string, videoPath: string, videoType: string, duration: number, snapshotPath: string): Message {
     debug('MessageManager', `createVideoMessageFromFullPath: ${videoPath}, operationID: ${operationID}`);
-    return im.createVideoMessageFromFullPath(operationID, videoPath, videoType, duration, snapshotPath);
+    return this.parseMessage(im.createVideoMessageFromFullPath(operationID, videoPath, videoType, duration, snapshotPath));
   }
 
   /**
@@ -309,9 +312,9 @@ export class MessageManager {
    * @param fileName 文件名
    * @returns 消息JSON字符串
    */
-  createFileMessage(operationID: string, filePath: string, fileName: string): string {
+  createFileMessage(operationID: string, filePath: string, fileName: string): Message {
     debug('MessageManager', `createFileMessage: ${filePath}, fileName: ${fileName}, operationID: ${operationID}`);
-    return im.createFileMessage(operationID, filePath, fileName);
+    return this.parseMessage(im.createFileMessage(operationID, filePath, fileName));
   }
 
   /**
@@ -321,9 +324,9 @@ export class MessageManager {
    * @param fileName 文件名
    * @returns 消息JSON字符串
    */
-  createFileMessageFromFullPath(operationID: string, filePath: string, fileName: string): string {
+  createFileMessageFromFullPath(operationID: string, filePath: string, fileName: string): Message {
     debug('MessageManager', `createFileMessageFromFullPath: ${filePath}, fileName: ${fileName}, operationID: ${operationID}`);
-    return im.createFileMessageFromFullPath(operationID, filePath, fileName);
+    return this.parseMessage(im.createFileMessageFromFullPath(operationID, filePath, fileName));
   }
 
   /**
@@ -334,9 +337,9 @@ export class MessageManager {
    * @param summaryList 摘要列表JSON
    * @returns 消息JSON字符串
    */
-  createMergerMessage(operationID: string, messageList: string, title: string, summaryList: string): string {
+  createMergerMessage(operationID: string, messageList: string, title: string, summaryList: string): Message {
     debug('MessageManager', `createMergerMessage: ${title}, operationID: ${operationID}`);
-    return im.createMergerMessage(operationID, messageList, title, summaryList);
+    return this.parseMessage(im.createMergerMessage(operationID, messageList, title, summaryList));
   }
 
   /**
@@ -345,9 +348,9 @@ export class MessageManager {
    * @param message 消息体JSON
    * @returns 消息JSON字符串
    */
-  createForwardMessage(operationID: string, message: string): string {
+  createForwardMessage(operationID: string, message: string): Message {
     debug('MessageManager', `createForwardMessage, operationID: ${operationID}`);
-    return im.createForwardMessage(operationID, message);
+    return this.parseMessage(im.createForwardMessage(operationID, message));
   }
 
   /**
@@ -358,9 +361,9 @@ export class MessageManager {
    * @param description 描述消息
    * @returns 消息JSON字符串
    */
-  createLocationMessage(operationID: string, latitude: number, longitude: number, description: string): string {
+  createLocationMessage(operationID: string, latitude: number, longitude: number, description: string): Message {
     debug('MessageManager', `createLocationMessage: ${latitude}, ${longitude}, ${description}, operationID: ${operationID}`);
-    return im.createLocationMessage(operationID, description, longitude, latitude);
+    return this.parseMessage(im.createLocationMessage(operationID, description, longitude, latitude));
   }
 
   /**
@@ -371,9 +374,9 @@ export class MessageManager {
    * @param description 描述
    * @returns 消息JSON字符串
    */
-  createCustomMessage(operationID: string, data: string, extension: string, description: string): string {
+  createCustomMessage(operationID: string, data: string, extension: string, description: string): Message {
     debug('MessageManager', `createCustomMessage: ${description}, operationID: ${operationID}`);
-    return im.createCustomMessage(operationID, data, extension, description);
+    return this.parseMessage(im.createCustomMessage(operationID, data, extension, description));
   }
 
   /**
@@ -383,9 +386,9 @@ export class MessageManager {
    * @param message 被引用的消息体JSON
    * @returns 消息JSON字符串
    */
-  createQuoteMessage(operationID: string, text: string, message: string): string {
+  createQuoteMessage(operationID: string, text: string, message: string): Message {
     debug('MessageManager', `createQuoteMessage: ${text}, operationID: ${operationID}`);
-    return im.createQuoteMessage(operationID, text, message);
+    return this.parseMessage(im.createQuoteMessage(operationID, text, message));
   }
 
   /**
@@ -394,9 +397,9 @@ export class MessageManager {
    * @param cardElem json String
    * @returns 消息JSON字符串
    */
-  createCardMessage(operationID: string, cardElem: string): string {
+  createCardMessage(operationID: string, cardElem: string): Message {
     debug('MessageManager', `createCardMessage, operationID: ${operationID}`);
-    return im.createCardMessage(operationID, cardElem);
+    return this.parseMessage(im.createCardMessage(operationID, cardElem));
   }
 
   /**
@@ -406,9 +409,9 @@ export class MessageManager {
    * @param data url表情，json String : {"url":"","width":0,"height":0}
    * @returns 消息JSON字符串
    */
-  createFaceMessage(operationID: string, index: number, data: string): string {
+  createFaceMessage(operationID: string, index: number, data: string): Message {
     debug('MessageManager', `createFaceMessage: index ${index}, operationID: ${operationID}`);
-    return im.createFaceMessage(operationID, index, data);
+    return this.parseMessage(im.createFaceMessage(operationID, index, data));
   }
 
   /**
@@ -417,11 +420,11 @@ export class MessageManager {
    * @param operationID 操作ID
    * @param conversationID 会话id
    */
-  clearConversationAndDeleteAllMsg(callback: BaseCallback<string>, operationID: string, conversationID: string): void {
+  clearConversationAndDeleteAllMsg(callback: CompletionCallback, operationID: string, conversationID: string): void {
     debug('MessageManager', `clearConversationAndDeleteAllMsg: ${conversationID}, operationID: ${operationID}`);
 
     im.clearConversationAndDeleteAllMsg(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       conversationID
     );
@@ -442,7 +445,7 @@ export class MessageManager {
    * @param count 每页数量
    */
   searchLocalMessages(
-    callback: BaseCallback<string>,
+    callback: BaseCallback<SearchResult>,
     operationID: string,
     conversationID: string,
     keywordList: string[],
@@ -469,7 +472,7 @@ export class MessageManager {
     };
 
     im.searchLocalMessages(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeObject<SearchResult>),
       operationID,
       toString(searchParams)
     );
@@ -482,11 +485,11 @@ export class MessageManager {
    * @param conversationID 会话id
    * @param clientMsgID 消息id
    */
-  deleteMessageFromLocalAndSvr(callback: BaseCallback<string>, operationID: string, conversationID: string, clientMsgID: string): void {
+  deleteMessageFromLocalAndSvr(callback: CompletionCallback, operationID: string, conversationID: string, clientMsgID: string): void {
     debug('MessageManager', `deleteMessageFromLocalAndSvr: ${conversationID}, ${clientMsgID}, operationID: ${operationID}`);
 
     im.deleteMessage(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       conversationID,
       clientMsgID
@@ -498,11 +501,11 @@ export class MessageManager {
    * @param callback 回调
    * @param operationID 操作ID
    */
-  deleteAllMsgFromLocal(callback: BaseCallback<string>, operationID: string): void {
+  deleteAllMsgFromLocal(callback: CompletionCallback, operationID: string): void {
     debug('MessageManager', `deleteAllMsgFromLocal, operationID: ${operationID}`);
 
     im.deleteAllMsgFromLocal(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID
     );
   }
@@ -512,11 +515,11 @@ export class MessageManager {
    * @param callback 回调
    * @param operationID 操作ID
    */
-  deleteAllMsgFromLocalAndSvr(callback: BaseCallback<string>, operationID: string): void {
+  deleteAllMsgFromLocalAndSvr(callback: CompletionCallback, operationID: string): void {
     debug('MessageManager', `deleteAllMsgFromLocalAndSvr, operationID: ${operationID}`);
 
     im.deleteAllMsgFromLocalAndSvr(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID
     );
   }
@@ -527,11 +530,11 @@ export class MessageManager {
    * @param operationID 操作ID
    * @param conversationID 会话id
    */
-  markMessageAsReadByConID(callback: BaseCallback<string>, operationID: string, conversationID: string): void {
+  markMessageAsReadByConID(callback: CompletionCallback, operationID: string, conversationID: string): void {
     debug('MessageManager', `markMessageAsReadByConID: ${conversationID}, operationID: ${operationID}`);
 
     im.markConversationMessageAsRead(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       conversationID
     );
@@ -544,11 +547,11 @@ export class MessageManager {
    * @param conversationID 会话ID
    * @param clientMsgID msg client ID
    */
-  revokeMessageV2(callback: BaseCallback<string>, operationID: string, conversationID: string, clientMsgID: string): void {
+  revokeMessageV2(callback: CompletionCallback, operationID: string, conversationID: string, clientMsgID: string): void {
     debug('MessageManager', `revokeMessageV2: ${conversationID}, ${clientMsgID}, operationID: ${operationID}`);
 
     im.revokeMessage(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       conversationID,
       clientMsgID
@@ -575,7 +578,7 @@ export class MessageManager {
     };
 
     im.getAdvancedHistoryMessageList(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeObject<GetAdvancedHistoryMessageResult>),
       operationID,
       toString(params)
     );
@@ -601,7 +604,7 @@ export class MessageManager {
     };
 
     im.getAdvancedHistoryMessageListReverse(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeObject<GetAdvancedHistoryMessageResult>),
       operationID,
       toString(params)
     );
@@ -613,11 +616,11 @@ export class MessageManager {
    * @param operationID 操作ID
    * @param searchParams 搜索参数JSON
    */
-  findMessageList(callback: BaseCallback<string>, operationID: string, searchParams: string): void {
+  findMessageList(callback: BaseCallback<SearchResult>, operationID: string, searchParams: string): void {
     debug('MessageManager', `findMessageList, operationID: ${operationID}`);
 
     im.findMessageList(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeObject<SearchResult>),
       operationID,
       searchParams
     );
@@ -630,9 +633,9 @@ export class MessageManager {
    * @param richList 富文本详细JSON
    * @returns 消息JSON字符串
    */
-  createAdvancedTextMessage(operationID: string, text: string, richList: string): string {
+  createAdvancedTextMessage(operationID: string, text: string, richList: string): Message {
     debug('MessageManager', `createAdvancedTextMessage: ${text}, operationID: ${operationID}`);
-    return im.createAdvancedTextMessage(operationID, text, richList);
+    return this.parseMessage(im.createAdvancedTextMessage(operationID, text, richList));
   }
 
   /**
@@ -643,9 +646,9 @@ export class MessageManager {
    * @param richList 富文本详细JSON
    * @returns 消息JSON字符串
    */
-  createAdvancedQuoteMessage(operationID: string, text: string, message: string, richList: string): string {
+  createAdvancedQuoteMessage(operationID: string, text: string, message: string, richList: string): Message {
     debug('MessageManager', `createAdvancedQuoteMessage: ${text}, operationID: ${operationID}`);
-    return im.createAdvancedQuoteMessage(operationID, text, message, richList);
+    return this.parseMessage(im.createAdvancedQuoteMessage(operationID, text, message, richList));
   }
 
   /**
@@ -689,9 +692,9 @@ export class MessageManager {
    * @param snapshotPicture 缩略图信息JSON
    * @returns 消息JSON字符串
    */
-  createImageMessageByURL(operationID: string, sourcePath: string, sourcePicture: string, bigPicture: string, snapshotPicture: string): string {
+  createImageMessageByURL(operationID: string, sourcePath: string, sourcePicture: string, bigPicture: string, snapshotPicture: string): Message {
     debug('MessageManager', `createImageMessageByURL: ${sourcePath}, operationID: ${operationID}`);
-    return im.createImageMessageByURL(operationID, sourcePath, sourcePicture, bigPicture, snapshotPicture);
+    return this.parseMessage(im.createImageMessageByURL(operationID, sourcePath, sourcePicture, bigPicture, snapshotPicture));
   }
 
   /**
@@ -700,9 +703,9 @@ export class MessageManager {
    * @param soundElem 声音元素JSON
    * @returns 消息JSON字符串
    */
-  createSoundMessageByURL(operationID: string, soundElem: string): string {
+  createSoundMessageByURL(operationID: string, soundElem: string): Message {
     debug('MessageManager', `createSoundMessageByURL, operationID: ${operationID}`);
-    return im.createSoundMessageByURL(operationID, soundElem);
+    return this.parseMessage(im.createSoundMessageByURL(operationID, soundElem));
   }
 
   /**
@@ -711,9 +714,9 @@ export class MessageManager {
    * @param videoElem 视频元素JSON
    * @returns 消息JSON字符串
    */
-  createVideoMessageByURL(operationID: string, videoElem: string): string {
+  createVideoMessageByURL(operationID: string, videoElem: string): Message {
     debug('MessageManager', `createVideoMessageByURL, operationID: ${operationID}`);
-    return im.createVideoMessageByURL(operationID, videoElem);
+    return this.parseMessage(im.createVideoMessageByURL(operationID, videoElem));
   }
 
   /**
@@ -722,9 +725,9 @@ export class MessageManager {
    * @param fileElem 文件元素JSON
    * @returns 消息JSON字符串
    */
-  createFileMessageByURL(operationID: string, fileElem: string): string {
+  createFileMessageByURL(operationID: string, fileElem: string): Message {
     debug('MessageManager', `createFileMessageByURL, operationID: ${operationID}`);
-    return im.createFileMessageByURL(operationID, fileElem);
+    return this.parseMessage(im.createFileMessageByURL(operationID, fileElem));
   }
 
   /**
@@ -735,11 +738,11 @@ export class MessageManager {
    * @param clientMsgID 消息ID
    * @param localEx 本地扩展
    */
-  setMessageLocalEx(callback: BaseCallback<string>, operationID: string, conversationID: string, clientMsgID: string, localEx: string): void {
+  setMessageLocalEx(callback: CompletionCallback, operationID: string, conversationID: string, clientMsgID: string, localEx: string): void {
     debug('MessageManager', `setMessageLocalEx: ${conversationID}, ${clientMsgID}, operationID: ${operationID}`);
 
     im.setMessageLocalEx(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       conversationID,
       clientMsgID,

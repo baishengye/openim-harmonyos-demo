@@ -5,8 +5,8 @@
 
 import im from 'libimsdk.so';
 import { debug, error, info } from '../internal/log/Logger';
-import { BaseCallback, ConnListener } from '../listeners/listener';
-import { BaseCallbackWrapper, ConnListenerWrapper } from '../listeners/ListenerImpl';
+import { BaseCallback, CompletionCallback, ConnListener } from '../listeners/listener';
+import { CompletionCallbackWrapper, ConnListenerWrapper } from '../listeners/ListenerImpl';
 import { InitConfig } from '../models/entity';
 import { toString } from '../utils/JsonUtil';
 import { LoginStatus } from '../enums/enum';
@@ -47,11 +47,11 @@ export class LoginManager {
    * @param userID 用户ID
    * @param token 登录令牌
    */
-  login(callback: BaseCallback<string>, operationID: string, userID: string, token: string): void {
+  login(callback: CompletionCallback, operationID: string, userID: string, token: string): void {
     debug('OpenIM', `login with userID: ${userID}, operationID: ${operationID}`);
 
     im.login(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       userID,
       token
@@ -63,11 +63,11 @@ export class LoginManager {
    * @param callback 回调
    * @param operationID 操作ID
    */
-  logout(callback: BaseCallback<string>, operationID: string): void {
+  logout(callback: CompletionCallback, operationID: string): void {
     debug('OpenIM', `logout with operationID: ${operationID}`);
 
     im.logout(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID
     );
   }

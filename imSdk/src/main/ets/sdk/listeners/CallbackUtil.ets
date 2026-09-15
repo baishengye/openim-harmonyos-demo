@@ -1,4 +1,19 @@
-import { BaseCallback, SendMsgCallBack } from "./listener";
+import { BaseCallback, CompletionCallback, SendMsgCallBack } from "./listener";
+
+export class PromiseCompletionCallback implements CompletionCallback {
+  private resolve: () => void;
+  private reject: (reason: Error) => void;
+
+  constructor(resolve: () => void, reject: (reason: Error) => void) {
+    this.resolve = resolve;
+    this.reject = reject;
+  }
+
+  onSuccess(): void { this.resolve(); }
+  onError(code: number, message: string): void {
+    this.reject(new Error(`Code: ${code}, Message: ${message}`));
+  }
+}
 
 // 桥接类同样支持泛型 T
 export class PromiseBaseCallback<T> implements BaseCallback<T> {

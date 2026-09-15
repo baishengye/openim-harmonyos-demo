@@ -28,6 +28,12 @@ export interface BaseCallback<T> {
   onSuccess(data: T): void;
 }
 
+/** 仅表示异步操作已完成，不携带业务数据。 */
+export interface CompletionCallback {
+  onError(errCode: number, errMsg: string): void;
+  onSuccess(): void;
+}
+
 /**
  * 发送消息回调接口
  */

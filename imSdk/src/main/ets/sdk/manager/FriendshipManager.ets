@@ -5,9 +5,9 @@
 
 import im from 'libimsdk.so';
 import { debug, error, info } from '../internal/log/Logger';
-import { BaseCallback, FriendListener } from '../listeners/listener';
-import { BaseCallbackWrapper, FriendListenerWrapper } from '../listeners/ListenerImpl';
-import { BlackInfo, FriendApplication, FriendInfo } from '../models/entity';
+import { BaseCallback, CompletionCallback, FriendListener } from '../listeners/listener';
+import { BaseCallbackWrapper, CompletionCallbackWrapper, decodeArray, decodeNumber, FriendListenerWrapper } from '../listeners/ListenerImpl';
+import { BlackInfo, FriendApplication, FriendshipInfo, FriendInfo } from '../models/entity';
 import { toArray, toString } from '../utils/JsonUtil';
 import { buildOperationID } from '../utils/Utils';
 
@@ -35,7 +35,7 @@ export class FriendshipManager {
     debug('FriendshipManager', `getFriendList, filterBlack: ${filterBlack}, operationID: ${operationID}`);
 
     im.getFriendList(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<FriendInfo>),
       operationID,
       filterBlack
     );
@@ -53,7 +53,7 @@ export class FriendshipManager {
     debug('FriendshipManager', `getFriendListPage, offset: ${offset}, count: ${count}, operationID: ${operationID}`);
 
     im.getFriendListPage(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<FriendInfo>),
       operationID,
       offset,
       count,
@@ -72,7 +72,7 @@ export class FriendshipManager {
     debug('FriendshipManager', `getSpecifiedFriendsInfo, operationID: ${operationID}`);
 
     im.getSpecifiedFriendsInfo(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<FriendInfo>),
       operationID,
       toString(userIDList),
       ex
@@ -89,7 +89,7 @@ export class FriendshipManager {
     debug('FriendshipManager', `searchFriends, operationID: ${operationID}`);
 
     im.searchFriends(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<FriendInfo>),
       operationID,
       params
     );
@@ -101,11 +101,11 @@ export class FriendshipManager {
    * @param operationID 操作ID
    * @param params 添加参数JSON
    */
-  addFriend(callback: BaseCallback<string>, operationID: string, params: string): void {
+  addFriend(callback: CompletionCallback, operationID: string, params: string): void {
     debug('FriendshipManager', `addFriend, operationID: ${operationID}`);
 
     im.addFriend(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       params
     );
@@ -117,11 +117,11 @@ export class FriendshipManager {
    * @param operationID 操作ID
    * @param userIDList 用户ID列表
    */
-  checkFriend(callback: BaseCallback<string>, operationID: string, userIDList: string[]): void {
+  checkFriend(callback: BaseCallback<FriendshipInfo[]>, operationID: string, userIDList: string[]): void {
     debug('FriendshipManager', `checkFriend, operationID: ${operationID}`);
 
     im.checkFriend(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<FriendshipInfo>),
       operationID,
       toString(userIDList)
     );
@@ -133,11 +133,11 @@ export class FriendshipManager {
    * @param operationID 操作ID
    * @param params 更新参数JSON
    */
-  updateFriends(callback: BaseCallback<string>, operationID: string, params: string): void {
+  updateFriends(callback: CompletionCallback, operationID: string, params: string): void {
     debug('FriendshipManager', `updateFriends, operationID: ${operationID}`);
 
     im.updateFriends(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       params
     );
@@ -152,7 +152,7 @@ export class FriendshipManager {
     debug('FriendshipManager', `getFriendApplicationUnhandledCount, operationID: ${operationID}`);
 
     im.getFriendApplicationUnhandledCount(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeNumber),
       operationID,
       "{}"
     );
@@ -164,11 +164,11 @@ export class FriendshipManager {
    * @param operationID 操作ID
    * @param friendUserID 好友用户ID
    */
-  deleteFriend(callback: BaseCallback<string>, operationID: string, friendUserID: string): void {
+  deleteFriend(callback: CompletionCallback, operationID: string, friendUserID: string): void {
     debug('FriendshipManager', `deleteFriend: ${friendUserID}, operationID: ${operationID}`);
 
     im.deleteFriend(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       friendUserID
     );
@@ -181,11 +181,11 @@ export class FriendshipManager {
    * @param toUserID 用户ID
    * @param remark 备注
    */
-  setFriendRemark(callback: BaseCallback<string>, operationID: string, toUserID: string, remark: string): void {
+  setFriendRemark(callback: CompletionCallback, operationID: string, toUserID: string, remark: string): void {
     debug('FriendshipManager', `setFriendRemark: ${toUserID}, remark: ${remark}, operationID: ${operationID}`);
 
     im.setFriendRemark(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       toUserID,
       remark
@@ -202,7 +202,7 @@ export class FriendshipManager {
     debug('FriendshipManager', `getFriendApplicationListAsApplicant, operationID: ${operationID}`);
 
     im.getFriendApplicationListAsApplicant(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<FriendApplication>),
       operationID,
       params
     );
@@ -218,7 +218,7 @@ export class FriendshipManager {
     debug('FriendshipManager', `getFriendApplicationListAsRecipient, operationID: ${operationID}`);
 
     im.getFriendApplicationListAsRecipient(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<FriendApplication>),
       operationID,
       params
     );
@@ -230,11 +230,11 @@ export class FriendshipManager {
    * @param operationID 操作ID
    * @param params 接受参数JSON
    */
-  acceptFriendApplication(callback: BaseCallback<string>, operationID: string, params: string): void {
+  acceptFriendApplication(callback: CompletionCallback, operationID: string, params: string): void {
     debug('FriendshipManager', `acceptFriendApplication, operationID: ${operationID}`);
 
     im.acceptFriendApplication(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       params
     );
@@ -246,11 +246,11 @@ export class FriendshipManager {
    * @param operationID 操作ID
    * @param params 拒绝参数JSON
    */
-  refuseFriendApplication(callback: BaseCallback<string>, operationID: string, params: string): void {
+  refuseFriendApplication(callback: CompletionCallback, operationID: string, params: string): void {
     debug('FriendshipManager', `refuseFriendApplication, operationID: ${operationID}`);
 
     im.refuseFriendApplication(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       params
     );
@@ -263,11 +263,11 @@ export class FriendshipManager {
    * @param toUserID 用户ID
    * @param ex 扩展信息
    */
-  addBlack(callback: BaseCallback<string>, operationID: string, toUserID: string, ex: string = ""): void {
+  addBlack(callback: CompletionCallback, operationID: string, toUserID: string, ex: string = ""): void {
     debug('FriendshipManager', `addBlack: ${toUserID}, operationID: ${operationID}`);
 
     im.addBlack(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       toUserID,
       ex
@@ -283,7 +283,7 @@ export class FriendshipManager {
     debug('FriendshipManager', `getBlackList, operationID: ${operationID}`);
 
     im.getBlackList(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<BlackInfo>),
       operationID
     );
   }
@@ -294,11 +294,11 @@ export class FriendshipManager {
    * @param operationID 操作ID
    * @param userID 用户ID
    */
-  removeBlack(callback: BaseCallback<string>, operationID: string, userID: string): void {
+  removeBlack(callback: CompletionCallback, operationID: string, userID: string): void {
     debug('FriendshipManager', `removeBlack: ${userID}, operationID: ${operationID}`);
 
     im.removeBlack(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       userID
     );

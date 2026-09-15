@@ -47,7 +47,10 @@ export {
   SingleTypeKeyInfoSum,
   MessageKv,
   UsersOnlineStatus,
-  UserCommand
+  UserCommand,
+  FriendshipInfo,
+  SearchResult,
+  SearchResultItem
 } from './src/main/ets/sdk/models/entity';
 export {
   AllowType,
@@ -73,6 +76,7 @@ export {
 
 export {
   BaseCallback,
+  CompletionCallback,
   SendMsgCallBack,
   UploadFileCallback,
   UploadLogProgress,
@@ -112,6 +116,7 @@ export {
 } from './src/main/ets/sdk/manager/UserInfoManager';
 export {
   PromiseBaseCallback,
+  PromiseCompletionCallback,
   PromiseSendMsgCallback
 } from './src/main/ets/sdk/listeners/CallbackUtil'
 export {

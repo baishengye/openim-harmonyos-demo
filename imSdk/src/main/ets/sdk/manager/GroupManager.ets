@@ -5,8 +5,8 @@
 
 import im from 'libimsdk.so';
 import { debug, error, info } from '../internal/log/Logger';
-import { BaseCallback, GroupListener } from '../listeners/listener';
-import { BaseCallbackWrapper, GroupListenerWrapper } from '../listeners/ListenerImpl';
+import { BaseCallback, CompletionCallback, GroupListener } from '../listeners/listener';
+import { BaseCallbackWrapper, CompletionCallbackWrapper, decodeArray, decodeBoolean, decodeNumber, decodeObject, GroupListenerWrapper } from '../listeners/ListenerImpl';
 import { GroupApplication, GroupInfo, GroupMemberInfo } from '../models/entity';
 import { toArray, toObject, toString } from '../utils/JsonUtil';
 import { buildOperationID } from '../utils/Utils';
@@ -35,7 +35,7 @@ export class GroupManager {
     debug('GroupManager', `createGroup, operationID: ${operationID}`);
 
     im.createGroup(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeObject<GroupInfo>),
       operationID,
       params
     );
@@ -50,11 +50,11 @@ export class GroupManager {
    * @param joinSource 加入来源
    * @param ex 扩展信息
    */
-  joinGroup(callback: BaseCallback<string>, operationID: string, groupID: string, reqMsg: string = "", joinSource: number = 2, ex: string = ""): void {
+  joinGroup(callback: CompletionCallback, operationID: string, groupID: string, reqMsg: string = "", joinSource: number = 2, ex: string = ""): void {
     debug('GroupManager', `joinGroup: ${groupID}, operationID: ${operationID}`);
 
     im.joinGroup(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       groupID,
       reqMsg,
@@ -69,11 +69,11 @@ export class GroupManager {
    * @param operationID 操作ID
    * @param groupID 群组ID
    */
-  quitGroup(callback: BaseCallback<string>, operationID: string, groupID: string): void {
+  quitGroup(callback: CompletionCallback, operationID: string, groupID: string): void {
     debug('GroupManager', `quitGroup: ${groupID}, operationID: ${operationID}`);
 
     im.quitGroup(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       groupID
     );
@@ -85,11 +85,11 @@ export class GroupManager {
    * @param operationID 操作ID
    * @param groupID 群组ID
    */
-  dismissGroup(callback: BaseCallback<string>, operationID: string, groupID: string): void {
+  dismissGroup(callback: CompletionCallback, operationID: string, groupID: string): void {
     debug('GroupManager', `dismissGroup: ${groupID}, operationID: ${operationID}`);
 
     im.dismissGroup(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       groupID
     );
@@ -104,7 +104,7 @@ export class GroupManager {
     debug('GroupManager', `getJoinedGroupList, operationID: ${operationID}`);
 
     im.getJoinedGroupList(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<GroupInfo>),
       operationID
     );
   }
@@ -120,7 +120,7 @@ export class GroupManager {
     debug('GroupManager', `getJoinedGroupListPage, offset: ${offset}, count: ${count}, operationID: ${operationID}`);
 
     im.getJoinedGroupListPage(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<GroupInfo>),
       operationID,
       offset,
       count
@@ -137,7 +137,7 @@ export class GroupManager {
     debug('GroupManager', `getSpecifiedGroupsInfo, count: ${groupIDList.length}, operationID: ${operationID}`);
 
     im.getSpecifiedGroupsInfo(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<GroupInfo>),
       operationID,
       toString(groupIDList)
     );
@@ -156,7 +156,7 @@ export class GroupManager {
     debug('GroupManager', `getGroupMemberList: ${groupID}, operationID: ${operationID}`);
 
     im.getGroupMemberList(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<GroupMemberInfo>),
       operationID,
       groupID,
       filter,
@@ -175,7 +175,7 @@ export class GroupManager {
     debug('GroupManager', `getGroupMemberOwnerAndAdmin: ${groupID}, operationID: ${operationID}`);
 
     im.getGroupMemberOwnerAndAdmin(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<GroupMemberInfo>),
       operationID,
       groupID
     );
@@ -192,7 +192,7 @@ export class GroupManager {
     debug('GroupManager', `getSpecifiedGroupMembersInfo: ${groupID}, count: ${userIDList.length}, operationID: ${operationID}`);
 
     im.getSpecifiedGroupMembersInfo(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<GroupMemberInfo>),
       operationID,
       groupID,
       toString(userIDList)
@@ -210,7 +210,7 @@ export class GroupManager {
     debug('GroupManager', `getUsersInGroup: ${groupID}, count: ${userIDList.length}, operationID: ${operationID}`);
 
     im.getUsersInGroup(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<string>),
       operationID,
       groupID,
       toString(userIDList)
@@ -227,7 +227,7 @@ export class GroupManager {
     debug('GroupManager', `searchGroupMembers, operationID: ${operationID}`);
 
     im.searchGroupMembers(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<GroupMemberInfo>),
       operationID,
       params
     );
@@ -239,11 +239,11 @@ export class GroupManager {
    * @param operationID 操作ID
    * @param params 群组信息JSON
    */
-  setGroupInfo(callback: BaseCallback<string>, operationID: string, params: string): void {
+  setGroupInfo(callback: CompletionCallback, operationID: string, params: string): void {
     debug('GroupManager', `setGroupInfo, operationID: ${operationID}`);
 
     im.setGroupInfo(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       params
     );
@@ -256,11 +256,11 @@ export class GroupManager {
    * @param groupID 群组ID
    * @param isMute 是否禁言
    */
-  changeGroupMute(callback: BaseCallback<string>, operationID: string, groupID: string, isMute: boolean): void {
+  changeGroupMute(callback: CompletionCallback, operationID: string, groupID: string, isMute: boolean): void {
     debug('GroupManager', `changeGroupMute: ${groupID}, isMute: ${isMute}, operationID: ${operationID}`);
 
     im.changeGroupMute(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       groupID,
       isMute
@@ -275,11 +275,11 @@ export class GroupManager {
    * @param userID 用户ID
    * @param mutedSeconds 禁言时长（秒）
    */
-  changeGroupMemberMute(callback: BaseCallback<string>, operationID: string, groupID: string, userID: string, mutedSeconds: number): void {
+  changeGroupMemberMute(callback: CompletionCallback, operationID: string, groupID: string, userID: string, mutedSeconds: number): void {
     debug('GroupManager', `changeGroupMemberMute: ${groupID}, userID: ${userID}, mutedSeconds: ${mutedSeconds}, operationID: ${operationID}`);
 
     im.changeGroupMemberMute(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       groupID,
       userID,
@@ -293,11 +293,11 @@ export class GroupManager {
    * @param operationID 操作ID
    * @param params 群成员信息JSON
    */
-  setGroupMemberInfo(callback: BaseCallback<string>, operationID: string, params: string): void {
+  setGroupMemberInfo(callback: CompletionCallback, operationID: string, params: string): void {
     debug('GroupManager', `setGroupMemberInfo, operationID: ${operationID}`);
 
     im.setGroupMemberInfo(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       params
     );
@@ -311,11 +311,11 @@ export class GroupManager {
    * @param userIDList 用户ID列表
    * @param reason 原因
    */
-  inviteUserToGroup(callback: BaseCallback<string>, operationID: string, groupID: string, userIDList: string[], reason: string = ""): void {
+  inviteUserToGroup(callback: CompletionCallback, operationID: string, groupID: string, userIDList: string[], reason: string = ""): void {
     debug('GroupManager', `inviteUserToGroup: ${groupID}, operationID: ${operationID}`);
 
     im.inviteUserToGroup(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       groupID,
       toString(userIDList),
@@ -331,11 +331,11 @@ export class GroupManager {
    * @param userIDList 用户ID列表
    * @param reason 原因
    */
-  kickGroupMember(callback: BaseCallback<string>, operationID: string, groupID: string, userIDList: string[], reason: string = ""): void {
+  kickGroupMember(callback: CompletionCallback, operationID: string, groupID: string, userIDList: string[], reason: string = ""): void {
     debug('GroupManager', `kickGroupMember: ${groupID}, operationID: ${operationID}`);
 
     im.kickGroupMember(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       groupID,
       toString(userIDList),
@@ -350,11 +350,11 @@ export class GroupManager {
    * @param groupID 群组ID
    * @param newOwnerUserID 新群主用户ID
    */
-  transferGroupOwner(callback: BaseCallback<string>, operationID: string, groupID: string, newOwnerUserID: string): void {
+  transferGroupOwner(callback: CompletionCallback, operationID: string, groupID: string, newOwnerUserID: string): void {
     debug('GroupManager', `transferGroupOwner: ${groupID}, newOwner: ${newOwnerUserID}, operationID: ${operationID}`);
 
     im.transferGroupOwner(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       groupID,
       newOwnerUserID
@@ -371,7 +371,7 @@ export class GroupManager {
     debug('GroupManager', `getGroupApplicationListAsApplicant, operationID: ${operationID}`);
 
     im.getGroupApplicationListAsApplicant(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<GroupApplication>),
       operationID,
       params
     );
@@ -387,7 +387,7 @@ export class GroupManager {
     debug('GroupManager', `getGroupApplicationListAsRecipient, operationID: ${operationID}`);
 
     im.getGroupApplicationListAsRecipient(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<GroupApplication>),
       operationID,
       params
     );
@@ -402,7 +402,7 @@ export class GroupManager {
     debug('GroupManager', `getGroupApplicationUnhandledCount, operationID: ${operationID}`);
 
     im.getGroupApplicationUnhandledCount(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeNumber),
       operationID,
       "{}"
     );
@@ -416,11 +416,11 @@ export class GroupManager {
    * @param userID 用户ID
    * @param handleMsg 处理消息
    */
-  acceptGroupApplication(callback: BaseCallback<string>, operationID: string, groupID: string, userID: string, handleMsg: string = ""): void {
+  acceptGroupApplication(callback: CompletionCallback, operationID: string, groupID: string, userID: string, handleMsg: string = ""): void {
     debug('GroupManager', `acceptGroupApplication: ${groupID}, userID: ${userID}, operationID: ${operationID}`);
 
     im.acceptGroupApplication(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       groupID,
       userID,
@@ -436,11 +436,11 @@ export class GroupManager {
    * @param userID 用户ID
    * @param handleMsg 处理消息
    */
-  refuseGroupApplication(callback: BaseCallback<string>, operationID: string, groupID: string, userID: string, handleMsg: string = ""): void {
+  refuseGroupApplication(callback: CompletionCallback, operationID: string, groupID: string, userID: string, handleMsg: string = ""): void {
     debug('GroupManager', `refuseGroupApplication: ${groupID}, userID: ${userID}, operationID: ${operationID}`);
 
     im.refuseGroupApplication(
-      new BaseCallbackWrapper(callback),
+      new CompletionCallbackWrapper(callback),
       operationID,
       groupID,
       userID,
@@ -458,7 +458,7 @@ export class GroupManager {
     debug('GroupManager', `searchGroups, operationID: ${operationID}`);
 
     im.searchGroups(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<GroupInfo>),
       operationID,
       params
     );
@@ -488,7 +488,7 @@ export class GroupManager {
     debug('GroupManager', `getGroupMemberListByJoinTimeFilter: ${groupID}, operationID: ${operationID}`);
 
     im.getGroupMemberListByJoinTimeFilter(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeArray<GroupMemberInfo>),
       operationID,
       groupID,
       offset,
@@ -509,7 +509,7 @@ export class GroupManager {
     debug('GroupManager', `isJoinGroup: ${groupID}, operationID: ${operationID}`);
 
     im.isJoinGroup(
-      new BaseCallbackWrapper(callback),
+      new BaseCallbackWrapper(callback, decodeBoolean),
       operationID,
       groupID
     );

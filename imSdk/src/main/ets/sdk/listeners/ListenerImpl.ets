@@ -13,6 +13,7 @@ import { ConnListener,
   SignalingListener ,
   MsgKvInfoListener ,
   BaseCallback,
+  CompletionCallback,
   UploadFileCallback,
   UploadLogProgress,
   CustomBusinessListener,
@@ -566,11 +567,13 @@ export class MsgKvInfoListenerWrapper implements NativeMsgKvInfoListener {
  */
 export class BaseCallbackWrapper<T> implements NativeBaseCallback {
   private callback: BaseCallback<T> | null = null;
+  private decoder: (data: string) => T;
 
-  constructor(callback?: BaseCallback<T> | null) {
+  constructor(callback: BaseCallback<T> | null, decoder: (data: string) => T) {
     if (callback) {
       this.callback = callback;
     }
+    this.decoder = decoder;
   }
 
   onError(errCode: number, errMsg: string): void {
@@ -582,14 +585,62 @@ export class BaseCallbackWrapper<T> implements NativeBaseCallback {
   onSuccess(data: string): void {
     if (this.callback != null) {
       try {
-        this.callback.onSuccess(JSON.parse(data) as T);
+        this.callback.onSuccess(this.decoder(data));
       } catch (error) {
-        // Login/logout and several command-style APIs legitimately return an
-        // empty or plain string instead of JSON.
-        this.callback.onSuccess(data as T);
+        this.callback.onError(-1, `OpenIM 返回数据解析失败: ${error}`);
       }
     }
   }
+}
+
+/** 原生成功回调不含业务数据时使用，忽略其空字符串响应。 */
+export class CompletionCallbackWrapper implements NativeBaseCallback {
+  private callback: CompletionCallback | null = null;
+
+  constructor(callback: CompletionCallback | null) {
+    this.callback = callback;
+  }
+
+  onError(errCode: number, errMsg: string): void {
+    if (this.callback != null) this.callback.onError(errCode, errMsg);
+  }
+
+  onSuccess(_data: string): void {
+    if (this.callback != null) this.callback.onSuccess();
+  }
+}
+
+/** 以下解码器是 Manager 层唯一允许的原生 JSON 结果入口。 */
+export function decodeObject<T>(data: string): T {
+  const value = toObject<T>(data);
+  if (value == null) throw new Error('期望 JSON 对象');
+  return value;
+}
+
+export function decodeArray<T>(data: string): T[] {
+  const value = JSON.parse(data);
+  if (!Array.isArray(value)) throw new Error('期望 JSON 数组');
+  return value as T[];
+}
+
+export function decodeNumber(data: string): number {
+  const value = JSON.parse(data);
+  if (typeof value !== 'number') throw new Error('期望数字');
+  return value;
+}
+
+export function decodeBoolean(data: string): boolean {
+  const value = JSON.parse(data);
+  if (typeof value !== 'boolean') throw new Error('期望布尔值');
+  return value;
+}
+
+export function decodeString(data: string): string {
+  try {
+    const value = JSON.parse(data);
+    if (typeof value === 'string') return value;
+  } catch (_) {}
+  return data;
 }
 
 /**
@@ -679,10 +730,10 @@ export class UploadLogProgressWrapper implements NativeUploadLogProgress {
 /**
  * 发送消息回调包装类
  */
-export class SendMsgCallBackWrapper<T> implements NativeSendMsgCallBack {
-  private callback: SendMsgCallBack<T> | null = null;
+export class SendMsgCallBackWrapper implements NativeSendMsgCallBack {
+  private callback: SendMsgCallBack<Message> | null = null;
 
-  constructor(callback: SendMsgCallBack<T> | null) {
+  constructor(callback: SendMsgCallBack<Message> | null) {
     this.callback = callback;
   }
 
@@ -694,7 +745,11 @@ export class SendMsgCallBackWrapper<T> implements NativeSendMsgCallBack {
 
   onSuccess(data: string): void {
     if (this.callback != null) {
-      this.callback.onSuccess(JSON.parse(data) as T);
+      try {
+        this.callback.onSuccess(decodeObject<Message>(data));
+      } catch (error) {
+        this.callback.onError(-1, `OpenIM 消息解析失败: ${error}`);
+      }
     }
   }
 

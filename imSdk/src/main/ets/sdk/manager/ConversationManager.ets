@@ -5,8 +5,8 @@
 
 import im from 'libimsdk.so';
 import { debug, error, info } from '../internal/log/Logger';
-import { BaseCallback, ConvListener } from '../listeners/listener';
-import { BaseCallbackWrapper, ConvListenerWrapper } from '../listeners/ListenerImpl';
+import { BaseCallback, CompletionCallback, ConvListener } from '../listeners/listener';
+import { BaseCallbackWrapper, CompletionCallbackWrapper, ConvListenerWrapper, decodeArray, decodeNumber, decodeObject } from '../listeners/ListenerImpl';
 import { ConversationInfo } from '../models/entity';
 import { toArray, toObject, toString } from '../utils/JsonUtil';
 import { buildOperationID } from '../utils/Utils';
@@ -18,7 +18,7 @@ import { buildOperationID } from '../utils/Utils';
  */
 export class ConversationManager {
   searchConversation(callback: BaseCallback<ConversationInfo[]>, operationID: string, searchParam: string): void {
-    im.searchConversation(new BaseCallbackWrapper(callback), operationID, searchParam);
+    im.searchConversation(new BaseCallbackWrapper(callback, decodeArray<ConversationInfo>), operationID, searchParam);
   }
   /**
    * 设置会话监听器
@@ -37,7 +37,7 @@ export class ConversationManager {
     debug('ConversationManager', `getAllConversationList, operationID: ${operationID}`);
 
     im.getAllConversationList(
-      new BaseCallbackWrapper(baseCallback),
+      new BaseCallbackWrapper(baseCallback, decodeArray<ConversationInfo>),
       operationID
     );
   }
@@ -53,7 +53,7 @@ export class ConversationManager {
     debug('ConversationManager', `getConversationListSplit, offset: ${offset}, count: ${count}, operationID: ${operationID}`);
 
     im.getConversationListSplit(
-      new BaseCallbackWrapper(baseCallback),
+      new BaseCallbackWrapper(baseCallback, decodeArray<ConversationInfo>),
       operationID,
       offset,
       count
@@ -71,7 +71,7 @@ export class ConversationManager {
     debug('ConversationManager', `getOneConversation, sessionType: ${sessionType}, sourceID: ${sourceID}, operationID: ${operationID}`);
 
     im.getOneConversation(
-      new BaseCallbackWrapper(baseCallback),
+      new BaseCallbackWrapper(baseCallback, decodeObject<ConversationInfo>),
       operationID,
       sessionType,
       sourceID
@@ -88,7 +88,7 @@ export class ConversationManager {
     debug('ConversationManager', `getMultipleConversation, count: ${conversationIDList.length}, operationID: ${operationID}`);
 
     im.getMultipleConversation(
-      new BaseCallbackWrapper(baseCallback),
+      new BaseCallbackWrapper(baseCallback, decodeArray<ConversationInfo>),
       operationID,
       toString(conversationIDList)
     );
@@ -115,7 +115,7 @@ export class ConversationManager {
     debug('ConversationManager', `getTotalUnreadMsgCount, operationID: ${operationID}`);
 
     im.getTotalUnreadMsgCount(
-      new BaseCallbackWrapper(baseCallback),
+      new BaseCallbackWrapper(baseCallback, decodeNumber),
       operationID
     );
   }
@@ -126,11 +126,11 @@ export class ConversationManager {
    * @param operationID 操作ID
    * @param conversationID 会话ID
    */
-  markConversationMessageAsRead(baseCallback: BaseCallback<string>, operationID: string, conversationID: string): void {
+  markConversationMessageAsRead(baseCallback: CompletionCallback, operationID: string, conversationID: string): void {
     debug('ConversationManager', `markConversationMessageAsRead: ${conversationID}, operationID: ${operationID}`);
 
     im.markConversationMessageAsRead(
-      new BaseCallbackWrapper(baseCallback),
+      new CompletionCallbackWrapper(baseCallback),
       operationID,
       conversationID
     );
@@ -143,11 +143,11 @@ export class ConversationManager {
    * @param conversationID 会话ID
    * @param params 属性参数JSON
    */
-  setConversation(baseCallback: BaseCallback<string>, operationID: string, conversationID: string, params: string): void {
+  setConversation(baseCallback: CompletionCallback, operationID: string, conversationID: string, params: string): void {
     debug('ConversationManager', `setConversation: ${conversationID}, operationID: ${operationID}`);
 
     im.setConversation(
-      new BaseCallbackWrapper(baseCallback),
+      new CompletionCallbackWrapper(baseCallback),
       operationID,
       conversationID,
       params
@@ -161,11 +161,11 @@ export class ConversationManager {
    * @param conversationID 会话ID
    * @param draftText 草稿文本
    */
-  setConversationDraft(baseCallback: BaseCallback<string>, operationID: string, conversationID: string, draftText: string): void {
+  setConversationDraft(baseCallback: CompletionCallback, operationID: string, conversationID: string, draftText: string): void {
     debug('ConversationManager', `setConversationDraft: ${conversationID}, draftText: ${draftText}, operationID: ${operationID}`);
 
     im.setConversationDraft(
-      new BaseCallbackWrapper(baseCallback),
+      new CompletionCallbackWrapper(baseCallback),
       operationID,
       conversationID,
       draftText
@@ -179,11 +179,11 @@ export class ConversationManager {
    * @param conversationID 会话ID
    * @param isPinned 是否置顶
    */
-  pinConversation(baseCallback: BaseCallback<string>, operationID: string, conversationID: string, isPinned: boolean): void {
+  pinConversation(baseCallback: CompletionCallback, operationID: string, conversationID: string, isPinned: boolean): void {
     debug('ConversationManager', `pinConversation: ${conversationID}, isPinned: ${isPinned}, operationID: ${operationID}`);
 
     im.pinConversation(
-      new BaseCallbackWrapper(baseCallback),
+      new CompletionCallbackWrapper(baseCallback),
       operationID,
       conversationID,
       isPinned
@@ -197,11 +197,11 @@ export class ConversationManager {
    * @param conversationID 会话ID
    * @param opt 接收选项 (0: 正常, 1: 不接受消息, 2: 不接受通知)
    */
-  setConversationRecvMessageOpt(baseCallback: BaseCallback<string>, operationID: string, conversationID: string, opt: number): void {
+  setConversationRecvMessageOpt(baseCallback: CompletionCallback, operationID: string, conversationID: string, opt: number): void {
     debug('ConversationManager', `setConversationRecvMessageOpt: ${conversationID}, opt: ${opt}, operationID: ${operationID}`);
 
     im.setConversationRecvMessageOpt(
-      new BaseCallbackWrapper(baseCallback),
+      new CompletionCallbackWrapper(baseCallback),
       operationID,
       conversationID,
       opt
@@ -215,11 +215,11 @@ export class ConversationManager {
    * @param conversationID 会话ID
    * @param isPrivate 是否私密
    */
-  setConversationPrivateChat(baseCallback: BaseCallback<string>, operationID: string, conversationID: string, isPrivate: boolean): void {
+  setConversationPrivateChat(baseCallback: CompletionCallback, operationID: string, conversationID: string, isPrivate: boolean): void {
     debug('ConversationManager', `setConversationPrivateChat: ${conversationID}, isPrivate: ${isPrivate}, operationID: ${operationID}`);
 
     im.setConversationPrivateChat(
-      new BaseCallbackWrapper(baseCallback),
+      new CompletionCallbackWrapper(baseCallback),
       operationID,
       conversationID,
       isPrivate
@@ -233,11 +233,11 @@ export class ConversationManager {
    * @param conversationID 会话ID
    * @param burnDuration 阅后即焚时长（秒）
    */
-  setConversationBurnDuration(baseCallback: BaseCallback<string>, operationID: string, conversationID: string, burnDuration: number): void {
+  setConversationBurnDuration(baseCallback: CompletionCallback, operationID: string, conversationID: string, burnDuration: number): void {
     debug('ConversationManager', `setConversationBurnDuration: ${conversationID}, burnDuration: ${burnDuration}, operationID: ${operationID}`);
 
     im.setConversationBurnDuration(
-      new BaseCallbackWrapper(baseCallback),
+      new CompletionCallbackWrapper(baseCallback),
       operationID,
       conversationID,
       burnDuration
@@ -250,11 +250,11 @@ export class ConversationManager {
    * @param operationID 操作ID
    * @param conversationID 会话ID
    */
-  resetConversationGroupAtType(baseCallback: BaseCallback<string>, operationID: string, conversationID: string): void {
+  resetConversationGroupAtType(baseCallback: CompletionCallback, operationID: string, conversationID: string): void {
     debug('ConversationManager', `resetConversationGroupAtType: ${conversationID}, operationID: ${operationID}`);
 
     im.resetConversationGroupAtType(
-      new BaseCallbackWrapper(baseCallback),
+      new CompletionCallbackWrapper(baseCallback),
       operationID,
       conversationID
     );
@@ -266,11 +266,11 @@ export class ConversationManager {
    * @param operationID 操作ID
    * @param conversationID 会话ID
    */
-  hideConversation(baseCallback: BaseCallback<string>, operationID: string, conversationID: string): void {
+  hideConversation(baseCallback: CompletionCallback, operationID: string, conversationID: string): void {
     debug('ConversationManager', `hideConversation: ${conversationID}, operationID: ${operationID}`);
 
     im.hideConversation(
-      new BaseCallbackWrapper(baseCallback),
+      new CompletionCallbackWrapper(baseCallback),
       operationID,
       conversationID
     );
@@ -281,11 +281,11 @@ export class ConversationManager {
    * @param baseCallback 回调
    * @param operationID 操作ID
    */
-  hideAllConversations(baseCallback: BaseCallback<string>, operationID: string): void {
+  hideAllConversations(baseCallback: CompletionCallback, operationID: string): void {
     debug('ConversationManager', `hideAllConversations, operationID: ${operationID}`);
 
     im.hideAllConversations(
-      new BaseCallbackWrapper(baseCallback),
+      new CompletionCallbackWrapper(baseCallback),
       operationID
     );
   }
@@ -296,11 +296,11 @@ export class ConversationManager {
    * @param operationID 操作ID
    * @param conversationID 会话ID
    */
-  clearConversationAndDeleteAllMsg(baseCallback: BaseCallback<string>, operationID: string, conversationID: string): void {
+  clearConversationAndDeleteAllMsg(baseCallback: CompletionCallback, operationID: string, conversationID: string): void {
     debug('ConversationManager', `clearConversationAndDeleteAllMsg: ${conversationID}, operationID: ${operationID}`);
 
     im.clearConversationAndDeleteAllMsg(
-      new BaseCallbackWrapper(baseCallback),
+      new CompletionCallbackWrapper(baseCallback),
       operationID,
       conversationID
     );
@@ -312,11 +312,11 @@ export class ConversationManager {
    * @param operationID 操作ID
    * @param conversationID 会话ID
    */
-  deleteConversationAndDeleteAllMsg(baseCallback: BaseCallback<string>, operationID: string, conversationID: string): void {
+  deleteConversationAndDeleteAllMsg(baseCallback: CompletionCallback, operationID: string, conversationID: string): void {
     debug('ConversationManager', `deleteConversationAndDeleteAllMsg: ${conversationID}, operationID: ${operationID}`);
 
     im.deleteConversationAndDeleteAllMsg(
-      new BaseCallbackWrapper(baseCallback),
+      new CompletionCallbackWrapper(baseCallback),
       operationID,
       conversationID
     );
