@@ -23,6 +23,19 @@ static napi_status GetBoundCallbackProperty(napi_env env, napi_value receiver,
 
 // ==================== Misc Functions ====================
 
+napi_value NAPI_checkResourceLoad(napi_env env, napi_callback_info info) {
+    size_t argc = 1;
+    napi_value args[1] = {nullptr};
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    std::string funcName = GetStringFromJS(env, args[0]);
+    SdkString errorMessage(CheckResourceLoad(MutableCString(funcName)));
+    if (!errorMessage.str().empty()) {
+        napi_throw_error(env, nullptr, errorMessage.str().c_str());
+        return nullptr;
+    }
+    return CreateJSUndefined(env);
+}
+
 napi_value NAPI_updateFcmToken(napi_env env, napi_callback_info info) {
     size_t argc = 4;
     napi_value args[4] = {nullptr};
@@ -64,7 +77,7 @@ napi_value NAPI_uploadLogs(napi_env env, napi_callback_info info) {
     if (operationID.empty()) {
         operationID = "napi_uploadLogs_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
-    int line = GetIntFromJS(env, args[2]);
+    long long line = GetInt64FromJS(env, args[2]);
     std::string ex = GetStringFromJS(env, args[3]);
     // args[0] = baseCallback, args[4] = uploadLogProgress
     napi_value baseCallback = args[0];
@@ -79,7 +92,7 @@ napi_value NAPI_uploadLogs(napi_env env, napi_callback_info info) {
         DeleteBaseCallback(baseCbId);
         return nullptr;
     }
-    // New signature: UploadLogs(int baseCallbackID, int uploadLogCallbackID, char* operationID, int line, char* ex)
+    // New signature: UploadLogs(int baseCallbackID, int uploadLogCallbackID, char* operationID, long long line, char* ex)
     UploadLogs(baseCbId, uploadCbId, (char*)operationID.c_str(), line, (char*)ex.c_str());
     return CreateJSUndefined(env);
 }
@@ -138,7 +151,7 @@ napi_value NAPI_logs(napi_env env, napi_callback_info info) {
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     int cbId = StoreBaseCallback(env, args[0]);
     if (cbId == INVALID_CALLBACK_ID) return nullptr;
-    int logLevel = GetIntFromJS(env, args[2]);
+    long long logLevel = GetInt64FromJS(env, args[2]);
     std::string file = GetStringFromJS(env, args[3]);
     long long line = GetInt64FromJS(env, args[4]);
     std::string msgs = GetStringFromJS(env, args[5]);

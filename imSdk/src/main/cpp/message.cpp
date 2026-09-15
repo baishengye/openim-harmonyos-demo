@@ -20,7 +20,7 @@ napi_value NAPI_createTextMessage(napi_env env, napi_callback_info info) {
     if (operationID.empty()) {
         operationID = "napi_createText_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
-    SdkString result(CreateTextMessage((char*)text.c_str(), (char*)operationID.c_str()));
+    SdkString result(CreateTextMessage(MutableCString(operationID), MutableCString(text)));
     return CreateJSString(env, result.str());
 }
 
@@ -33,7 +33,7 @@ napi_value NAPI_createImageMessage(napi_env env, napi_callback_info info) {
     if (operationID.empty()) {
         operationID = "napi_createImage_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
-    SdkString result(CreateImageMessage((char*)imagePath.c_str(), (char*)operationID.c_str()));
+    SdkString result(CreateImageMessage(MutableCString(operationID), MutableCString(imagePath)));
     return CreateJSString(env, result.str());
 }
 
@@ -46,7 +46,7 @@ napi_value NAPI_createImageMessageFromFullPath(napi_env env, napi_callback_info 
     if (operationID.empty()) {
         operationID = "napi_createImageFullPath_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
-    SdkString result(CreateImageMessage((char*)fileFullPath.c_str(), (char*)operationID.c_str()));
+    SdkString result(CreateImageMessageFromFullPath(MutableCString(operationID), MutableCString(fileFullPath)));
     return CreateJSString(env, result.str());
 }
 
@@ -78,7 +78,7 @@ napi_value NAPI_createSoundMessage(napi_env env, napi_callback_info info) {
     if (operationID.empty()) {
         operationID = "napi_createSound_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
-    SdkString result(CreateSoundMessage((char*)soundPath.c_str(), duration, (char*)operationID.c_str()));
+    SdkString result(CreateSoundMessage(MutableCString(operationID), MutableCString(soundPath), duration));
     return CreateJSString(env, result.str());
 }
 
@@ -119,7 +119,7 @@ napi_value NAPI_createFileMessage(napi_env env, napi_callback_info info) {
     if (operationID.empty()) {
         operationID = "napi_createFile_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
-    SdkString result(CreateFileMessage((char*)filePath.c_str(), (char*)fileName.c_str(), (char*)operationID.c_str()));
+    SdkString result(CreateFileMessage(MutableCString(operationID), MutableCString(filePath), MutableCString(fileName)));
     return CreateJSString(env, result.str());
 }
 
@@ -162,7 +162,8 @@ napi_value NAPI_createVideoMessage(napi_env env, napi_callback_info info) {
     if (operationID.empty()) {
         operationID = "napi_createVideo_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
-    SdkString result(CreateVideoMessage((char*)videoPath.c_str(), (char*)videoType.c_str(), duration, (char*)snapshotPath.c_str(), (char*)operationID.c_str()));
+    SdkString result(CreateVideoMessage(MutableCString(operationID), MutableCString(videoPath),
+                                        MutableCString(videoType), duration, MutableCString(snapshotPath)));
     return CreateJSString(env, result.str());
 }
 
@@ -221,7 +222,8 @@ napi_value NAPI_createCustomMessage(napi_env env, napi_callback_info info) {
     if (operationID.empty()) {
         operationID = "napi_createCustom_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
-    SdkString result(CreateCustomMessage((char*)data.c_str(), (char*)extension.c_str(), (char*)description.c_str(), (char*)operationID.c_str()));
+    SdkString result(CreateCustomMessage(MutableCString(operationID), MutableCString(data),
+                                         MutableCString(extension), MutableCString(description)));
     return CreateJSString(env, result.str());
 }
 
@@ -235,7 +237,7 @@ napi_value NAPI_createQuoteMessage(napi_env env, napi_callback_info info) {
     if (operationID.empty()) {
         operationID = "napi_createQuote_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
-    SdkString result(CreateQuoteMessage((char*)text.c_str(), (char*)message.c_str(), (char*)operationID.c_str()));
+    SdkString result(CreateQuoteMessage(MutableCString(operationID), MutableCString(text), MutableCString(message)));
     return CreateJSString(env, result.str());
 }
 
@@ -244,7 +246,7 @@ napi_value NAPI_createFaceMessage(napi_env env, napi_callback_info info) {
     napi_value args[3] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     std::string operationID = GetStringFromJS(env, args[0]);
-    int index = GetIntFromJS(env, args[1]);
+    long long index = GetInt64FromJS(env, args[1]);
     std::string data = GetStringFromJS(env, args[2]);
     if (operationID.empty()) {
         operationID = "napi_createFace_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
@@ -264,7 +266,8 @@ napi_value NAPI_createMergerMessage(napi_env env, napi_callback_info info) {
     if (operationID.empty()) {
         operationID = "napi_createMerger_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
-    SdkString result(CreateMergerMessage((char*)messageList.c_str(), (char*)title.c_str(), (char*)summaryList.c_str(), (char*)operationID.c_str()));
+    SdkString result(CreateMergerMessage(MutableCString(operationID), MutableCString(messageList),
+                                         MutableCString(title), MutableCString(summaryList)));
     return CreateJSString(env, result.str());
 }
 
@@ -277,7 +280,7 @@ napi_value NAPI_createForwardMessage(napi_env env, napi_callback_info info) {
     if (operationID.empty()) {
         operationID = "napi_createForward_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     }
-    SdkString result(CreateForwardMessage((char*)message.c_str(), (char*)operationID.c_str()));
+    SdkString result(CreateForwardMessage(MutableCString(operationID), MutableCString(message)));
     return CreateJSString(env, result.str());
 }
 
@@ -327,7 +330,8 @@ napi_value NAPI_sendMessage(napi_env env, napi_callback_info info) {
     int cbId = StoreSendMsgCallback(env, args[0]);
     if (cbId == INVALID_CALLBACK_ID) return nullptr;
 //    // New signature: SendMessage(int baseCallbackID, int sendReceiptCallbackID, char* message, char* recvID, char* groupID, char* offlinePushInfo, char* operationID, int isOnlineOnly)
-    SendMessage(cbId, cbId, (char*)message.c_str(), (char*)recvID.c_str(), (char*)groupID.c_str(), (char*)offlinePushInfo.c_str(), (char*)operationID.c_str(), isOnlineOnly);
+    SendMessage(cbId, cbId, MutableCString(operationID), MutableCString(message), MutableCString(recvID),
+                MutableCString(groupID), MutableCString(offlinePushInfo), isOnlineOnly);
     return CreateJSUndefined(env);
 }
 
@@ -348,7 +352,8 @@ napi_value NAPI_sendMessageNotOss(napi_env env, napi_callback_info info) {
     int cbId = StoreSendMsgCallback(env, args[0]);
     if (cbId == INVALID_CALLBACK_ID) return nullptr;
 //    // New signature: SendMessageNotOss(int baseCallbackID, int sendReceiptCallbackID, char* message, char* recvID, char* groupID, char* offlinePushInfo, char* operationID, int isOnlineOnly)
-    SendMessageNotOss(cbId, cbId, (char*)message.c_str(), (char*)recvID.c_str(), (char*)groupID.c_str(), (char*)offlinePushInfo.c_str(), (char*)operationID.c_str(), isOnlineOnly);
+    SendMessageNotOss(cbId, cbId, MutableCString(operationID), MutableCString(message), MutableCString(recvID),
+                      MutableCString(groupID), MutableCString(offlinePushInfo), isOnlineOnly);
     return CreateJSUndefined(env);
 }
 
@@ -388,8 +393,8 @@ napi_value NAPI_markMessageAsRead(napi_env env, napi_callback_info info) {
 }
 
 napi_value NAPI_markAllMessageAsRead(napi_env env, napi_callback_info info) {
-    size_t argc = 3;
-    napi_value args[3] = {nullptr};
+    size_t argc = 2;
+    napi_value args[2] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     std::string operationID = GetStringFromJS(env, args[1]);
     if (operationID.empty()) {
@@ -543,14 +548,6 @@ napi_value NAPI_findMessageList(napi_env env, napi_callback_info info) {
     if (cbId == INVALID_CALLBACK_ID) return nullptr;
     // New signature: FindMessageList(int baseCallbackID, char* operationID, char* findOptions)
     FindMessageList(cbId, (char*)operationID.c_str(), (char*)findOptions.c_str());
-    return CreateJSUndefined(env);
-}
-
-/**
- * @deprecated 此 API 已在 SDK 中废弃，请使用 NAPI_getAdvancedHistoryMessageList
- */
-napi_value NAPI_getHistoryMessageList(napi_env env, napi_callback_info info) {
-    // Deprecated: 此 API 已在 SDK 中废弃
     return CreateJSUndefined(env);
 }
 

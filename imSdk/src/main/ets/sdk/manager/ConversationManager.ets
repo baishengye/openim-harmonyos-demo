@@ -17,6 +17,9 @@ import { buildOperationID } from '../utils/Utils';
  * 提供会话查询、管理等操作
  */
 export class ConversationManager {
+  searchConversation(callback: BaseCallback<ConversationInfo[]>, operationID: string, searchParam: string): void {
+    im.searchConversation(new BaseCallbackWrapper(callback), operationID, searchParam);
+  }
   /**
    * 设置会话监听器
    * @param listener 会话监听器

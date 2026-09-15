@@ -5,6 +5,7 @@
 
 import { ConnListener,
   MsgListener,
+  BatchMsgListener,
   ConvListener,
   GroupListener,
   FriendListener,
@@ -18,6 +19,7 @@ import { ConnListener,
   SendMsgCallBack} from './listener';
 import { ConnListener as NativeConnListener,
   MsgListener as NativeMsgListener,
+  BatchMsgListener as NativeBatchMsgListener,
   ConvListener as NativeConvListener,
   GroupListener as NativeGroupListener,
   FriendListener as NativeFriendListener,
@@ -32,7 +34,7 @@ import { ConnListener as NativeConnListener,
 } from 'libimsdk.so';
 import { info, debug } from '../internal/log/Logger';
 import { JSON } from '@kit.ArkTS';
-import { ConversationInfo, Message, MessageEntity, RevokedInfo } from '../models/entity';
+import { ConversationInfo, Message, MessageEntity, RevokedInfo, UserCommand } from '../models/entity';
 import { toArray, toObject } from '../utils/JsonUtil';
 
 /**
@@ -140,6 +142,28 @@ export class MsgListenerWrapper implements NativeMsgListener {
     debug('MsgListener', `onRecvOnlineOnlyMessage: ${message}`);
     if (this.listener != null) {
       this.listener.onRecvOnlineOnlyMessage(message);
+    }
+  }
+}
+
+export class BatchMsgListenerWrapper implements NativeBatchMsgListener {
+  private listener: BatchMsgListener | null = null;
+
+  constructor(listener: BatchMsgListener | null) {
+    this.listener = listener;
+  }
+
+  onRecvNewMessages(messageList: string): void {
+    debug('BatchMsgListener', `onRecvNewMessages: ${messageList}`);
+    if (this.listener != null) {
+      this.listener.onRecvNewMessages(toArray<Message>(messageList));
+    }
+  }
+
+  onRecvOfflineNewMessages(messageList: string): void {
+    debug('BatchMsgListener', `onRecvOfflineNewMessages: ${messageList}`);
+    if (this.listener != null) {
+      this.listener.onRecvOfflineNewMessages(toArray<Message>(messageList));
     }
   }
 }
@@ -394,6 +418,27 @@ export class UserListenerWrapper implements NativeUserListener {
     info('UserListener', `onUserStatusChanged: ${userOnlineStatus}`);
     if (this.listener != null) {
       this.listener.onUserStatusChanged(toObject(userOnlineStatus)!!);
+    }
+  }
+
+  onUserCommandAdd(userCommand: string): void {
+    const parsed = toObject<UserCommand>(userCommand);
+    if (this.listener != null && parsed != null) {
+      this.listener.onUserCommandAdd(parsed);
+    }
+  }
+
+  onUserCommandDelete(userCommand: string): void {
+    const parsed = toObject<UserCommand>(userCommand);
+    if (this.listener != null && parsed != null) {
+      this.listener.onUserCommandDelete(parsed);
+    }
+  }
+
+  onUserCommandUpdate(userCommand: string): void {
+    const parsed = toObject<UserCommand>(userCommand);
+    if (this.listener != null && parsed != null) {
+      this.listener.onUserCommandUpdate(parsed);
     }
   }
 }

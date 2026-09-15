@@ -26,7 +26,8 @@ The output is `imSdk/build/default/outputs/default/imsdk.har`.
 
 ## Known ABI gaps
 
-The current native SDK header does not expose compatible implementations for
-`setConversationRecvMessageOpt`, single-conversation `hideConversation`, or
-the callback-style `getSendMessageOpt`. These wrappers throw an explicit
-ArkTS error instead of silently allocating callbacks that can never complete.
+The patch15 native SDK does not expose compatible implementations for the
+legacy Harmony-only `setConversationRecvMessageOpt`, callback-style
+`getSendMessageOpt`, or `setSignalingListener` wrappers. They throw an explicit
+ArkTS error instead of allocating callbacks that can never complete. `hideConversation` is backed
+by the native SDK and is fully available.

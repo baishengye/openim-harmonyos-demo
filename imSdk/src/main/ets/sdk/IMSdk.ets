@@ -13,6 +13,7 @@ import { ConnListenerWrapper, ConvListenerWrapper,
   FriendListenerWrapper,
   GroupListenerWrapper,
   MsgListenerWrapper,
+  BatchMsgListenerWrapper,
   UserListenerWrapper} from './listeners/ListenerImpl';
 import { MessageManager } from './manager/MessageManager';
 import { ConversationManager } from './manager/ConversationManager';
@@ -20,6 +21,7 @@ import { FriendshipManager } from './manager/FriendshipManager';
 import { GroupManager } from './manager/GroupManager';
 import { UserInfoManager } from './manager/UserInfoManager';
 import { ConnListener, ConvListener, FriendListener, GroupListener, MsgListener,
+  BatchMsgListener,
   UserListener } from './listeners/listener';
 import { MiscManager } from './manager/MiscManager';
 import { LoginManager } from './manager/LoginManager';

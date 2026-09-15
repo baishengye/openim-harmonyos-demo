@@ -14,6 +14,7 @@ import {
   MessageKv,
   RevokedInfo,
   UserInfo,
+  UserCommand,
   UsersOnlineStatus} from "../models/entity";
 import List from "@ohos.util.List";
 
@@ -101,6 +102,12 @@ export interface MsgListener {
   onRecvOnlineOnlyMessage(message: string): void;
 }
 
+/** 批量消息监听器。启用后 Core 会按数组批量投递新消息。 */
+export interface BatchMsgListener {
+  onRecvNewMessages(messageList: Message[]): void;
+  onRecvOfflineNewMessages(messageList: Message[]): void;
+}
+
 /**
  * 会话监听器接口
  */
@@ -183,6 +190,12 @@ export interface UserListener {
   onSelfInfoUpdated(userInfo: UserInfo): void;
   /** 用户在线状态变化 */
   onUserStatusChanged(userOnlineStatus: UsersOnlineStatus): void;
+  /** 用户命令新增 */
+  onUserCommandAdd(userCommand: UserCommand): void;
+  /** 用户命令删除 */
+  onUserCommandDelete(userCommand: UserCommand): void;
+  /** 用户命令更新 */
+  onUserCommandUpdate(userCommand: UserCommand): void;
 }
 
 /**

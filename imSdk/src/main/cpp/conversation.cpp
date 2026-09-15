@@ -31,8 +31,8 @@ napi_value NAPI_getConversationListSplit(napi_env env, napi_callback_info info) 
     size_t argc = 4;
     napi_value args[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    int offset = GetIntFromJS(env, args[2]);
-    int count = GetIntFromJS(env, args[3]);
+    long long offset = GetInt64FromJS(env, args[2]);
+    long long count = GetInt64FromJS(env, args[3]);
     std::string operationID = GetStringFromJS(env, args[1]);
     if (operationID.empty()) {
         operationID = "napi_getConversationListSplit_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
@@ -82,7 +82,7 @@ napi_value NAPI_getConversationIDBySessionType(napi_env env, napi_callback_info 
     napi_value args[3] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     std::string sourceID = GetStringFromJS(env, args[1]);
-    int sessionType = GetIntFromJS(env, args[2]);
+    long long sessionType = GetInt64FromJS(env, args[2]);
     std::string operationID = "napi_getConvID_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
     SdkString result(GetConversationIDBySessionType(MutableCString(operationID), MutableCString(sourceID), sessionType));
     return CreateJSString(env, result.str());
@@ -254,10 +254,7 @@ napi_value NAPI_hideConversation(napi_env env, napi_callback_info info) {
     }
     int cbId = StoreBaseCallback(env, args[0]);
     if (cbId == INVALID_CALLBACK_ID) return nullptr;
-    // New signature: HideAllConversations(int baseCallbackID, char* operationID)
-    napi_throw_error(env, nullptr, "hideConversation is not available in the current native SDK ABI");
-    DeleteBaseCallback(cbId);
-    (void)conversationID; // suppress unused warning
+    HideConversation(cbId, MutableCString(operationID), MutableCString(conversationID));
     return CreateJSUndefined(env);
 }
 

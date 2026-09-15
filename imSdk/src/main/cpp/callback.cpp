@@ -6,6 +6,11 @@
 #include <stdint.h>
 #include <vector>
 
+template <typename Callback>
+static uintptr_t CallbackAddress(Callback callback) {
+    return reinterpret_cast<uintptr_t>(callback);
+}
+
 // ============================================================
 // C API 回调前向声明
 // ============================================================
@@ -16,19 +21,19 @@ void CAPI_OnBaseError(int cbId, int code, char* message);
 
 // 上传文件回调（SDK 现在传递 cbId 作为第一个参数）
 void CAPI_OnUploadOpen(int cbId, long long fileSize);
-void CAPI_OnUploadPartSize(int cbId, long long partSize, int partNumber);
-void CAPI_OnUploadHashProgress(int cbId, int index, long long size, char* partHash);
+void CAPI_OnUploadPartSize(int cbId, long long partSize, long long partNumber);
+void CAPI_OnUploadHashProgress(int cbId, long long index, long long size, char* partHash);
 void CAPI_OnUploadHashComplete(int cbId, char* partsHash, char* fileHash);
 void CAPI_OnUploadID(int cbId, char* uploadID);
-void CAPI_OnUploadPartComplete(int cbId, int index, long long partSize, char* partHash);
+void CAPI_OnUploadPartComplete(int cbId, long long index, long long partSize, char* partHash);
 void CAPI_OnUploadComplete(int cbId, long long fileSize, long long streamSize, long long storageSize);
-void CAPI_OnUploadFinish(int cbId, long long size, char* url, int fileType);
+void CAPI_OnUploadFinish(int cbId, long long size, char* url, long long fileType);
 
 // 日志上传回调（SDK 现在传递 cbId 作为第一个参数）
 void CAPI_OnUploadLogProgress(int cbId, long long current, long long total);
 
 // 发送进度回调
-void CAPI_OnSendMsg(int cbId, int progress);
+void CAPI_OnSendMsg(int cbId, long long progress);
 
 // 连接回调
 void CAPI_OnConnConnecting(int value);
@@ -45,11 +50,13 @@ void CAPI_OnMsgRevoked(char* msg);
 void CAPI_OnRecvOffline(char* msg);
 void CAPI_OnMsgDeleted(char* msg);
 void CAPI_OnRecvOnline(char* msg);
+void CAPI_OnRecvNewMessages(char* messages);
+void CAPI_OnRecvOfflineNewMessages(char* messages);
 
 // 会话回调
 void CAPI_OnConvSyncStart(int reinstalled);
 void CAPI_OnConvSyncFinish(int reinstalled);
-void CAPI_OnConvSyncProgress(int progress);
+void CAPI_OnConvSyncProgress(long long progress);
 void CAPI_OnConvSyncFailed(int reinstalled);
 void CAPI_OnConvChanged(char* conv);
 void CAPI_OnNewConv(char* conv);
@@ -83,6 +90,9 @@ void CAPI_OnBlackDel(char* black);
 // 用户回调
 void CAPI_OnUserSelfInfoUpdated(char* userInfo);
 void CAPI_OnUserStatusChanged(char* status);
+void CAPI_OnUserCommandAdd(char* command);
+void CAPI_OnUserCommandDelete(char* command);
+void CAPI_OnUserCommandUpdate(char* command);
 
 // 信令回调
 void CAPI_OnSignalingReceiveNewInvitation(char* invitation);
@@ -126,6 +136,8 @@ struct ListenerCallbacks {
     napi_ref onRecvOffline;
     napi_ref onMsgDeleted;
     napi_ref onRecvOnline;
+    napi_ref onRecvNewMessages;
+    napi_ref onRecvOfflineNewMessages;
 
     napi_ref onSyncStart;
     napi_ref onSyncFinish;
@@ -160,6 +172,9 @@ struct ListenerCallbacks {
 
     napi_ref onSelfInfo;
     napi_ref onUserStatus;
+    napi_ref onUserCommandAdd;
+    napi_ref onUserCommandDelete;
+    napi_ref onUserCommandUpdate;
 
     napi_ref onReceiveNewInvitation;
     napi_ref onInviteeAccepted;
@@ -223,12 +238,6 @@ static void DeleteReference(napi_env env, napi_ref& reference) {
     if (!reference) return;
     napi_delete_reference(env, reference);
     reference = nullptr;
-}
-
-static int CallbackRegistrationFailed(napi_env env, int callbackId, const char* message) {
-    FreeCallbackId(callbackId);
-    napi_throw_error(env, nullptr, message);
-    return INVALID_CALLBACK_ID;
 }
 
 static void ShutdownCallbackDispatcher(void*) {
@@ -367,11 +376,7 @@ int StoreBaseCallback(napi_env env, napi_value onSuccess, napi_value onError) {
         return INVALID_CALLBACK_ID;
     }
 
-    if (!RegisterBaseCallback(cbId, CAPI_OnBaseSuccess, CAPI_OnBaseError)) {
-        DeleteReference(env, ctx.onSuccessRef);
-        DeleteReference(env, ctx.onErrorRef);
-        return CallbackRegistrationFailed(env, cbId, "Failed to register OpenIM base callback");
-    }
+    RegisterBaseCallback(cbId, CallbackAddress(CAPI_OnBaseSuccess), CallbackAddress(CAPI_OnBaseError));
     ctx.isValid = true;
 
     return cbId;
@@ -452,26 +457,16 @@ int StoreUploadCallbacks(
         return INVALID_CALLBACK_ID;
     }
 
-    if (!RegisterUploadFileCallback(
+    RegisterUploadFileCallback(
         cbId,
-        CAPI_OnUploadOpen,
-        CAPI_OnUploadPartSize,
-        CAPI_OnUploadHashProgress,
-        CAPI_OnUploadHashComplete,
-        CAPI_OnUploadID,
-        CAPI_OnUploadPartComplete,
-        CAPI_OnUploadComplete,
-        CAPI_OnUploadFinish)) {
-        DeleteReference(env, ctx.onOpenRef);
-        DeleteReference(env, ctx.onPartSizeRef);
-        DeleteReference(env, ctx.onHashPartProgressRef);
-        DeleteReference(env, ctx.onHashPartCompleteRef);
-        DeleteReference(env, ctx.onUploadIDRef);
-        DeleteReference(env, ctx.onUploadPartCompleteRef);
-        DeleteReference(env, ctx.onUploadCompleteRef);
-        DeleteReference(env, ctx.onCompleteRef);
-        return CallbackRegistrationFailed(env, cbId, "Failed to register OpenIM upload callbacks");
-    }
+        CallbackAddress(CAPI_OnUploadOpen),
+        CallbackAddress(CAPI_OnUploadPartSize),
+        CallbackAddress(CAPI_OnUploadHashProgress),
+        CallbackAddress(CAPI_OnUploadHashComplete),
+        CallbackAddress(CAPI_OnUploadID),
+        CallbackAddress(CAPI_OnUploadPartComplete),
+        CallbackAddress(CAPI_OnUploadComplete),
+        CallbackAddress(CAPI_OnUploadFinish));
     ctx.isValid = true;
 
     return cbId;
@@ -523,10 +518,7 @@ int StoreUploadLogCallback(napi_env env, napi_value onProgress) {
         return INVALID_CALLBACK_ID;
     }
 
-    if (!RegisterUploadLogProgress(cbId, CAPI_OnUploadLogProgress)) {
-        DeleteReference(env, ctx.onProgressRef);
-        return CallbackRegistrationFailed(env, cbId, "Failed to register OpenIM log upload callback");
-    }
+    RegisterUploadLogProgress(cbId, CallbackAddress(CAPI_OnUploadLogProgress));
     ctx.isValid = true;
 
     return cbId;
@@ -577,15 +569,8 @@ int StoreSendMsgCallback(napi_env env, napi_value onSuccess, napi_value onError,
         return INVALID_CALLBACK_ID;
     }
 
-    if (!RegisterBaseCallback(cbId, CAPI_OnBaseSuccess, CAPI_OnBaseError) ||
-        !RegisterSendMsgCallback(cbId, CAPI_OnSendMsg)) {
-        UnregisterBaseCallback(cbId);
-        UnregisterSendMsgCallback(cbId);
-        DeleteReference(env, ctx.onSuccessRef);
-        DeleteReference(env, ctx.onErrorRef);
-        DeleteReference(env, ctx.onProgressRef);
-        return CallbackRegistrationFailed(env, cbId, "Failed to register OpenIM send-message callback");
-    }
+    RegisterBaseCallback(cbId, CallbackAddress(CAPI_OnBaseSuccess), CallbackAddress(CAPI_OnBaseError));
+    RegisterSendMsgCallback(cbId, CallbackAddress(CAPI_OnSendMsg));
     ctx.isValid = true;
 
     return cbId;
@@ -652,12 +637,12 @@ int StoreConnListener(
 
     // Register with SDK
     RegisterConnListener(
-        CAPI_OnConnConnecting,
-        CAPI_OnConnConnectSuccess,
-        CAPI_OnConnConnectFailed,
-        CAPI_OnConnKickedOffline,
-        CAPI_OnConnUserTokenExpired,
-        CAPI_OnConnUserTokenInvalid);
+        CallbackAddress(CAPI_OnConnConnecting),
+        CallbackAddress(CAPI_OnConnConnectSuccess),
+        CallbackAddress(CAPI_OnConnConnectFailed),
+        CallbackAddress(CAPI_OnConnKickedOffline),
+        CallbackAddress(CAPI_OnConnUserTokenExpired),
+        CallbackAddress(CAPI_OnConnUserTokenInvalid));
 
     return 0;
 }
@@ -700,12 +685,12 @@ int StoreMsgListener(
     g_listeners.isValid = true;
 
     RegisterMsgListener(
-        CAPI_OnRecvNewMsg,
-        CAPI_OnRecvReceipt,
-        CAPI_OnMsgRevoked,
-        CAPI_OnRecvOffline,
-        CAPI_OnMsgDeleted,
-        CAPI_OnRecvOnline);
+        CallbackAddress(CAPI_OnRecvNewMsg),
+        CallbackAddress(CAPI_OnRecvReceipt),
+        CallbackAddress(CAPI_OnMsgRevoked),
+        CallbackAddress(CAPI_OnRecvOffline),
+        CallbackAddress(CAPI_OnMsgDeleted),
+        CallbackAddress(CAPI_OnRecvOnline));
 
     return 0;
 }
@@ -720,6 +705,27 @@ void DeleteMsgListener() {
     DELETE_REF(g_listeners.onRecvOffline);
     DELETE_REF(g_listeners.onMsgDeleted);
     DELETE_REF(g_listeners.onRecvOnline);
+    #undef DELETE_REF
+}
+
+int StoreBatchMsgListener(napi_env env, napi_value onRecvNewMessages, napi_value onRecvOfflineNewMessages) {
+    DeleteBatchMsgListener();
+    napi_create_reference(env, onRecvNewMessages, 1, &g_listeners.onRecvNewMessages);
+    napi_create_reference(env, onRecvOfflineNewMessages, 1, &g_listeners.onRecvOfflineNewMessages);
+    g_listeners.env = env;
+    g_listeners.isValid = true;
+
+    RegisterBatchMsgListener(CallbackAddress(CAPI_OnRecvNewMessages),
+                             CallbackAddress(CAPI_OnRecvOfflineNewMessages));
+    return 0;
+}
+
+void DeleteBatchMsgListener() {
+    UnregisterBatchMsgListener();
+
+    #define DELETE_REF(ref) if (ref) { napi_delete_reference(g_listeners.env, ref); ref = nullptr; }
+    DELETE_REF(g_listeners.onRecvNewMessages);
+    DELETE_REF(g_listeners.onRecvOfflineNewMessages);
     #undef DELETE_REF
 }
 
@@ -751,14 +757,14 @@ int StoreConvListener(
     g_listeners.isValid = true;
 
     RegisterConvListener(
-        CAPI_OnConvSyncStart,
-        CAPI_OnConvSyncFinish,
-        CAPI_OnConvSyncProgress,
-        CAPI_OnConvSyncFailed,
-        CAPI_OnConvChanged,
-        CAPI_OnNewConv,
-        CAPI_OnUnreadChanged,
-        CAPI_OnInputStatus);
+        CallbackAddress(CAPI_OnConvSyncStart),
+        CallbackAddress(CAPI_OnConvSyncFinish),
+        CallbackAddress(CAPI_OnConvSyncProgress),
+        CallbackAddress(CAPI_OnConvSyncFailed),
+        CallbackAddress(CAPI_OnConvChanged),
+        CallbackAddress(CAPI_OnNewConv),
+        CallbackAddress(CAPI_OnUnreadChanged),
+        CallbackAddress(CAPI_OnInputStatus));
 
     return 0;
 }
@@ -812,17 +818,17 @@ int StoreGroupListener(
     g_listeners.isValid = true;
 
     RegisterGroupListener(
-        CAPI_OnGroupJoinedAdd,
-        CAPI_OnGroupJoinedDel,
-        CAPI_OnGroupMemberAdd,
-        CAPI_OnGroupMemberDel,
-        CAPI_OnGroupAppAdd,
-        CAPI_OnGroupAppDel,
-        CAPI_OnGroupInfoChanged,
-        CAPI_OnGroupDismissed,
-        CAPI_OnGroupMemberInfo,
-        CAPI_OnGroupAppAccept,
-        CAPI_OnGroupAppReject);
+        CallbackAddress(CAPI_OnGroupJoinedAdd),
+        CallbackAddress(CAPI_OnGroupJoinedDel),
+        CallbackAddress(CAPI_OnGroupMemberAdd),
+        CallbackAddress(CAPI_OnGroupMemberDel),
+        CallbackAddress(CAPI_OnGroupAppAdd),
+        CallbackAddress(CAPI_OnGroupAppDel),
+        CallbackAddress(CAPI_OnGroupInfoChanged),
+        CallbackAddress(CAPI_OnGroupDismissed),
+        CallbackAddress(CAPI_OnGroupMemberInfo),
+        CallbackAddress(CAPI_OnGroupAppAccept),
+        CallbackAddress(CAPI_OnGroupAppReject));
 
     return 0;
 }
@@ -875,15 +881,15 @@ int StoreFriendListener(
     g_listeners.isValid = true;
 
     RegisterFriendListener(
-        CAPI_OnFriendAppAdd,
-        CAPI_OnFriendAppDel,
-        CAPI_OnFriendAppAccept,
-        CAPI_OnFriendAppReject,
-        CAPI_OnFriendAdd,
-        CAPI_OnFriendDel,
-        CAPI_OnFriendInfo,
-        CAPI_OnBlackAdd,
-        CAPI_OnBlackDel);
+        CallbackAddress(CAPI_OnFriendAppAdd),
+        CallbackAddress(CAPI_OnFriendAppDel),
+        CallbackAddress(CAPI_OnFriendAppAccept),
+        CallbackAddress(CAPI_OnFriendAppReject),
+        CallbackAddress(CAPI_OnFriendAdd),
+        CallbackAddress(CAPI_OnFriendDel),
+        CallbackAddress(CAPI_OnFriendInfo),
+        CallbackAddress(CAPI_OnBlackAdd),
+        CallbackAddress(CAPI_OnBlackDel));
 
     return 0;
 }
@@ -908,15 +914,23 @@ void DeleteFriendListener() {
 // 用户监听器实现
 // ============================================================
 
-int StoreUserListener(napi_env env, napi_value onSelfInfo, napi_value onUserStatus) {
+int StoreUserListener(napi_env env, napi_value onSelfInfo, napi_value onUserStatus,
+                      napi_value onUserCommandAdd, napi_value onUserCommandDelete,
+                      napi_value onUserCommandUpdate) {
     DeleteUserListener();
     napi_create_reference(env, onSelfInfo, 1, &g_listeners.onSelfInfo);
     napi_create_reference(env, onUserStatus, 1, &g_listeners.onUserStatus);
+    napi_create_reference(env, onUserCommandAdd, 1, &g_listeners.onUserCommandAdd);
+    napi_create_reference(env, onUserCommandDelete, 1, &g_listeners.onUserCommandDelete);
+    napi_create_reference(env, onUserCommandUpdate, 1, &g_listeners.onUserCommandUpdate);
     g_listeners.env = env;
     g_listeners.isValid = true;
 
-    RegisterUserListener(CAPI_OnUserSelfInfoUpdated,
-                         CAPI_OnUserStatusChanged);
+    RegisterUserListener(CallbackAddress(CAPI_OnUserSelfInfoUpdated),
+                         CallbackAddress(CAPI_OnUserStatusChanged),
+                         CallbackAddress(CAPI_OnUserCommandAdd),
+                         CallbackAddress(CAPI_OnUserCommandDelete),
+                         CallbackAddress(CAPI_OnUserCommandUpdate));
 
     return 0;
 }
@@ -927,6 +941,9 @@ void DeleteUserListener() {
     #define DELETE_REF(ref) if (ref) { napi_delete_reference(g_listeners.env, ref); ref = nullptr; }
     DELETE_REF(g_listeners.onSelfInfo);
     DELETE_REF(g_listeners.onUserStatus);
+    DELETE_REF(g_listeners.onUserCommandAdd);
+    DELETE_REF(g_listeners.onUserCommandDelete);
+    DELETE_REF(g_listeners.onUserCommandUpdate);
     #undef DELETE_REF
 }
 
@@ -962,16 +979,16 @@ int StoreSignalingListener(
     g_listeners.isValid = true;
 
     RegisterSignalingListener(
-        CAPI_OnSignalingReceiveNewInvitation,
-        CAPI_OnSignalingInviteeAccepted,
-        CAPI_OnSignalingInviteeAcceptedByOtherDevice,
-        CAPI_OnSignalingInviteeRejected,
-        CAPI_OnSignalingInviteeRejectedByOtherDevice,
-        CAPI_OnSignalingInvitationCancelled,
-        CAPI_OnSignalingInvitationTimeout,
-        CAPI_OnSignalingHangUp,
-        CAPI_OnSignalingRoomParticipantConnected,
-        CAPI_OnSignalingRoomParticipantDisconnected);
+        CallbackAddress(CAPI_OnSignalingReceiveNewInvitation),
+        CallbackAddress(CAPI_OnSignalingInviteeAccepted),
+        CallbackAddress(CAPI_OnSignalingInviteeAcceptedByOtherDevice),
+        CallbackAddress(CAPI_OnSignalingInviteeRejected),
+        CallbackAddress(CAPI_OnSignalingInviteeRejectedByOtherDevice),
+        CallbackAddress(CAPI_OnSignalingInvitationCancelled),
+        CallbackAddress(CAPI_OnSignalingInvitationTimeout),
+        CallbackAddress(CAPI_OnSignalingHangUp),
+        CallbackAddress(CAPI_OnSignalingRoomParticipantConnected),
+        CallbackAddress(CAPI_OnSignalingRoomParticipantDisconnected));
 
     return 0;
 }
@@ -1003,7 +1020,7 @@ int StoreCustomBusinessListener(napi_env env, napi_value onRecvCustomBusinessMes
     g_listeners.env = env;
     g_listeners.isValid = true;
 
-    RegisterCustomBusinessListener(CAPI_OnRecvCustomBusinessMessage);
+    RegisterCustomBusinessListener(CallbackAddress(CAPI_OnRecvCustomBusinessMessage));
 
     return 0;
 }
@@ -1027,7 +1044,7 @@ int StoreMsgKvInfoListener(napi_env env, napi_value onMessageKvInfoChanged) {
     g_listeners.env = env;
     g_listeners.isValid = true;
 
-    RegisterMsgKvInfoListener(CAPI_OnMessageKvInfoChanged);
+    RegisterMsgKvInfoListener(CallbackAddress(CAPI_OnMessageKvInfoChanged));
 
     return 0;
 }
@@ -1065,6 +1082,7 @@ void DeleteAllCallbacks() {
     // 清理所有 Listener
     DeleteConnListener();
     DeleteMsgListener();
+    DeleteBatchMsgListener();
     DeleteConvListener();
     DeleteGroupListener();
     DeleteFriendListener();
@@ -1093,9 +1111,10 @@ void CallBoolCallback(napi_env env, napi_ref callbackRef, bool value) {
     QueueCallback(callbackRef, {JsArg::Bool(value)});
 }
 
-void CallIntStringCallback(napi_env env, napi_ref callbackRef, int value, const char* text) {
+void CallIntStringCallback(napi_env env, napi_ref callbackRef, int value, char* text) {
     (void)env;
     QueueCallback(callbackRef, {JsArg::Int(value), JsArg::String(text)});
+    FreeString(text);
 }
 
 void CallLongLongCallback(napi_env env, napi_ref callbackRef, long long value) {
@@ -1103,9 +1122,10 @@ void CallLongLongCallback(napi_env env, napi_ref callbackRef, long long value) {
     QueueCallback(callbackRef, {JsArg::Long(value)});
 }
 
-void CallStringCallback(napi_env env, napi_ref callbackRef, const char* value) {
+void CallStringCallback(napi_env env, napi_ref callbackRef, char* value) {
     (void)env;
     QueueCallback(callbackRef, {JsArg::String(value)});
+    FreeString(value);
 }
 
 void CallBaseSuccessCallback(int cbId, const char* data) {
@@ -1138,19 +1158,19 @@ void CallUploadOpenCallback(int cbId, long long fileSize) {
     QueueCallback(ctx->onOpenRef, {JsArg::Long(fileSize)});
 }
 
-void CallUploadPartSizeCallback(int cbId, long long partSize, int partNumber) {
+void CallUploadPartSizeCallback(int cbId, long long partSize, long long partNumber) {
     auto* ctx = GetUploadCallback(cbId);
     if (!ctx || !ctx->onPartSizeRef) return;
 
-    QueueCallback(ctx->onPartSizeRef, {JsArg::Long(partSize), JsArg::Int(partNumber)});
+    QueueCallback(ctx->onPartSizeRef, {JsArg::Long(partSize), JsArg::Long(partNumber)});
 }
 
-void CallUploadHashProgressCallback(int cbId, int index, long long size, const char* partHash) {
+void CallUploadHashProgressCallback(int cbId, long long index, long long size, const char* partHash) {
     auto* ctx = GetUploadCallback(cbId);
     if (!ctx || !ctx->onHashPartProgressRef) return;
 
     QueueCallback(ctx->onHashPartProgressRef,
-                  {JsArg::Int(index), JsArg::Long(size), JsArg::String(partHash)});
+                  {JsArg::Long(index), JsArg::Long(size), JsArg::String(partHash)});
 }
 
 void CallUploadHashCompleteCallback(int cbId, const char* partsHash, const char* fileHash) {
@@ -1167,12 +1187,12 @@ void CallUploadIDCallback(int cbId, const char* uploadID) {
     QueueCallback(ctx->onUploadIDRef, {JsArg::String(uploadID)});
 }
 
-void CallUploadPartCompleteCallback(int cbId, int index, long long partSize, const char* partHash) {
+void CallUploadPartCompleteCallback(int cbId, long long index, long long partSize, const char* partHash) {
     auto* ctx = GetUploadCallback(cbId);
     if (!ctx || !ctx->onUploadPartCompleteRef) return;
 
     QueueCallback(ctx->onUploadPartCompleteRef,
-                  {JsArg::Int(index), JsArg::Long(partSize), JsArg::String(partHash)});
+                  {JsArg::Long(index), JsArg::Long(partSize), JsArg::String(partHash)});
 }
 
 void CallUploadCompleteCallback(int cbId, long long fileSize, long long streamSize, long long storageSize) {
@@ -1183,12 +1203,12 @@ void CallUploadCompleteCallback(int cbId, long long fileSize, long long streamSi
                   {JsArg::Long(fileSize), JsArg::Long(streamSize), JsArg::Long(storageSize)});
 }
 
-void CallUploadFinishCallback(int cbId, long long size, const char* url, int fileType) {
+void CallUploadFinishCallback(int cbId, long long size, const char* url, long long fileType) {
     auto* ctx = GetUploadCallback(cbId);
     if (!ctx || !ctx->onCompleteRef) return;
 
     QueueCallback(ctx->onCompleteRef,
-                  {JsArg::Long(size), JsArg::String(url), JsArg::Int(fileType)},
+                  {JsArg::Long(size), JsArg::String(url), JsArg::Long(fileType)},
                   CleanupType::Upload, cbId);
 }
 
@@ -1200,11 +1220,11 @@ void CallUploadLogProgressCallback(int cbId, long long current, long long total)
                   total > 0 && current >= total ? CleanupType::UploadLog : CleanupType::None, cbId);
 }
 
-void CallSendMsgCallback(int cbId, int progress) {
+void CallSendMsgCallback(int cbId, long long progress) {
     auto* ctx = GetSendMsgCallback(cbId);
     if (!ctx || !ctx->onProgressRef) return;
 
-    QueueCallback(ctx->onProgressRef, {JsArg::Int(progress)});
+    QueueCallback(ctx->onProgressRef, {JsArg::Long(progress)});
 
     // The terminal success/error callback owns cleanup. A 100% progress event
     // can arrive before the final result and must not invalidate its callbacks.
@@ -1219,10 +1239,12 @@ extern "C" {
 // Base 回调
 void CAPI_OnBaseSuccess(int cbId, char* data) {
     CallBaseSuccessCallback(cbId, data);
+    FreeString(data);
 }
 
 void CAPI_OnBaseError(int cbId, int code, char* message) {
     CallBaseErrorCallback(cbId, code, message);
+    FreeString(message);
 }
 
 // 上传文件回调（SDK 现在传递 cbId）
@@ -1230,32 +1252,38 @@ void CAPI_OnUploadOpen(int cbId, long long fileSize) {
     CallUploadOpenCallback(cbId, fileSize);
 }
 
-void CAPI_OnUploadPartSize(int cbId, long long partSize, int partNumber) {
+void CAPI_OnUploadPartSize(int cbId, long long partSize, long long partNumber) {
     CallUploadPartSizeCallback(cbId, partSize, partNumber);
 }
 
-void CAPI_OnUploadHashProgress(int cbId, int index, long long size, char* partHash) {
+void CAPI_OnUploadHashProgress(int cbId, long long index, long long size, char* partHash) {
     CallUploadHashProgressCallback(cbId, index, size, partHash);
+    FreeString(partHash);
 }
 
 void CAPI_OnUploadHashComplete(int cbId, char* partsHash, char* fileHash) {
     CallUploadHashCompleteCallback(cbId, partsHash, fileHash);
+    FreeString(partsHash);
+    FreeString(fileHash);
 }
 
 void CAPI_OnUploadID(int cbId, char* uploadID) {
     CallUploadIDCallback(cbId, uploadID);
+    FreeString(uploadID);
 }
 
-void CAPI_OnUploadPartComplete(int cbId, int index, long long partSize, char* partHash) {
+void CAPI_OnUploadPartComplete(int cbId, long long index, long long partSize, char* partHash) {
     CallUploadPartCompleteCallback(cbId, index, partSize, partHash);
+    FreeString(partHash);
 }
 
 void CAPI_OnUploadComplete(int cbId, long long fileSize, long long streamSize, long long storageSize) {
     CallUploadCompleteCallback(cbId, fileSize, streamSize, storageSize);
 }
 
-void CAPI_OnUploadFinish(int cbId, long long size, char* url, int fileType) {
+void CAPI_OnUploadFinish(int cbId, long long size, char* url, long long fileType) {
     CallUploadFinishCallback(cbId, size, url, fileType);
+    FreeString(url);
 }
 
 // 日志上传回调（SDK 现在传递 cbId）
@@ -1264,7 +1292,7 @@ void CAPI_OnUploadLogProgress(int cbId, long long current, long long total) {
 }
 
 // 发送进度回调
-void CAPI_OnSendMsg(int cbId, int progress) {
+void CAPI_OnSendMsg(int cbId, long long progress) {
     CallSendMsgCallback(cbId, progress);
 }
 
@@ -1318,6 +1346,14 @@ void CAPI_OnRecvOnline(char* msg) {
     CallStringCallback(g_listeners.env, g_listeners.onRecvOnline, msg);
 }
 
+void CAPI_OnRecvNewMessages(char* messages) {
+    CallStringCallback(g_listeners.env, g_listeners.onRecvNewMessages, messages);
+}
+
+void CAPI_OnRecvOfflineNewMessages(char* messages) {
+    CallStringCallback(g_listeners.env, g_listeners.onRecvOfflineNewMessages, messages);
+}
+
 // 会话回调
 void CAPI_OnConvSyncStart(int reinstalled) {
     CallBoolCallback(g_listeners.env, g_listeners.onSyncStart, reinstalled != 0);
@@ -1327,8 +1363,8 @@ void CAPI_OnConvSyncFinish(int reinstalled) {
     CallBoolCallback(g_listeners.env, g_listeners.onSyncFinish, reinstalled != 0);
 }
 
-void CAPI_OnConvSyncProgress(int progress) {
-    CallIntCallback(g_listeners.env, g_listeners.onSyncProgress, progress);
+void CAPI_OnConvSyncProgress(long long progress) {
+    CallLongLongCallback(g_listeners.env, g_listeners.onSyncProgress, progress);
 }
 
 void CAPI_OnConvSyncFailed(int reinstalled) {
@@ -1440,6 +1476,18 @@ void CAPI_OnUserSelfInfoUpdated(char* userInfo) {
 
 void CAPI_OnUserStatusChanged(char* status) {
     CallStringCallback(g_listeners.env, g_listeners.onUserStatus, status);
+}
+
+void CAPI_OnUserCommandAdd(char* command) {
+    CallStringCallback(g_listeners.env, g_listeners.onUserCommandAdd, command);
+}
+
+void CAPI_OnUserCommandDelete(char* command) {
+    CallStringCallback(g_listeners.env, g_listeners.onUserCommandDelete, command);
+}
+
+void CAPI_OnUserCommandUpdate(char* command) {
+    CallStringCallback(g_listeners.env, g_listeners.onUserCommandUpdate, command);
 }
 
 // 信令回调

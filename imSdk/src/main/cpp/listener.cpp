@@ -66,7 +66,20 @@ napi_value NAPI_setAdvancedMsgListener(napi_env env, napi_callback_info info) {
 }
 
 napi_value NAPI_setBatchMsgListener(napi_env env, napi_callback_info info) {
-    // BatchMsgListener 暂未在 callback.cpp 中实现，保持原有逻辑
+    size_t argc = 1;
+    napi_value args[1] = {nullptr};
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+
+    if (!args[0]) {
+        DeleteBatchMsgListener();
+        return CreateJSUndefined(env);
+    }
+
+    napi_value listener = args[0];
+    napi_value onRecvNewMessages, onRecvOfflineNewMessages;
+    napi_get_named_property(env, listener, "onRecvNewMessages", &onRecvNewMessages);
+    napi_get_named_property(env, listener, "onRecvOfflineNewMessages", &onRecvOfflineNewMessages);
+    StoreBatchMsgListener(env, onRecvNewMessages, onRecvOfflineNewMessages);
     return CreateJSUndefined(env);
 }
 
@@ -167,42 +180,23 @@ napi_value NAPI_setUserListener(napi_env env, napi_callback_info info) {
 
     napi_value listener = args[0];
     // 提取各个回调方法
-    napi_value onSelfInfo, onUserStatus;
+    napi_value onSelfInfo, onUserStatus, onUserCommandAdd, onUserCommandDelete, onUserCommandUpdate;
     napi_get_named_property(env, listener, "onSelfInfoUpdated", &onSelfInfo);
     napi_get_named_property(env, listener, "onUserStatusChanged", &onUserStatus);
+    napi_get_named_property(env, listener, "onUserCommandAdd", &onUserCommandAdd);
+    napi_get_named_property(env, listener, "onUserCommandDelete", &onUserCommandDelete);
+    napi_get_named_property(env, listener, "onUserCommandUpdate", &onUserCommandUpdate);
 
-    StoreUserListener(env, onSelfInfo, onUserStatus);
+    StoreUserListener(env, onSelfInfo, onUserStatus, onUserCommandAdd, onUserCommandDelete, onUserCommandUpdate);
 
     return CreateJSUndefined(env);
 }
 
 napi_value NAPI_setSignalingListener(napi_env env, napi_callback_info info) {
-    size_t argc = 1;
-    napi_value args[1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-
-    if (!args[0]) {
-        DeleteSignalingListener();
-        return CreateJSUndefined(env);
-    }
-
-    napi_value listener = args[0];
-    // 提取各个回调方法
-    napi_value onReceiveNewInvitation, onInviteeAccepted, onInviteeAcceptedByOtherDevice, onInviteeRejected, onInviteeRejectedByOtherDevice, onInvitationCancelled, onInvitationTimeout, onHangUp, onRoomParticipantConnected, onRoomParticipantDisconnected;
-    napi_get_named_property(env, listener, "onReceiveNewInvitation", &onReceiveNewInvitation);
-    napi_get_named_property(env, listener, "onInviteeAccepted", &onInviteeAccepted);
-    napi_get_named_property(env, listener, "onInviteeAcceptedByOtherDevice", &onInviteeAcceptedByOtherDevice);
-    napi_get_named_property(env, listener, "onInviteeRejected", &onInviteeRejected);
-    napi_get_named_property(env, listener, "onInviteeRejectedByOtherDevice", &onInviteeRejectedByOtherDevice);
-    napi_get_named_property(env, listener, "onInvitationCancelled", &onInvitationCancelled);
-    napi_get_named_property(env, listener, "onInvitationTimeout", &onInvitationTimeout);
-    napi_get_named_property(env, listener, "onHangUp", &onHangUp);
-    napi_get_named_property(env, listener, "onRoomParticipantConnected", &onRoomParticipantConnected);
-    napi_get_named_property(env, listener, "onRoomParticipantDisconnected", &onRoomParticipantDisconnected);
-
-    StoreSignalingListener(env, onReceiveNewInvitation, onInviteeAccepted, onInviteeAcceptedByOtherDevice, onInviteeRejected, onInviteeRejectedByOtherDevice, onInvitationCancelled, onInvitationTimeout, onHangUp, onRoomParticipantConnected, onRoomParticipantDisconnected);
-
-    return CreateJSUndefined(env);
+    (void)info;
+    napi_throw_error(env, nullptr,
+                     "setSignalingListener is not available in OpenIM Core v3.8.3-patch15.1");
+    return nullptr;
 }
 
 napi_value NAPI_setCustomBusinessListener(napi_env env, napi_callback_info info) {

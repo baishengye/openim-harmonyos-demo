@@ -6,8 +6,8 @@
 
 import im from 'libimsdk.so';
 import { debug, error, info } from '../internal/log/Logger';
-import { BaseCallback, CustomBusinessListener, MsgKvInfoListener, MsgListener, SendMsgCallBack } from '../listeners/listener';
-import { BaseCallbackWrapper, CustomBusinessListenerWrapper, MsgKvInfoListenerWrapper, MsgListenerWrapper, SendMsgCallBackWrapper } from '../listeners/ListenerImpl';
+import { BaseCallback, BatchMsgListener, CustomBusinessListener, MsgKvInfoListener, MsgListener, SendMsgCallBack } from '../listeners/listener';
+import { BaseCallbackWrapper, BatchMsgListenerWrapper, CustomBusinessListenerWrapper, MsgKvInfoListenerWrapper, MsgListenerWrapper, SendMsgCallBackWrapper } from '../listeners/ListenerImpl';
 import { GetAdvancedHistoryMessageParams, GetAdvancedHistoryMessageResult, Message, SearchLocalMessagesParams } from '../models/entity';
 import { toString } from '../utils/JsonUtil';
 import { buildOperationID } from '../utils/Utils';
@@ -25,6 +25,9 @@ export interface SendMsgProgressCallback {
  * 提供消息创建、发送、查询等操作
  */
 export class MessageManager {
+  markAllConversationMessageAsRead(callback: BaseCallback<string>, operationID: string): void {
+    im.markAllConversationMessageAsRead(new BaseCallbackWrapper(callback), operationID);
+  }
   /**
    * 设置高级消息监听器
    * @param listener 消息监听器
@@ -32,6 +35,12 @@ export class MessageManager {
   setAdvancedMsgListener(listener: MsgListener): void {
     debug('MessageManager', `setAdvancedMsgListener`);
     im.setAdvancedMsgListener(new MsgListenerWrapper(listener));
+  }
+
+  /** 设置批量消息监听器。Core 启用后将优先通过批量监听器投递。 */
+  setBatchMsgListener(listener: BatchMsgListener): void {
+    debug('MessageManager', `setBatchMsgListener`);
+    im.setBatchMsgListener(new BatchMsgListenerWrapper(listener));
   }
 
   /**

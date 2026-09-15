@@ -294,6 +294,16 @@ export class FaceElem {
   data: string = "";
 }
 
+/** 用户自定义命令。 */
+export class UserCommand {
+  userID: string = '';
+  type: number = 0;
+  uuid: string = '';
+  createTime: number = 0;
+  value: string = '';
+  ex: string = '';
+}
+
 /**
  * 附加信息元素
  */

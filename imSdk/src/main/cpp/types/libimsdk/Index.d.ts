@@ -66,6 +66,14 @@ export interface MsgListener {
 }
 
 /**
+ * 批量消息监听器接口
+ */
+export interface BatchMsgListener {
+  onRecvNewMessages(messageList: string): void;
+  onRecvOfflineNewMessages(messageList: string): void;
+}
+
+/**
  * 会话监听器接口
  */
 export interface ConvListener {
@@ -117,6 +125,9 @@ export interface FriendListener {
 export interface UserListener {
   onSelfInfoUpdated(userInfo: string): void;
   onUserStatusChanged(userOnlineStatus: string): void;
+  onUserCommandAdd(userCommand: string): void;
+  onUserCommandDelete(userCommand: string): void;
+  onUserCommandUpdate(userCommand: string): void;
 }
 
 /**
@@ -161,6 +172,11 @@ export interface MsgKvInfoListener {
  * @returns 是否初始化成功
  */
 export function initSdk(connectListener: ConnListener, operationID: string, config: string): number;
+
+/**
+ * 检查调用目标所需的 SDK 资源是否已加载，未就绪时抛出异常。
+ */
+export function checkResourceLoad(funcName: string): void;
 
 /**
  * 登录
@@ -290,6 +306,16 @@ export function setAppBackgroundStatus(baseCallback: BaseCallback, operationID: 
  * @param operationID 唯一操作标识
  */
 export function networkStatusChanged(baseCallback: BaseCallback, operationID: string): void;
+
+export function addUserCommand(baseCallback: BaseCallback, operationID: string, commandType: number, uuid: string, value: string): void;
+
+export function deleteUserCommand(baseCallback: BaseCallback, operationID: string, commandType: number, uuid: string): void;
+
+export function getAllUserCommands(baseCallback: BaseCallback, operationID: string, commandType: number): void;
+
+export function markAllConversationMessageAsRead(baseCallback: BaseCallback, operationID: string): void;
+
+export function searchConversation(baseCallback: BaseCallback, operationID: string, searchParam: string): void;
 
 // ============================================================
 // 会话
@@ -465,7 +491,7 @@ export function setAdvancedMsgListener(msgListener: MsgListener): void;
  * 设置批量消息监听器
  * @param msgListener 消息监听器
  */
-export function setBatchMsgListener(msgListener: MsgListener): void;
+export function setBatchMsgListener(msgListener: BatchMsgListener): void;
 
 /**
  * 设置信令监听器
@@ -880,9 +906,9 @@ export function getFriendListPage(baseCallback: BaseCallback, operationID: strin
  * @param baseCallback 基础回调
  * @param operationID 唯一操作标识
  * @param userIDList 用户 ID 列表 (JSON 字符串数组)
- * @param ex 扩展字段
+ * @param filterBlack 是否过滤黑名单
  */
-export function getSpecifiedFriendsInfo(baseCallback: BaseCallback, operationID: string, userIDList: string, ex: boolean): void;
+export function getSpecifiedFriendsInfo(baseCallback: BaseCallback, operationID: string, userIDList: string, filterBlack: boolean): void;
 
 /**
  * 搜索好友

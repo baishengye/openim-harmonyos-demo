@@ -25,7 +25,18 @@ std::string GetStringFromJS(napi_env env, napi_value value) {
 // Get int from napi_value
 int GetIntFromJS(napi_env env, napi_value value) {
     int32_t result = 0;
-    if (value) napi_get_value_int32(env, value, &result);
+    if (!value) return result;
+
+    napi_valuetype type = napi_undefined;
+    if (napi_typeof(env, value, &type) != napi_ok) return result;
+    if (type == napi_boolean) {
+        bool booleanValue = false;
+        if (napi_get_value_bool(env, value, &booleanValue) == napi_ok) {
+            return booleanValue ? 1 : 0;
+        }
+        return result;
+    }
+    napi_get_value_int32(env, value, &result);
     return result;
 }
 
@@ -41,7 +52,20 @@ long long GetInt64FromJS(napi_env env, napi_value value) {
 // Get bool from napi_value
 bool GetBoolFromJS(napi_env env, napi_value value) {
     bool result = false;
-    if (value) napi_get_value_bool(env, value, &result);
+    if (!value) return result;
+
+    napi_valuetype type = napi_undefined;
+    if (napi_typeof(env, value, &type) != napi_ok) return result;
+    if (type == napi_boolean) {
+        napi_get_value_bool(env, value, &result);
+        return result;
+    }
+    if (type == napi_number) {
+        int32_t numericValue = 0;
+        if (napi_get_value_int32(env, value, &numericValue) == napi_ok) {
+            return numericValue != 0;
+        }
+    }
     return result;
 }
 

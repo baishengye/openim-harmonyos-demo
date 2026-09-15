@@ -52,6 +52,7 @@ export {
   MergeElem,
   NotificationElem,
   FaceElem,
+  UserCommand,
   AttachedInfoElem,
   CardElem,
   AdvancedTextElem,
@@ -86,6 +87,7 @@ export {
   UploadLogProgress,
   ConnListener,
   MsgListener,
+  BatchMsgListener,
   ConvListener,
   GroupListener,
   FriendListener,
@@ -99,6 +101,7 @@ export {
 export {
   ConnListenerWrapper,
   MsgListenerWrapper,
+  BatchMsgListenerWrapper,
   ConvListenerWrapper,
   GroupListenerWrapper,
   FriendListenerWrapper,

@@ -7,7 +7,7 @@ import im from 'libimsdk.so';
 import { debug, error, info } from '../internal/log/Logger';
 import { BaseCallback, UserListener } from '../listeners/listener';
 import { BaseCallbackWrapper, UserListenerWrapper } from '../listeners/ListenerImpl';
-import { SubscribeUsersStatus, UserInfo, UsersOnlineStatus } from '../models/entity';
+import { SubscribeUsersStatus, UserCommand, UserInfo, UsersOnlineStatus } from '../models/entity';
 import { toArray, toString } from '../utils/JsonUtil';
 import { buildOperationID } from '../utils/Utils';
 
@@ -23,6 +23,19 @@ export class UserInfoManager {
    */
   setUserListener(listener: UserListener): void {
     im.setUserListener(new UserListenerWrapper(listener));
+  }
+
+  addUserCommand(callback: BaseCallback<string>, operationID: string, commandType: number,
+    uuid: string, value: string): void {
+    im.addUserCommand(new BaseCallbackWrapper(callback), operationID, commandType, uuid, value);
+  }
+
+  deleteUserCommand(callback: BaseCallback<string>, operationID: string, commandType: number, uuid: string): void {
+    im.deleteUserCommand(new BaseCallbackWrapper(callback), operationID, commandType, uuid);
+  }
+
+  getAllUserCommands(callback: BaseCallback<UserCommand[]>, operationID: string, commandType: number): void {
+    im.getAllUserCommands(new BaseCallbackWrapper(callback), operationID, commandType);
   }
 
   /**

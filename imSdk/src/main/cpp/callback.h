@@ -30,7 +30,7 @@ typedef void (*DeletedCb)(char*);
 
 // 会话回调（与 libopenimsdk.h 一致）
 typedef void (*SyncBoolCb)(int);
-typedef void (*SyncProgressCb)(int);
+typedef void (*SyncProgressCb)(long long);
 typedef void (*UnreadCb)(int);
 
 // 群组/好友/用户回调（与 libopenimsdk.h 一致）
@@ -48,19 +48,19 @@ typedef void (*BaseErrorCb)(int, int, char*);
 
 // 上传文件回调（与 libopenimsdk.h 一致）
 typedef void (*UploadOpenCb)(int, long long);
-typedef void (*UploadPartSizeCb)(int, long long, int);
-typedef void (*UploadHashProgressCb)(int, int, long long, char*);
+typedef void (*UploadPartSizeCb)(int, long long, long long);
+typedef void (*UploadHashProgressCb)(int, long long, long long, char*);
 typedef void (*UploadHashCompleteCb)(int, char*, char*);
 typedef void (*UploadIDCb)(int, char*);
-typedef void (*UploadPartCompleteCb)(int, int, long long, char*);
+typedef void (*UploadPartCompleteCb)(int, long long, long long, char*);
 typedef void (*UploadCompleteCb)(int, long long, long long, long long);
-typedef void (*UploadFinishCb)(int, long long, char*, int);
+typedef void (*UploadFinishCb)(int, long long, char*, long long);
 
 // 日志上传回调
 typedef void (*UploadLogProgressCb)(int, long long, long long);
 
 // 发送进度回调
-typedef void (*SendMsgCb)(int, int);
+typedef void (*SendMsgCb)(int, long long);
 
 // ============================================================
 // Base 回调上下文
@@ -219,6 +219,14 @@ int StoreMsgListener(
 );
 void DeleteMsgListener();
 
+// 批量消息监听器
+int StoreBatchMsgListener(
+    napi_env env,
+    napi_value onRecvNewMessages,
+    napi_value onRecvOfflineNewMessages
+);
+void DeleteBatchMsgListener();
+
 // 会话监听器
 int StoreConvListener(
     napi_env env,
@@ -266,7 +274,14 @@ int StoreFriendListener(
 void DeleteFriendListener();
 
 // 用户监听器
-int StoreUserListener(napi_env env, napi_value onSelfInfo, napi_value onUserStatus);
+int StoreUserListener(
+    napi_env env,
+    napi_value onSelfInfo,
+    napi_value onUserStatus,
+    napi_value onUserCommandAdd,
+    napi_value onUserCommandDelete,
+    napi_value onUserCommandUpdate
+);
 void DeleteUserListener();
 
 // 信令监听器
@@ -308,13 +323,13 @@ void CallVoidCallback(napi_env env, napi_ref callbackRef);
 // 调用单个参数回调（int）
 void CallIntCallback(napi_env env, napi_ref callbackRef, int value);
 void CallBoolCallback(napi_env env, napi_ref callbackRef, bool value);
-void CallIntStringCallback(napi_env env, napi_ref callbackRef, int value, const char* text);
+void CallIntStringCallback(napi_env env, napi_ref callbackRef, int value, char* text);
 
 // 调用单个参数回调（long long）
 void CallLongLongCallback(napi_env env, napi_ref callbackRef, long long value);
 
 // 调用字符串参数回调
-void CallStringCallback(napi_env env, napi_ref callbackRef, const char* value);
+void CallStringCallback(napi_env env, napi_ref callbackRef, char* value);
 
 // 调用 Base 成功回调
 void CallBaseSuccessCallback(int cbId, const char* data);
@@ -324,18 +339,18 @@ void CallBaseErrorCallback(int cbId, int code, const char* message);
 
 // 调用上传文件回调
 void CallUploadOpenCallback(int cbId, long long fileSize);
-void CallUploadPartSizeCallback(int cbId, long long partSize, int partNumber);
-void CallUploadHashProgressCallback(int cbId, int index, long long size, const char* partHash);
+void CallUploadPartSizeCallback(int cbId, long long partSize, long long partNumber);
+void CallUploadHashProgressCallback(int cbId, long long index, long long size, const char* partHash);
 void CallUploadHashCompleteCallback(int cbId, const char* partsHash, const char* fileHash);
 void CallUploadIDCallback(int cbId, const char* uploadID);
-void CallUploadPartCompleteCallback(int cbId, int index, long long partSize, const char* partHash);
+void CallUploadPartCompleteCallback(int cbId, long long index, long long partSize, const char* partHash);
 void CallUploadCompleteCallback(int cbId, long long fileSize, long long streamSize, long long storageSize);
-void CallUploadFinishCallback(int cbId, long long size, const char* url, int fileType);
+void CallUploadFinishCallback(int cbId, long long size, const char* url, long long fileType);
 
 // 调用日志上传回调
 void CallUploadLogProgressCallback(int cbId, long long current, long long total);
 
 // 调用发送进度回调
-void CallSendMsgCallback(int cbId, int progress);
+void CallSendMsgCallback(int cbId, long long progress);
 
 #endif // OPENIM_CALLBACK_H

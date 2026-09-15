@@ -471,8 +471,8 @@ napi_value NAPI_getGroupMemberListByJoinTimeFilter(napi_env env, napi_callback_i
     napi_value args[8] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     std::string groupID = GetStringFromJS(env, args[2]);
-    long long offset = GetInt64FromJS(env, args[3]);
-    long long count = GetInt64FromJS(env, args[4]);
+    int offset = GetIntFromJS(env, args[3]);
+    int count = GetIntFromJS(env, args[4]);
     long long joinTimeBegin = GetInt64FromJS(env, args[5]);
     long long joinTimeEnd = GetInt64FromJS(env, args[6]);
     std::string filterUserIDList = GetStringFromJS(env, args[7]);

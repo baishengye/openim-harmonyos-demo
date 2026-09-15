@@ -46,7 +46,8 @@ export {
   UserExInfo,
   SingleTypeKeyInfoSum,
   MessageKv,
-  UsersOnlineStatus
+  UsersOnlineStatus,
+  UserCommand
 } from './src/main/ets/sdk/models/entity';
 export {
   AllowType,
@@ -77,6 +78,7 @@ export {
   UploadLogProgress,
   ConnListener,
   MsgListener,
+  BatchMsgListener,
   ConvListener,
   GroupListener,
   FriendListener,

@@ -39,6 +39,10 @@ class InputStatesCallback implements BaseCallback<number[]> {
  * 提供FCM Token、App角标、日志上传、文件上传等操作
  */
 export class MiscManager {
+  /** 检查指定 SDK 方法所需资源是否已加载；未就绪时抛出异常。 */
+  checkResourceLoad(funcName: string): void {
+    im.checkResourceLoad(funcName);
+  }
   /**
    * 更新FCM Token
    * @param callback 回调

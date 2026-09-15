@@ -134,7 +134,6 @@ extern napi_value NAPI_deleteAllMessageFromLocal(napi_env env, napi_callback_inf
 extern napi_value NAPI_deleteAllMsgFromLocalAndSvr(napi_env env, napi_callback_info info);
 extern napi_value NAPI_insertSingleMessageToLocal(napi_env env, napi_callback_info info);
 extern napi_value NAPI_findMessageList(napi_env env, napi_callback_info info);
-extern napi_value NAPI_getHistoryMessageList(napi_env env, napi_callback_info info);
 extern napi_value NAPI_getAdvancedHistoryMessageList(napi_env env, napi_callback_info info);
 extern napi_value NAPI_getAdvancedHistoryMessageListReverse(napi_env env, napi_callback_info info);
 extern napi_value NAPI_searchLocalMessages(napi_env env, napi_callback_info info);
@@ -159,6 +158,7 @@ extern napi_value NAPI_unInitSDK(napi_env env, napi_callback_info info);
 extern napi_value NAPI_getAtAllTag(napi_env env, napi_callback_info info);
 extern napi_value NAPI_changeInputStates(napi_env env, napi_callback_info info);
 extern napi_value NAPI_getInputStates(napi_env env, napi_callback_info info);
+extern napi_value NAPI_checkResourceLoad(napi_env env, napi_callback_info info);
 
 
 // User NAPI functions
@@ -171,6 +171,9 @@ extern napi_value NAPI_unsubscribeUsersStatus(napi_env env, napi_callback_info i
 extern napi_value NAPI_getSubscribeUsersStatus(napi_env env, napi_callback_info info);
 extern napi_value NAPI_setAppBackgroundStatus(napi_env env, napi_callback_info info);
 extern napi_value NAPI_networkStatusChanged(napi_env env, napi_callback_info info);
+extern napi_value NAPI_addUserCommand(napi_env env, napi_callback_info info);
+extern napi_value NAPI_deleteUserCommand(napi_env env, napi_callback_info info);
+extern napi_value NAPI_getAllUserCommands(napi_env env, napi_callback_info info);
 
 // ==================== Module Init ====================
 
@@ -200,6 +203,9 @@ static napi_value Init(napi_env env, napi_value exports) {
         {"setAppBackgroundStatus", nullptr, NAPI_setAppBackgroundStatus, nullptr, nullptr, nullptr, napi_default,
          nullptr},
         {"networkStatusChanged", nullptr, NAPI_networkStatusChanged, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"addUserCommand", nullptr, NAPI_addUserCommand, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"deleteUserCommand", nullptr, NAPI_deleteUserCommand, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"getAllUserCommands", nullptr, NAPI_getAllUserCommands, nullptr, nullptr, nullptr, napi_default, nullptr},
         // Conversation
         {"getAllConversationList", nullptr, NAPI_getAllConversationList, nullptr, nullptr, nullptr, napi_default,
          nullptr},
@@ -269,6 +275,8 @@ static napi_value Init(napi_env env, napi_value exports) {
         {"typingStatusUpdate", nullptr, NAPI_typingStatusUpdate, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"markMessageAsRead", nullptr, NAPI_markMessageAsRead, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"markAllMessageAsRead", nullptr, NAPI_markAllMessageAsRead, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"markAllConversationMessageAsRead", nullptr, NAPI_markAllMessageAsRead, nullptr, nullptr, nullptr,
+         napi_default, nullptr},
         {"revokeMessage", nullptr, NAPI_revokeMessage, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"deleteMessageFromLocal", nullptr, NAPI_deleteMessageFromLocal, nullptr, nullptr, nullptr, napi_default,
          nullptr},
@@ -280,8 +288,6 @@ static napi_value Init(napi_env env, napi_value exports) {
         {"insertSingleMessageToLocal", nullptr, NAPI_insertSingleMessageToLocal, nullptr, nullptr, nullptr,
          napi_default, nullptr},
         {"findMessageList", nullptr, NAPI_findMessageList, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"getHistoryMessageList", nullptr, NAPI_getHistoryMessageList, nullptr, nullptr, nullptr, napi_default,
-         nullptr},
         {"getAdvancedHistoryMessageList", nullptr, NAPI_getAdvancedHistoryMessageList, nullptr, nullptr, nullptr,
          napi_default, nullptr},
         {"getAdvancedHistoryMessageListReverse", nullptr, NAPI_getAdvancedHistoryMessageListReverse, nullptr, nullptr,
@@ -379,6 +385,7 @@ static napi_value Init(napi_env env, napi_value exports) {
         {"getAtAllTag", nullptr, NAPI_getAtAllTag, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"changeInputStates", nullptr, NAPI_changeInputStates, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"getInputStates", nullptr, NAPI_getInputStates, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"checkResourceLoad", nullptr, NAPI_checkResourceLoad, nullptr, nullptr, nullptr, napi_default, nullptr},
         // Listener
         {"setConnListener", nullptr, NAPI_setConnListener, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"setAdvancedMsgListener", nullptr, NAPI_setAdvancedMsgListener, nullptr, nullptr, nullptr, napi_default,

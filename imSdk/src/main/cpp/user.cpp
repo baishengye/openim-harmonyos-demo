@@ -11,6 +11,45 @@
 
 // ==================== User Functions ====================
 
+napi_value NAPI_addUserCommand(napi_env env, napi_callback_info info) {
+    size_t argc = 5;
+    napi_value args[5] = {nullptr};
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
+    std::string operationID = GetStringFromJS(env, args[1]);
+    int commandType = GetIntFromJS(env, args[2]);
+    std::string uuid = GetStringFromJS(env, args[3]);
+    std::string value = GetStringFromJS(env, args[4]);
+    AddUserCommand(cbId, MutableCString(operationID), commandType, MutableCString(uuid), MutableCString(value));
+    return CreateJSUndefined(env);
+}
+
+napi_value NAPI_deleteUserCommand(napi_env env, napi_callback_info info) {
+    size_t argc = 4;
+    napi_value args[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
+    std::string operationID = GetStringFromJS(env, args[1]);
+    int commandType = GetIntFromJS(env, args[2]);
+    std::string uuid = GetStringFromJS(env, args[3]);
+    DeleteUserCommand(cbId, MutableCString(operationID), commandType, MutableCString(uuid));
+    return CreateJSUndefined(env);
+}
+
+napi_value NAPI_getAllUserCommands(napi_env env, napi_callback_info info) {
+    size_t argc = 3;
+    napi_value args[3] = {nullptr};
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    int cbId = StoreBaseCallback(env, args[0]);
+    if (cbId == INVALID_CALLBACK_ID) return nullptr;
+    std::string operationID = GetStringFromJS(env, args[1]);
+    int commandType = GetIntFromJS(env, args[2]);
+    GetAllUserCommands(cbId, MutableCString(operationID), commandType);
+    return CreateJSUndefined(env);
+}
+
 napi_value NAPI_getUsersInfo(napi_env env, napi_callback_info info) {
     size_t argc = 3;
     napi_value args[3] = {nullptr};
