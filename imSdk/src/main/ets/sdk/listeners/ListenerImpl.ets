@@ -605,8 +605,8 @@ export class CompletionCallbackWrapper implements NativeBaseCallback {
     if (this.callback != null) this.callback.onError(errCode, errMsg);
   }
 
-  onSuccess(_data: string): void {
-    if (this.callback != null) this.callback.onSuccess();
+  onSuccess(data: string): void {
+    if (this.callback != null) this.callback.onSuccess(data);
   }
 }
 

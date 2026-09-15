@@ -28,10 +28,13 @@ export interface BaseCallback<T> {
   onSuccess(data: T): void;
 }
 
-/** 仅表示异步操作已完成，不携带业务数据。 */
+/**
+ * 仅表示异步操作已完成。原生层仍会携带一个历史兼容用的字符串（通常为空），
+ * 业务代码不应依赖它；保留形参以兼容既有 BaseCallback<string> 调用方。
+ */
 export interface CompletionCallback {
   onError(errCode: number, errMsg: string): void;
-  onSuccess(): void;
+  onSuccess(data: string): void;
 }
 
 /**

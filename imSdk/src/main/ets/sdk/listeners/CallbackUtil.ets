@@ -9,7 +9,7 @@ export class PromiseCompletionCallback implements CompletionCallback {
     this.reject = reject;
   }
 
-  onSuccess(): void { this.resolve(); }
+  onSuccess(_data: string): void { this.resolve(); }
   onError(code: number, message: string): void {
     this.reject(new Error(`Code: ${code}, Message: ${message}`));
   }
